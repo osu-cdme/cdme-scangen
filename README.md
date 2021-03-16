@@ -8,12 +8,12 @@ Use Test2 file to test code. If might not work.
 Libraires to Install before Running
 
 sphinx  
-numpy
-scipy
-shapely
-networkx
-Rtree
-trimesh
-triangle
-scikit-image
-cython
+numpy  
+scipy  
+shapely  
+networkx  
+Rtree  
+trimesh  
+triangle  
+scikit-image  
+cython  
