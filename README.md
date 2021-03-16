@@ -7,13 +7,13 @@ Use Test2 file to test code. If might not work.
 
 Libraires to Install before Running
 
-pip install sphinx
-pip installnumpy
-pip install scipy
-pip install shapely
-pip install networkx
-pip install Rtree
-pip install trimesh
-pip install triangle
-pip install scikit-image
-pip installcython
+sphinx  
+numpy
+scipy
+shapely
+networkx
+Rtree
+trimesh
+triangle
+scikit-image
+cython
