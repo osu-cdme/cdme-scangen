@@ -1,8 +1,6 @@
 # PowderBedFusion_ScanGenerator
 This library generates the scan vectors used in Powder Bed Fusion (PBF) Additive Manufacturing (AM) Systems. Built for the Ohio State University Center for Design and Manufacturing Excellence (CDME) to prototype and develop new scanning algorithms. 
 
-WRITE NEW ALGORTHIMS IN THE genScan folder
-
 ## To Install
 Either:
 - Run `python -mpip install -r requirements.txt` in the base directory of this repository
