@@ -15,6 +15,7 @@ Either:
     - triangle  
     - scikit-image  
     - cython  
+    - pyclipper
 
 ## To Run 
 The `test2.py` file currently has a basic implementation of line scanning and island scanning implemented.
