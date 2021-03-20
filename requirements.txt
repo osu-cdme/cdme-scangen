@@ -8,3 +8,4 @@ trimesh
 triangle
 scikit-image
 cython
+pyclipper
