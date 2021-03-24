@@ -43,17 +43,20 @@ layers = []
 
 
 for z in np.arange(0, Part.boundingBox[5], layerThickness):
-    # Slice the boundary
-    geomSlice = Part.getVectorSlice(z)
 
-    # Hatch the boundary using myHatcher
-    layer = myHatcher.hatch(geomSlice)
+  print('Layer # ' + str(z) + ' Started')
 
-    # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
-    print('Layer # ' + str(z) + ' Started')
-    layer.z = int(z*1000)
-    print('Layer # ' + str(z) + ' Complete\n')
-    layers.append(layer)
+  # Slice the boundary
+  geomSlice = Part.getVectorSlice(z) 
+
+  # Hatch the boundary using myHatcher
+  layer = myHatcher.hatch(geomSlice) 
+  
+  # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
+  layer.z = int(z*1000)
+  
+  layers.append(layer)
+  print('Layer # ' + str(z) + ' Complete\n')
     
 # we have to assign a model and build style id to the layer geometry
 for layer in layers:
