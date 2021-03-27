@@ -11,9 +11,10 @@ class Header:
     The Header provides basic information about the machine build file, such as the name of the file
     (:class:`~Header.filename`), version and the zUnit used for calculating the actual Layer z position in the machine.
     """
+
     def __init__(self):
         self.filename = ""
-        self.version = (0,0)
+        self.version = (0, 0)
         self.zUnit = 1000
 
 
@@ -51,7 +52,7 @@ class BuildStyle:
         return self._laserPower
 
     @laserPower.setter
-    def laserPower(self, laserPower:float):
+    def laserPower(self, laserPower: float):
         self._laserPower = laserPower
 
     @property
@@ -114,6 +115,7 @@ class Model:
     A Model represents a parametric group or in practice a part which contains a set of :class:`BuildStyle` used across
     the :class:`LayerGeometry.`
     """
+
     def __init__(self, mid: Optional[int] = 0):
         self._mid = mid
         self.topLayerId = 0
@@ -140,6 +142,7 @@ class Model:
     @mid.setter
     def mid(self, mid: int):
         self._mid = mid
+
 
 class LayerGeometryType(Enum):
     Invalid = 0
@@ -174,9 +177,10 @@ class LayerGeometry(abc.ABC):
 
     @coords.setter
     def coords(self, coordValues: np.ndarray):
-        print(coordValues.shape)
+        # print(coordValues.shape)
         if coordValues.shape[-1] != 2:
-            raise ValueError('Coordinates provided to layer geometry must have (X,Y) values only')
+            raise ValueError(
+                'Coordinates provided to layer geometry must have (X,Y) values only')
 
         self._coords = coordValues
 
@@ -220,8 +224,9 @@ class HatchGeometry(LayerGeometry):
     unlike :class:`ContourGeometry`. Typically, the scan vectors are used for infilling large internal regions and
     are arranged parallel at a set distance from each other.
     """
+
     def __init__(self, modelId: Optional[int] = 0, buildStyleId: Optional[int] = 0,
-                       coords: Optional[np.ndarray] = None):
+                 coords: Optional[np.ndarray] = None):
 
         super().__init__(modelId, buildStyleId, coords)
         # print('Constructed Hatch Geometry')
@@ -249,8 +254,9 @@ class ContourGeometry(LayerGeometry):
      efficiently follow a path without jumping,  unlike :class:`HatchGeometry`. Typically, the scan vectors are used for
      generated the boundaries of a part across a layer.
      """
+
     def __init__(self, modelId: Optional[int] = 0, buildStyleId: Optional[int] = 0,
-                       coords: Optional[np.ndarray] = None):
+                 coords: Optional[np.ndarray] = None):
 
         super().__init__(modelId, buildStyleId, coords)
 
@@ -279,6 +285,7 @@ class PointsGeometry(LayerGeometry):
      for very controlled and articulated scan styles. Typically, the exposure points are used either lattice structures,
      or support structures. It is impracticable and inefficient to use these for generated very large aerial regions..
      """
+
     def __init__(self, modelId: Optional[int] = 0, buildStyleId: Optional[int] = 0,
                  coords: Optional[np.ndarray] = None):
 
@@ -330,7 +337,7 @@ class Layer:
         return self._name
 
     @name.setter
-    def name(self, name : str):
+    def name(self, name: str):
         self._name = name
 
     @property
@@ -431,4 +438,3 @@ class Layer:
                 geoms.append(geom)
 
         return geoms
-
