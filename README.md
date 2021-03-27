@@ -4,17 +4,20 @@ This library generates the scan vectors used in Powder Bed Fusion (PBF) Additive
 
 ## To Install
 
-Either run `python -mpip install -r requirements.txt` in the base directory of this repository or install the following packages: - sphinx  
- - numpy  
- - scipy  
- - shapely  
- - networkx  
- - Rtree  
- - trimesh  
- - triangle  
- - scikit-image  
- - cython  
- - pyclipper
+Either run `python -mpip install -r requirements.txt` in the base directory of this repository or install the following packages:
+
+- sphinx
+- numpy
+- scipy
+- shapely
+- networkx
+- Rtree
+- trimesh
+- triangle
+- scikit-image
+- cython
+- pyclipper
+- autopep8 (for formatting)
 
 ## To Run
 
@@ -22,4 +25,5 @@ The `test2.py` file currently has a basic implementation of line scanning and is
 
 ## To Develop
 
-Write new algorithms in the PowderBedFusion/genScan folder.
+1. Install autopep8
+2. Write new algorithms in the pyslm/genScan folder!
