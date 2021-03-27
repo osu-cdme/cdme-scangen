@@ -7,6 +7,7 @@ from typing import Any, List, Optional, Tuple
 
 from shapely.geometry import Polygon
 
+
 class DocumentObject(ABC):
 
     def __init__(self, name):
@@ -39,15 +40,14 @@ class DocumentObject(ABC):
     def setName(self, name):
         self._name = name
 
-
     def boundingBox(self):  # const
-        raise NotImplementedError('Abstract  method should be implemented in derived class')
+        raise NotImplementedError(
+            'Abstract  method should be implemented in derived class')
 
 
 class Document:
 
     def __init__(self):
-        print('Initialising the Document Graph')
 
         # Create a direct acyclic graph using NetworkX
         self._graph = nx.DiGraph()
@@ -55,7 +55,8 @@ class Document:
     def addObject(self, obj):
 
         if not issubclass(type(obj), DocumentObject):
-            raise ValueError('Feature {:s} is not a Document Object'.format(obj))
+            raise ValueError(
+                'Feature {:s} is not a Document Object'.format(obj))
 
         self._graph.add_node(obj)
 
@@ -246,7 +247,7 @@ class Part(DocumentObject):
         self._scaleFactor = np.asanyarray(sf).flatten()
 
         if len(self._scaleFactor) == 1:
-            self._scaleFactor = self._scaleFactor * np.ones([3,])
+            self._scaleFactor = self._scaleFactor * np.ones([3, ])
 
         self._dirty = True
 
@@ -257,7 +258,7 @@ class Part(DocumentObject):
         :param zPos: The position the bottom of the part should be suspended above :math:`z=0`
         """
 
-        self.origin[2] = -1.0* self.boundingBox[2] + zPos
+        self.origin[2] = -1.0 * self.boundingBox[2] + zPos
         self._dirty = True
 
     def getTransform(self) -> np.ndarray:
@@ -266,9 +267,12 @@ class Part(DocumentObject):
         (:attr:`~Part.origin`), a :attr:`~Part.rotation` and a :attr:`~Part.scaleFactor`
         """
 
-        Sx = trimesh.transformations.scale_matrix(factor = self._scaleFactor[0], direction=[1,0,0])
-        Sy = trimesh.transformations.scale_matrix(factor=self._scaleFactor[1] , direction=[0,1,0])
-        Sz = trimesh.transformations.scale_matrix(factor=self._scaleFactor[2], direction=[0,0,1])
+        Sx = trimesh.transformations.scale_matrix(
+            factor=self._scaleFactor[0], direction=[1, 0, 0])
+        Sy = trimesh.transformations.scale_matrix(
+            factor=self._scaleFactor[1], direction=[0, 1, 0])
+        Sz = trimesh.transformations.scale_matrix(
+            factor=self._scaleFactor[2], direction=[0, 0, 1])
         S = Sx*Sy*Sz
         T = trimesh.transformations.translation_matrix(self._origin)
 
@@ -287,11 +291,15 @@ class Part(DocumentObject):
 
         :param filename: The mesh filename
         """
-        self._geometry = trimesh.load_mesh(filename, use_embree=False, process=True, Validate_faces=False)
+        self._geometry = trimesh.load_mesh(
+            filename, use_embree=False, process=True, Validate_faces=False)
 
-        print('Geometry information <{:s}> - [{:s}]'.format(self.name, filename))
+        '''
+        print(
+            'Geometry information <{:s}> - [{:s}]'.format(self.name, filename))
         print('\t bounds', self._geometry.bounds)
         print('\t extent', self._geometry.extents)
+        '''
 
         self._dirty = True
 
@@ -313,7 +321,7 @@ class Part(DocumentObject):
             return None
 
         if self.isDirty():
-            print('Updating {:s} Geometry Representation'.format(self.label))
+            # print('Updating {:s} Geometry Representation'.format(self.label))
             self._geometryCache = self._geometry.copy()
             self._geometryCache.apply_transform(self.getTransform())
             self._dirty = False
@@ -331,7 +339,7 @@ class Part(DocumentObject):
         if not self.geometry:
             raise ValueError('Geometry was not set')
         else:
-            return  self.geometry.bounds.flatten()
+            return self.geometry.bounds.flatten()
 
     @property
     def partType(self) -> str:
@@ -344,7 +352,7 @@ class Part(DocumentObject):
         return self._partType
 
     def getVectorSlice(self, z: float, returnCoordPaths: bool = True,
-                       simplificationFactor = None, simplificationPreserveTopology: Optional[bool] = True) -> Any:
+                       simplificationFactor=None, simplificationPreserveTopology: Optional[bool] = True) -> Any:
         """
         The vector slice is created by using `trimesh` to slice the mesh into a polygon
 
@@ -385,8 +393,9 @@ class Part(DocumentObject):
         if simplificationFactor:
             simpPolys = []
 
-            for polygon in  polygons:
-                simpPolys.append(polygon.simplify(simplificationFactor, preserve_topology=simplificationPreserveTopology))
+            for polygon in polygons:
+                simpPolys.append(polygon.simplify(
+                    simplificationFactor, preserve_topology=simplificationPreserveTopology))
 
             polygons = simpPolys
 
@@ -415,5 +424,3 @@ class Part(DocumentObject):
                 paths.append(coords)
 
         return paths
-
-    
