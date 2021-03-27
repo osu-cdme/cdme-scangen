@@ -9,3 +9,4 @@ triangle
 scikit-image
 cython
 pyclipper
+autopep8
