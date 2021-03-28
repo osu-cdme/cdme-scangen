@@ -7,10 +7,12 @@ Example showing how to use pyPowderBedFusion for generating scan vector
 """
 
 # Standard Library Imports
+import os
+import glob
 
 # Third-Party Imports
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # Local Imports
@@ -44,8 +46,8 @@ LAYER_THICKNESS = 1  # [mm]
 # Perform the hatching operations
 layers = []
 
-print("Processing...")
 t = tqdm(np.arange(0, Part.boundingBox[5], LAYER_THICKNESS))
+t.set_description("Processing Layers")
 for z in t:
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
@@ -74,20 +76,37 @@ model.buildStyles.append(bstyle)
 resolution = 0.2
 
 # Plot the results
-PowderBedFusion.outputtools.plotLayers(layers[0:len(layers)])
+# PowderBedFusion.outputtools.plotLayers(layers[0:len(layers)])
+# plt.show()
 
-'''
-# Plot the corresponding layers
-i = 0
-for layer in layers:
-    PowderBedFusion.visualize.plot(
-        layers[i], plot3D=False, plotOrderLine=True, plotArrows=True, handle=(fig, ax))
-    name = 'LayerFiles/Layer' + str(i) + '.pdf'
-    print("name: {}".format(name))
-    fig, ax = plt.subplots(figsize=(20, 10))
-    
-    fig.savefig(name, bbox_inches='tight')
-    plt.cla()
-    plt.close(fig)
-    i = i+1
+DO_OUTPUT = True
+if DO_OUTPUT:
+
+    # Make output folder if it doesn't exist
+    if not os.path.exists("LayerFiles"):
+        os.makedirs("LayerFiles")
+
+    # Otherwise, wipe folder of previous output
+    else:
+        files = glob.glob("LayerFiles/*")
+        for f in files:
+            os.remove(f)
+
+    # Generate new output
+    t = tqdm(range(len(layers)))
+    t.set_description("Generating Plots")
+    for i in t:
+        fig, ax = plt.subplots()
+        PowderBedFusion.outputtools.plot(
+            layers[i], plot3D=False, plotOrderLine=False, plotHatches=True, plotContours=True, handle=(fig, ax))
+        fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
+        plt.cla()
+        plt.close(fig)
+
+''' 
+If we want to change to a subplot-based system, here's most of the code for it:
+NUM_ROWS, NUM_COLS = 200, 2
+fig, axarr = plt.subplots(NUM_ROWS, NUM_COLS)
+PowderBedFusion.outputtools.plot(layers[i], plot3D=False, plotOrderLine=True,
+                                 plotHatches=True, plotContours=True, handle=(fig, axarr[i // NUM_COLS, i % NUM_COLS]))
 '''
