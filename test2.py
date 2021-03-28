@@ -86,8 +86,7 @@ if GENERATE_OUTPUT:
     if not os.path.exists("LayerFiles"):
         os.makedirs("LayerFiles")
     else:
-        files = glob.glob("LayerFiles/*")
-        for f in files:
+        for f in glob.glob("LayerFiles/*"):
             os.remove(f)
 
     # Generate new output
