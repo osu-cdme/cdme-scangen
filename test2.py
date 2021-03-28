@@ -46,9 +46,8 @@ LAYER_THICKNESS = 1  # [mm]
 # Perform the hatching operations
 layers = []
 
-t = tqdm(np.arange(0, Part.boundingBox[5], LAYER_THICKNESS))
-t.set_description("Processing Layers")
-for z in t:
+for z in tqdm(np.arange(0, Part.boundingBox[5],
+                        LAYER_THICKNESS), desc="Processing Layers"):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
     layer = myHatcher.hatch(geom_slice)  # Hatch layer
@@ -59,9 +58,6 @@ for z in t:
         geometry.mid = 1
         geometry.bid = 1
     layers.append(layer)
-
-    # Explicitly refresh progress bar
-    t.refresh()
 
 bstyle = PowderBedFusion.genLayer.BuildStyle()
 bstyle.bid = 1
@@ -90,9 +86,7 @@ if GENERATE_OUTPUT:
             os.remove(f)
 
     # Generate new output
-    t = tqdm(range(len(layers)))
-    t.set_description("Generating Plots")
-    for i in t:
+    for i in tqdm(range(len(layers)), desc="Generating Plots"):
         fig, ax = plt.subplots()
         PowderBedFusion.outputtools.plot(
             layers[i], plot3D=False, plotOrderLine=False, plotHatches=True, plotContours=True, handle=(fig, ax))
