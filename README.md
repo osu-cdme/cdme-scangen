@@ -25,8 +25,10 @@ The `test2.py` file currently has a basic implementation of line scanning and is
 
 ## To Develop
 
-1. Install autopep8
-2. Write new algorithms in the pyslm/genScan folder!
+1. We use `autopep8` for formatting.
+   - It depends on your editor, but in Visual Studio Code setting the editor setting "Format on Save" is recommended.
+
+You're good to start writing new algorithms in the pyslm/genScan folder!
 
 ## Attributions
 
