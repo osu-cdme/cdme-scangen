@@ -79,8 +79,8 @@ resolution = 0.2
 # PowderBedFusion.outputtools.plotLayers(layers[0:len(layers)])
 # plt.show()
 
-DO_OUTPUT = True
-if DO_OUTPUT:
+GENERATE_OUTPUT = True
+if GENERATE_OUTPUT:
 
     # Make output folder if it doesn't exist
     if not os.path.exists("LayerFiles"):
