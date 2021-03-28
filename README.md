@@ -27,3 +27,7 @@ The `test2.py` file currently has a basic implementation of line scanning and is
 
 1. Install autopep8
 2. Write new algorithms in the pyslm/genScan folder!
+
+## Attributions
+
+This library is built on top of [pyslm](https://github.com/drlukeparry/pyslm/), built by [@drlukeparry](https://github.com/drlukeparry).
