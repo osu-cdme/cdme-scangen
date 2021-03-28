@@ -103,7 +103,7 @@ if DO_OUTPUT:
         plt.cla()
         plt.close(fig)
 
-''' 
+'''
 If we want to change to a subplot-based system, here's most of the code for it:
 NUM_ROWS, NUM_COLS = 200, 2
 fig, axarr = plt.subplots(NUM_ROWS, NUM_COLS)
