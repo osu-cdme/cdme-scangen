@@ -82,11 +82,9 @@ resolution = 0.2
 GENERATE_OUTPUT = True
 if GENERATE_OUTPUT:
 
-    # Make output folder if it doesn't exist
+    # Create/wipe folder
     if not os.path.exists("LayerFiles"):
         os.makedirs("LayerFiles")
-
-    # Otherwise, wipe folder of previous output
     else:
         files = glob.glob("LayerFiles/*")
         for f in files:
