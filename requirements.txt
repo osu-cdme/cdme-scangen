@@ -10,3 +10,4 @@ scikit-image
 cython
 pyclipper
 autopep8
+tqdm
