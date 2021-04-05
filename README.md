@@ -4,22 +4,26 @@ This library generates the scan vectors used in Powder Bed Fusion (PBF) Additive
 
 ## To Install
 
-Many versions should work, but **the library is tested on Python 3.9.1**. You can check your running python version by running `python --version` in a terminal. The python version used depends on the python install specified in your `PATH` environment variable. We can't speak for other versions, but can confirm **3.6.8 breaks**. 
+The following are required:
 
-To install all the Python prerequisites, either run `python -mpip install -r requirements.txt` in the base directory of this repository or install the following packages:
-
-- sphinx
-- numpy
-- scipy
-- shapely
-- networkx
-- Rtree
-- trimesh
-- triangle
-- scikit-image
-- cython
-- pyclipper
-- autopep8 (for formatting)
+- **Microsoft Visual C++ 14.0**: Required for one of the Python libraries; downloading the installer [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and installing the defaults under "C++ Build Tools" (and possibly MSVC v140 if that doesn't work) should be enough.
+- **Python**: Overall codebase runs on it. **Overall codebase is only tested on Python 3.9.1**. We can't speak for other versions, but we know 3.6.8 breaks. 
+- **Python Prerequisites**: A bunch of libraries. Two options for installing all these.
+    1. Run `python -mpip install -r requirements.txt` in the base directory of this repository
+    2. Install the following libraries:
+        - sphinx
+        - numpy
+        - scipy
+        - shapely
+        - networkx
+        - Rtree
+        - trimesh
+        - triangle
+        - scikit-image
+        - cython
+        - pyclipper
+        - tqdm 
+        - autopep8 (for formatting)
 
 ## To Run
 
