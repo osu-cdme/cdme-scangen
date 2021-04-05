@@ -8,22 +8,7 @@ The following are required:
 
 - **Microsoft Visual C++ 14.0**: Required for one of the Python libraries; downloading the installer [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and installing the defaults under "C++ Build Tools" (and possibly MSVC v140 if that doesn't work) should be enough.
 - **Python**: Overall codebase runs on it. **Overall codebase is only tested on Python 3.9.1**. We can't speak for other versions, but we know 3.6.8 breaks. 
-- **Python Prerequisites**: A bunch of libraries. Two options for installing all these.
-    1. Run `python -mpip install -r requirements.txt` in the base directory of this repository
-    2. Install the following libraries:
-        - sphinx
-        - numpy
-        - scipy
-        - shapely
-        - networkx
-        - Rtree
-        - trimesh
-        - triangle
-        - scikit-image
-        - cython
-        - pyclipper
-        - tqdm 
-        - autopep8 (for formatting)
+- **Python Prerequisites**: A bunch of libraries. Run `python -mpip install -r requirements.txt` in the base directory of this repository to install them all.
 
 ## To Run
 
