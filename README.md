@@ -12,14 +12,19 @@ The following are required:
 
 ## To Run
 
-The `main.py` file currently has a basic implementation of line scanning and island scanning implemented.
+The `main.py` file currently has basic overall usage implemented, and is pretty well outlined. Simply run it with `python main.py`. 
+
+Experiment with changing the line `myHatcher = hatching.Hatcher()` to `myHatcher = hatching.StripeHatcher()` or `myHatcher = hatching.BasicIslandHatcher()` to try out scan paths other than the basic alternating one.
 
 ## To Develop
 
-1. Set up `autopep8` for formatting. This depends on your editor, but in Visual Studio Code setting the editor setting "Format on Save" is recommended.
+1. Get an editor. 
+    - Visual Studio Code is recommended; the .vscode folder in this repository includes some useful debugger configurations. 
+2. Set up `autopep8` for formatting. 
+    - Visual Studio Code, the editor setting "Format on Save" is recommended.
 
-You're good to start writing new algorithms in the pyslm/genScan folder! There's some documentation on Box inside the "Scan Path Generation" folder; more will be written in the coming weeks. 
+You're good to start writing new algorithms in the PowderBedFusion/genScan folder! There's some documentation on Box inside the "Scan Path Generation" folder; more will be written in the coming weeks. 
 
 ## Attributions
 
-This infrastucture heavily uses [pyslm](https://github.com/drlukeparry/pyslm/), which is built by [@drlukeparry](https://github.com/drlukeparry).
+This infrastucture heavily uses [pyslm](https://github.com/drlukeparry/pyslm/), which is built by [@drlukeparry](https://github.com/drlukeparry). Note that we've done some renaming to make this closer to other bits of our architecture, particularly the OASIS framework.
