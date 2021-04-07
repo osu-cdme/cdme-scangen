@@ -139,6 +139,3 @@ cython_debug/
 
 # Our output files (specific to our system)
 LayerFiles/*
-
-# User-specific config
-.vscode
