@@ -704,31 +704,43 @@ class Hatcher(BaseHatcher):
         """
         Generates a series of contour or boundary offsets along with a basic full region internal hatch.
 
-        :param boundaryFeature: The collection of boundaries of closed polygons within a layer.
+        :param boundaryFeature: The collection of boundaries of closed polygons within a layer. Comes from Part.getVectorSlice(z). 
         :return: A :class:`Layer` object containing a list of :class:`LayerGeometry` objects generated
         """
+
+        # Essentially a check that our input slice isn't empty; boundaryFeature is Part.getVectorSlice(z)'s output.
         if len(boundaryFeature) == 0:
             return
 
+        # Init new layer to hold all the hatches we are about to fill it with
         layer = Layer(0, 0)
-        # First generate a boundary with the spot compensation applied
 
+        # First generate a boundary with the spot compensation applied
+        # Spot compensation is essentially
         offsetDelta = 0.0
         offsetDelta -= self._spotCompensation
 
+        # Generate outer contours by continually updating offsetDelta to be the distance from complete outside to the current contour
         for i in range(self._numOuterContours):
             offsetDelta -= self._contourOffset
             offsetBoundary = self.offsetBoundary(boundaryFeature, offsetDelta)
 
             for poly in offsetBoundary:
                 for path in poly:
+
+                    # Represents a continuous path, unlike hatching, which has jumps included
                     contourGeometry = ContourGeometry()
+
+                    # Grab the actual vertices
                     contourGeometry.coords = np.array(path)[:, :2]
+
+                    # Referenced later (at least, during visualization, if not more)
                     contourGeometry.subType = "outer"
+
                     # Append to the layer
                     layer.geometry.append(contourGeometry)
 
-        # Repeat for inner contours
+        # Repeat the above for inner contours
         for i in range(self._numInnerContours):
 
             offsetDelta -= self._contourOffset
@@ -738,49 +750,68 @@ class Hatcher(BaseHatcher):
                 for path in poly:
                     contourGeometry = ContourGeometry()
                     contourGeometry.coords = np.array(path)[:, :2]
-                    contourGeometry.subType = "inner"
-                    # Append to the layer
+                    contourGeometry.subType = "inner"  # Only difference from above
                     layer.geometry.append(contourGeometry)
 
         # The final offset is applied to the boundary
-
+        # volOffsetHatch is essentially the distance between contours and hatches; very similar to OASIS's hatch-to-contour spacing
         offsetDelta -= self._volOffsetHatch
-
         curBoundary = self.offsetBoundary(boundaryFeature, offsetDelta)
 
+        # The function now moves on from contours and starts generating the actual hatches inside the given boundary
         scanVectors = []
 
+        # This if works correctly if curBoundary is just one boundary; the second loop here (which never gets run because it's the `else` of an `if True`)
+        #   works if curBoundary is an iterable of some sort, likely just a numpy array.
+        # TODO: These code blocks are the same other than the second one doing the iteration; should be an easy way to avoid rewriting that code. For example, make curBoundary a one-long list. I'm just not editing that right now because I'm just documenting and it isn't strictly necessary.
         if True:
+
+            # paths is set to our overall layer geometry set waaaaay inward
             paths = curBoundary
 
+            # Figure out what hatch angle should be this layer
             # Hatch angle will change per layer
             # TODO change the layer angle increment
             layerHatchAngle = np.mod(
                 self._hatchAngle + self._layerAngleIncrement, 180)
 
+            # We constrain hatchAngle to be [-90, 90];
+            # this is because, for example, -30deg is the same as 150deg and we don't want that ambiguity
+
             # The layer hatch angle needs to be bound by +ve X vector (i.e. -90 < theta_h < 90 )
             if layerHatchAngle > 90:
                 layerHatchAngle = layerHatchAngle - 180
+
+            # Actually generates the hatches given the outline of the area we want, the space between hatches (I think?) and the hatch angle
+            # TODO: Verify that _hatchDistance is the same thing as the space between hatches
 
             # Generate the un-clipped hatch regions based on the layer hatchAngle and hatch distance
             hatches = self.generateHatching(
                 paths, self._hatchDistance, layerHatchAngle)
 
+            # The value we get back from generateHatching isn't constrainted to the bounds of the boundary 'paths' that we passed in, so we do that here
             # Clip the hatch fill to the boundary
             clippedPaths = self.clipLines(paths, hatches)
 
             # Merge the lines together
             if len(clippedPaths) > 0:
 
+                # Turns the input clippedPaths sequence into a (nx2x3) numpy array;
+                #   n is # of hatches, 2 is how many vertices per hatch, and 3 is xyz of each vertex
+                # TODO: Figure out: On actual debugging; this array is actually nx2x2... why?
                 clippedLines = self.clipperToHatchArray(clippedPaths)
 
                 # Extract only x-y coordinates and sort based on the pseudo-order stored in the z component.
+                # TODO: Figure out: If we are just grabbing xyz coordinates, shouldn't the indexing be :2 instead of :3?
                 clippedLines = clippedLines[:, :, :3]
                 id = np.argsort(clippedLines[:, 0, 1])
                 clippedLines = clippedLines[id, :, :]
 
                 scanVectors.append(clippedLines)
+
+        # Variant of the `if` block that treats curBoundary like an iterable; I assume it's used if you have several hollow areas, but the current code doesn't treat it that way
         else:
+
             # Iterate through each closed polygon region in the slice. The currently individually sliced.
             for contour in curBoundary:
                 # print('{:=^60} \n'.format(' Generating hatches '))
@@ -816,17 +847,22 @@ class Hatcher(BaseHatcher):
 
                 scanVectors.append(clippedLines)
 
+        # If we have scan vectors...
         if len(clippedLines) > 0:
             # Scan vectors have been created for the hatched region
 
             # Construct a HatchGeometry containing the list of points
+            # HatchGeometry is similar to ContourGeometry, but includes Jump vectors, which ContourGeometry can ignore due to it being one continuous line
             hatchGeom = HatchGeometry()
 
             # Only copy the (x,y) points from the coordinate array.
+            # Essentially transposing it because... sure?
             hatchVectors = np.vstack(scanVectors)
+            # Trim z-coords (this one is expected, the :3 above is something I'm confused by)
             hatchVectors = hatchVectors[:, :, :2].reshape(-1, 2)
 
             # Note the does not require positional sorting
+            # I assume this is for cases where you want to reorder your hatches
             if self.hatchSortMethod:
                 hatchVectors = self.hatchSortMethod.sort(hatchVectors)
 
