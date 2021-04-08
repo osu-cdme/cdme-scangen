@@ -275,9 +275,12 @@ class BaseHatcher(abc.ABC):
         :return: A (1x6) numpy array
         """
 
+        # Essentially iterates through all vertices in boundingBox and gets min-x, min-y, max-x, max-y coordinates
+        # Also has min-z/max-z coordinates, but those are basically completely ignored
         bboxList = [self.polygonBoundingBox(
             boundary) for boundary in boundaries]
 
+        # Takes individual boundary bboxes and compiles them all to get the overall bounding box
         bboxList = np.vstack(bboxList)
         bbox = np.hstack([np.min(bboxList[:, :2], axis=0),
                          np.max(bboxList[:, -2:], axis=0)])
@@ -301,9 +304,13 @@ class BaseHatcher(abc.ABC):
 
         for subObj in obj:
             path = np.array(subObj)[:, :2]  # Use only coordinates in XY plane
+
+            # np.min(path, axis=0) iterates through each coord and returns pair made of minimum x present and minimum y present
+            # The max function works similarly
             bboxList.append(
                 np.hstack([np.min(path, axis=0), np.max(path, axis=0)]))
 
+        # The above loop gets bboxes for individual sequences; this takes the bboxes of all those sequences and outputs one overall bbox square
         bboxList = np.vstack(bboxList)
         bbox = np.hstack([np.min(bboxList[:, :2], axis=0),
                          np.max(bboxList[:, -2:], axis=0)])
