@@ -26,7 +26,7 @@ Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
 # Create a BasicIslandHatcher object for performing any hatching operations (
-myHatcher = hatching.BasicIslandHatcher()
+myHatcher = hatching.Hatcher()
 myHatcher.islandWidth = 3.0
 myHatcher.stripeWidth = 5.0
 
@@ -35,9 +35,9 @@ myHatcher.hatchAngle = 45  # [°] The angle used for the islands
 # [mm] Offset between internal and external boundary
 myHatcher.volumeOffsetHatch = 0.08
 # [mm] Additional offset to account for laser spot size
-myHatcher.spotCompensation = 0.06
+myHatcher.spotCompensation = .06
 myHatcher.numInnerContours = 2
-myHatcher.numOuterContours = 1
+myHatcher.numOuterContours = 2
 myHatcher.hatchSortMethod = hatching.AlternateSort()
 
 # Set the layer thickness
