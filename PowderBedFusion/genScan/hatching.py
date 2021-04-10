@@ -162,11 +162,11 @@ class BaseHatcher(abc.ABC):
     """
 
     PYCLIPPER_SCALEFACTOR = 1e4
-    """ 
+    """
     The scaling factor used for polygon clipping and offsetting in `PyClipper <http://pyclipper.com>`_ for the decimal
-    component of each polygon coordinate. This should be set to inverse of the required decimal tolerance i.e. 0.01 
-    requires a minimum scalefactor of 1e2. This scaling factor is used in :meth:`~BaseHatcher.scaleToClipper` 
-    and :meth:`~BaseHatcher.scaleFromClipper`. 
+    component of each polygon coordinate. This should be set to inverse of the required decimal tolerance i.e. 0.01
+    requires a minimum scalefactor of 1e2. This scaling factor is used in :meth:`~BaseHatcher.scaleToClipper`
+    and :meth:`~BaseHatcher.scaleFromClipper`.
     """
 
     def __init__(self):
@@ -276,7 +276,7 @@ class BaseHatcher(abc.ABC):
         """
 
         # Essentially iterates through all vertices in boundingBox and gets min-x, min-y, max-x, max-y coordinates
-        # Also has min-z/max-z coordinates, but those are basically completely ignored
+        # Would also theoretically work with z-coordinates, but we trim those out at some point in here with all the [:2] stuff
         bboxList = [self.polygonBoundingBox(
             boundary) for boundary in boundaries]
 
@@ -341,7 +341,7 @@ class BaseHatcher(abc.ABC):
                 pc.AddPath(self.scaleToClipper(boundary),
                            pyclipper.PT_CLIP, True)
 
-        #print('time to add polygon', time.time()-startTime, 's')
+        # print('time to add polygon', time.time()-startTime, 's')
         startTime = time.time()
 
         # Reshape line list to create n lines with 2 coords(x,y,z)
@@ -351,14 +351,14 @@ class BaseHatcher(abc.ABC):
 
         pc.AddPaths(lineList, pyclipper.PT_SUBJECT, False)
 
-        #print('time to add hatches', time.time() - startTime, 's')
+        # print('time to add hatches', time.time() - startTime, 's')
         startTime = time.time()
 
         # Note open paths (lines) have to used PyClipper::Execute2 in order to perform trimming
         result = pc.Execute2(pyclipper.CT_INTERSECTION,
                              pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
 
-        #print('time to clip hatches', time.time() - startTime, 's')
+        # print('time to clip hatches', time.time() - startTime, 's')
         startTime = time.time()
 
         # Cast from PolyNode Struct from the result into line paths since this is not a list
@@ -382,24 +382,36 @@ class BaseHatcher(abc.ABC):
         # Hatch angle
         theta_h = np.radians(hatchAngle)  # 'rad'
 
-        # Get the bounding box of the paths
+        # Feed all our paths in, and this gives us a 1x4 array in order min-x, min-y, max-x, max-y
         bbox = self.boundaryBoundingBox(paths)
 
-        #print('bounding box bbox', bbox)
         # Expand the bounding box
+        # This reshape will make the first row min-x/min-y and the second row max-x/max-y,
+        #   and the axis=0 means mean will get the mean of the first elements then the mean of the second elements
+        test = bbox.reshape(2, 2)
         bboxCentre = np.mean(bbox.reshape(2, 2), axis=0)
 
         # Calculates the diagonal length for which is the longest
         diagonal = bbox[2:] - bboxCentre
+
+        # Dotting a vector with itself is square of its magnitude, so this line is just a quick way to get vector magnitude
+        # Not sure why numpy.linalg.norm(diagonal) wasn't used but we don't need to understand the specifics I suppose
         bboxRadius = np.sqrt(diagonal.dot(diagonal))
 
         # Construct a square which wraps the radius
+        # We space hatches along the x and then rotate all the hatches;
+        #   We hatch to the outermost bbox point, so we can do this without worrying
+
+        # Question: This basically duplicates each value; why? Is that intentional?
+        # Answer: The y-values get tiled such that each x-value is tied to a pair of y-values.
         x = np.tile(np.arange(-bboxRadius, bboxRadius, hatchSpacing,
-                    dtype=np.float32).reshape(-1, 1), (2)).flatten()
+                              dtype=np.float32).reshape(-1, 1), (2)).flatten()
         y = np.array([-bboxRadius, bboxRadius])
         y = np.resize(y, x.shape)
         z = np.arange(0, x.shape[0] / 2, 0.5).astype(np.int64)
 
+        # This doesn't just contenate them all; this basically says that the first triplet is the first x, the first
+        # y, then the first z, then does so with the second, and on and on and on...
         coords = np.hstack([x.reshape(-1, 1),
                             y.reshape(-1, 1),
                             z.reshape(-1, 1)])
@@ -425,7 +437,7 @@ class BaseHatcher(abc.ABC):
         """
         return np.transpose(np.dstack(coords), axes=[2, 0, 1])
 
-    @abc.abstractmethod
+    @ abc.abstractmethod
     def hatch(self, boundaryFeature) -> Layer:
         """
         The hatch method should be re-implemented by a child class to generate a :class:`Layer` containing the scan
@@ -518,12 +530,12 @@ class InnerHatchRegion(abc.ABC):
                       (s, c, 0),
                       (0, 0, 1.0)])
 
-        #T = np.diag([1.0,1.0,0])
-        #T[:2,:2] = self._origin
+        # T = np.diag([1.0,1.0,0])
+        # T[:2,:2] = self._origin
 
         return R
 
-    @property
+    @ property
     def orientation(self) -> float:
         """
         The orientation describes the rotation of the local coordinate system with respect to the global
@@ -531,16 +543,16 @@ class InnerHatchRegion(abc.ABC):
         """
         return self._orientation
 
-    @orientation.setter
+    @ orientation.setter
     def orientation(self, angle: float):
         self._orientation = angle
 
-    @property
+    @ property
     def origin(self):
         """ The origin is the :math:`(x\\prime,y\\prime)` position of of the local coordinate system. """
         return self._origin
 
-    @origin.setter
+    @ origin.setter
     def origin(self, coord):
         self._origin = coord
 
@@ -563,7 +575,7 @@ class InnerHatchRegion(abc.ABC):
     def __str__(self):
         return 'InnerHatchRegion <{:s}>'
 
-    @abc.abstractmethod
+    @ abc.abstractmethod
     def boundary(self) -> ShapelyPolygon:
         """ The boundary of the internal region
 
@@ -584,7 +596,7 @@ class InnerHatchRegion(abc.ABC):
         """
         return self._requiresClipping
 
-    @abc.abstractmethod
+    @ abc.abstractmethod
     def hatch(self) -> np.ndarray:
         """
         The hatch method should provide a list of hatch vectors, within the boundary. This must  be re-implemented in
@@ -619,25 +631,25 @@ class Hatcher(BaseHatcher):
         self._hatchAngle = 45
         self._hatchSortMethod = None
 
-    @property
+    @ property
     def hatchDistance(self) -> float:
         """ The distance between adjacent hatch scan vectors. """
         return self._hatchDistance
 
-    @hatchDistance.setter
+    @ hatchDistance.setter
     def hatchDistance(self, value: float):
         self._hatchDistance = value
 
-    @property
+    @ property
     def hatchAngle(self) -> float:
         """ The base hatch angle used for hatching the region expressed in degrees :math:`[-180,180]`."""
         return self._hatchAngle
 
-    @hatchAngle.setter
+    @ hatchAngle.setter
     def hatchAngle(self, value: float):
         self._hatchAngle = value
 
-    @property
+    @ property
     def layerAngleIncrement(self) -> float:
         """
         An additional offset used to increment the hatch angle between layers in degrees. This is typically set to
@@ -645,16 +657,16 @@ class Hatcher(BaseHatcher):
         By default this is set to 0.0"""
         return self._layerAngleIncrement
 
-    @layerAngleIncrement.setter
+    @ layerAngleIncrement.setter
     def layerAngleIncrement(self, value):
         self._layerAngleIncrement = value
 
-    @property
+    @ property
     def hatchSortMethod(self):
         """ The hatch sort method used once the hatch vectors have been generated """
         return self._hatchSortMethod
 
-    @hatchSortMethod.setter
+    @ hatchSortMethod.setter
     def hatchSortMethod(self, sortObj):
         if not isinstance(sortObj, BaseSort):
             raise TypeError(
@@ -662,29 +674,29 @@ class Hatcher(BaseHatcher):
 
         self._hatchSortMethod = sortObj
 
-    @property
+    @ property
     def numInnerContours(self) -> int:
         """
         The total number of inner contours to generate by offsets from the boundary region.
         """
         return self._numInnerContours
 
-    @numInnerContours.setter
+    @ numInnerContours.setter
     def numInnerContours(self, value: int):
         self._numInnerContours = value
 
-    @property
+    @ property
     def numOuterContours(self) -> int:
         """
         The total number of outer contours to generate by offsets from the boundary region.
         """
         return self._numOuterContours
 
-    @numOuterContours.setter
+    @ numOuterContours.setter
     def numOuterContours(self, value: int):
         self._numOuterContours = value
 
-    @property
+    @ property
     def spotCompensation(self) -> float:
         """
         The spot (laser point) compensation factor is the distance to offset the outer-boundary and other internal hatch
@@ -692,18 +704,18 @@ class Hatcher(BaseHatcher):
         """
         return self._spotCompensation
 
-    @spotCompensation.setter
+    @ spotCompensation.setter
     def spotCompensation(self, value: float):
         self._spotCompensation = value
 
-    @property
+    @ property
     def volumeOffsetHatch(self) -> float:
         """
         An additional offset may be added (positive or negative) between the contour and the internal hatching.
         """
         return self._volOffsetHatch
 
-    @volumeOffsetHatch.setter
+    @ volumeOffsetHatch.setter
     def volumeOffsetHatch(self, value: float):
         self._volOffsetHatch = value
 
@@ -711,7 +723,7 @@ class Hatcher(BaseHatcher):
         """
         Generates a series of contour or boundary offsets along with a basic full region internal hatch.
 
-        :param boundaryFeature: The collection of boundaries of closed polygons within a layer. Comes from Part.getVectorSlice(z). 
+        :param boundaryFeature: The collection of boundaries of closed polygons within a layer. Comes from Part.getVectorSlice(z).
         :return: A :class:`Layer` object containing a list of :class:`LayerGeometry` objects generated
         """
 
@@ -883,7 +895,7 @@ class Hatcher(BaseHatcher):
 class StripeHatcher(Hatcher):
     """
     The Stripe Hatcher extends the standard :class:`Hatcher` but generates a set of stripe hatches of a fixed width
-    (:attr:`~.stripeWidth`) to cover a region. 
+    (:attr:`~.stripeWidth`) to cover a region.
     This has the effect of limiting the max length of the scan vectors  across a region in order to mitigate the
     effects of residual stress.
     """
@@ -898,30 +910,30 @@ class StripeHatcher(Hatcher):
     def __str__(self):
         return 'StripeHatcher'
 
-    @property
+    @ property
     def stripeWidth(self) -> float:
         """ The stripe width """
         return self._stripeWidth
 
-    @stripeWidth.setter
+    @ stripeWidth.setter
     def stripeWidth(self, width):
         self._stripeWidth = width
 
-    @property
+    @ property
     def stripeOverlap(self) -> float:
         """ The length of overlap between adjacent stripes"""
         return self._stripeOverlap
 
-    @stripeOverlap.setter
+    @ stripeOverlap.setter
     def stripeOverlap(self, overlap: float):
         self._stripeOverlap = overlap
 
-    @property
+    @ property
     def stripeOffset(self) -> float:
         """ The stripe offset is the relative distance (hatch spacing) to move the scan vectors between adjacent stripes"""
         return self._stripeOffset
 
-    @stripeOffset.setter
+    @ stripeOffset.setter
     def stripeOffset(self, offset: float):
         self._stripeOffset = offset
 
@@ -995,7 +1007,7 @@ class StripeHatcher(Hatcher):
 class BasicIslandHatcher(Hatcher):
     """
     BasicIslandHatcher extends the standard :class:`Hatcher` and generates a set of islands of fixed size (:attr:`.islandWidth`)
-    which covers a region. This has the effect of limiting the max length of the scan whilst by orientating the scan vectors orthogonal to each other 
+    which covers a region. This has the effect of limiting the max length of the scan whilst by orientating the scan vectors orthogonal to each other
     mitigating any preferential distortion or curling in a single direction and any effects to micro-structure.
 
     """
@@ -1011,30 +1023,30 @@ class BasicIslandHatcher(Hatcher):
     def __str__(self):
         return 'IslandHatcher'
 
-    @property
+    @ property
     def islandWidth(self) -> float:
         """ The island width """
         return self._islandWidth
 
-    @islandWidth.setter
+    @ islandWidth.setter
     def islandWidth(self, width: float):
         self._islandWidth = width
 
-    @property
+    @ property
     def islandOverlap(self) -> float:
         """ The length of overlap between adjacent islands"""
         return self._islandOverlap
 
-    @islandOverlap.setter
+    @ islandOverlap.setter
     def islandOverlap(self, overlap: float):
         self._islandOverlap = overlap
 
-    @property
+    @ property
     def islandOffset(self) -> float:
         """ The island offset is the relative distance (hatch spacing) to move the scan vectors between adjacent checkers. """
         return self._islandOffset
 
-    @islandOffset.setter
+    @ islandOffset.setter
     def islandOffset(self, offset: float):
         self._islandOffset = offset
 
