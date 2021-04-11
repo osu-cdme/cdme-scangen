@@ -404,6 +404,7 @@ class BaseHatcher(abc.ABC):
 
         # Question: This basically duplicates each value; why? Is that intentional?
         # Answer: The y-values get tiled such that each x-value is tied to a pair of y-values.
+        # Presumably, we tile this twice because even at 45deg, we will still have enough hatches to fill the entire area
         x = np.tile(np.arange(-bboxRadius, bboxRadius, hatchSpacing,
                               dtype=np.float32).reshape(-1, 1), (2)).flatten()
         y = np.array([-bboxRadius, bboxRadius])
