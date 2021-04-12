@@ -1,3 +1,4 @@
+# pyslm requirements
 sphinx
 numpy
 scipy
@@ -9,5 +10,8 @@ triangle
 scikit-image
 cython
 pyclipper
-autopep8
-tqdm
+
+# Our requirements
+autopep8 # formatting as per 
+tqdm # progress bars
+nptyping # supports type hints for numpy
