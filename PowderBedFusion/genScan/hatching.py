@@ -1079,8 +1079,12 @@ class BasicIslandHatcher(Hatcher):
         hatchOrder = 0
         coords = []
 
-        for i in np.arange(0, numIslands):
-            for j in np.arange(0, numIslands):
+        order1 = np.random.permutation(np.arange(0, numIslands))
+        order2 = np.random.permutation(np.arange(0, numIslands))
+
+        # Iterate through islands and gen hatches
+        for i in order1:
+            for j in order2:
 
                 startX = -bboxRadius + i * \
                     (self._islandWidth) - self._islandOverlap
@@ -1130,6 +1134,6 @@ class BasicIslandHatcher(Hatcher):
 
         # Apply the rotation matrix and translate to bounding box centre
         coords = np.matmul(R, coords.T)
-        coords = coords.T + np.hstack([bboxCentre, 0.0])
+        coords = coords.T + np.hstack([bboxCentre, 0.0])j
 
         return coords

@@ -26,9 +26,10 @@ Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
 # Create a BasicIslandHatcher object for performing any hatching operations (
-myHatcher = hatching.Hatcher()
+myHatcher = hatching.BasicIslandHatcher()
 myHatcher.islandWidth = 3.0
-myHatcher.stripeWidth = 5.0
+myHatcher.islandOffset = 0
+myHatcher.islandOverlap = 0
 
 # Set the base hatching parameters which are generated within Hatcher
 myHatcher.hatchAngle = 45  # [°] The angle used for the islands
