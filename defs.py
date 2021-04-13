@@ -17,7 +17,7 @@ class Vertex:
             self.y = args[0].y
 
         # x/y pair
-        elif isinstance(args[0], int) and isinstance(args[1], int):
+        elif isinstance(args[0], (int, float)) and isinstance(args[1], (int, float)):
             self.x = args[0]
             self.y = args[1]
 
@@ -43,11 +43,11 @@ class Segment:
             self.v2 = args[1]
 
         # Four-Coordinate Variant
-        if isinstance(args[0], float) and isinstance(args[1], float) and isinstance(args[2], float) and isinstance(args[3], float):
+        if (args[0], float) and isinstance(args[1], float) and isinstance(args[2], float) and isinstance(args[3], float):
             self.v1 = Vertex(args[0], args[1])
             self.v2 = Vertex(args[2], args[3])
 
-        self.length = math.dist([v1.x, v1.y], [v2.x, v2.y])
+        self.length = math.dist([self.v1.x, self.v1.y], [self.v2.x, self.v2.y])
 
     def __str__(self):
         return "<{}->{}>".format(self.v1, self.v2)
