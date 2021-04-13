@@ -8,8 +8,8 @@ Welcome to osu-cdme-scan-generation's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   modules
 
 
 Indices and tables

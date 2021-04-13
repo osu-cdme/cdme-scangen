@@ -6,6 +6,15 @@ import numpy
 
 
 def line_intersects_line(s1: Segment, s2: Segment) -> Vertex:
+    """Calculates the intersection point of two segments.
+
+    :param s1: The first segment.
+    :type s1: Segment
+    :param s2: The second segment.
+    :type s2: Segment
+    :return: If no intersection exists, None. If an intersection exists, the intersection point.
+    :rtype: Vertex
+    """
     def det(a, b, c, d):
         return a * d - b * c
 

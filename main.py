@@ -18,9 +18,8 @@ from tqdm import tqdm
 # Local Imports
 import PowderBedFusion
 from PowderBedFusion import hatching
-import standardization
 from PowderBedFusion.genLayer import HatchGeometry
-from standardization import split_long_vectors
+from src.standardization.shortening import split_long_vectors
 
 Part = PowderBedFusion.Part('Parameter_quality_nut_2')
 Part.setGeometry('Parameter_quality_nut_2.stl')
