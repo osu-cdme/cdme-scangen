@@ -28,8 +28,8 @@ import timeit
 from defs import Vertex, Segment, BoundingBox
 
 
-@njit
-def split_long_vectors(segment_list: NDArray[Segment], cutoff: int) -> NDArray[Segment]:
+# @njit
+def split_long_vectors(vertex_list: np.ndarray, cutoff: int) -> NDArray[Segment]:
     """Splits a given list of segments such that no post-split segment is longer than `cutoff`.
 
     :param segment_list: A list of segments that should be split.
@@ -40,14 +40,30 @@ def split_long_vectors(segment_list: NDArray[Segment], cutoff: int) -> NDArray[S
     :rtype: np.array[class:`Segment`]
     """
 
+    # Convert our input vertices to segments
+    segment_list = np.empty(len(vertex_list) // 2, dtype=object)
+    for i in np.arange(0, len(vertex_list), 2):
+        segment_list[i // 2] = Segment(vertex_list[i, 0], vertex_list[i, 1],
+                                       vertex_list[i+1, 0], vertex_list[i+1, 1])
+
     # We know we will have at least as many segments as were passed in, so we preallocate to that
-    output = np.empty(len(segment_list))
-    for segment in segment_list:
-        output.put(split_vector(segment, cutoff))
+    split_segments = np.empty(0, dtype=object)
+    for i in range(len(segment_list)):
+        split_segments = np.append(
+            split_segments, split_vector(segment_list[i], cutoff))
+
+    # Convert segments back into vertices
+    output = np.empty((len(split_segments) * 2, 2), dtype=np.ndarray)
+    for i in range(len(split_segments)):
+        output[2 * i] = np.array([split_segments[i].v1.x,
+                                 split_segments[i].v1.y])
+        output[2 * i +
+               1] = np.array([split_segments[i].v2.x, split_segments[i].v2.y])
+
     return output
 
 
-@njit
+# @njit
 def split_vector(segment: Segment, cutoff: int) -> NDArray[Segment]:
     """Splits a given segment into segments such that each individual segment is no longer than `cutoff`.
 
@@ -66,21 +82,21 @@ def split_vector(segment: Segment, cutoff: int) -> NDArray[Segment]:
         return [segment]
 
     # Iterate along the segment by distance
-    output = np.array()
+    output = []
     segments_away = 1
     start_point = Vertex(segment.v1)
     end_point = get_scaled_point(
         segment, cutoff * segments_away // segment.length)
-    while math.dist(end_point, segment.v1) <= segment.length + .0000001:
-        output.put(Segment(start_point, end_point))
+    while math.dist([end_point.x, end_point.y], [segment.v1.x, segment.v1.y]) <= segment.length + .0000001:
+        output.append(Segment(start_point, end_point))
         segments_away += 1
         start_point = deepcopy(end_point)
         end_point = get_scaled_point(
             segment, (cutoff * segments_away) // segment.length)
-    return output
+    return np.array(output)
 
 
-@njit
+# @ njit
 def get_scaled_point(segment: Segment, fraction: float) -> Vertex:
     """Takes the provided segment and returns the subsegment starting at the provided fraction along the part.
 

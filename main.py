@@ -19,6 +19,8 @@ from tqdm import tqdm
 import PowderBedFusion
 from PowderBedFusion import hatching
 import standardization
+from PowderBedFusion.genLayer import HatchGeometry
+from standardization import split_long_vectors
 
 Part = PowderBedFusion.Part('Parameter_quality_nut_2')
 Part.setGeometry('Parameter_quality_nut_2.stl')
@@ -53,7 +55,14 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     geom_slice = Part.getVectorSlice(z)  # Slice layer
     layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
-    # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
+    # Split into smaller vectors by a defined cutoff
+    CUTOFF = .25  # mm
+    for geometry in layer.geometry:
+        if isinstance(geometry, HatchGeometry):
+            coords = split_long_vectors(geometry.coords, CUTOFF)
+            geometry.coords = coords
+
+            # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
     for geometry in layer.geometry:
         geometry.mid = 1

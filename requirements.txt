@@ -12,7 +12,7 @@ cython
 pyclipper
 
 # Our requirements
-autopep8 # formatting as per 
+autopep8 # formatting as per the pep8 standard
 tqdm # progress bars
 nptyping # supports type hints for numpy
 numba # Offers some decorators that perform JIT compilation (https://numba.pydata.org/)
