@@ -43,7 +43,7 @@ class Segment:
             self.v2 = args[1]
 
         # Four-Coordinate Variant
-        if (args[0], float) and isinstance(args[1], float) and isinstance(args[2], float) and isinstance(args[3], float):
+        if (args[0], (int, float)) and isinstance(args[1], (int, float)) and isinstance(args[2], (int, float)) and isinstance(args[3], (int, float)):
             self.v1 = Vertex(args[0], args[1])
             self.v2 = Vertex(args[2], args[3])
 
