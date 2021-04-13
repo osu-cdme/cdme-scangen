@@ -15,3 +15,4 @@ pyclipper
 autopep8 # formatting as per 
 tqdm # progress bars
 nptyping # supports type hints for numpy
+numba # Offers some decorators that perform JIT compilation (https://numba.pydata.org/)
