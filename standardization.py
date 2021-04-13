@@ -8,7 +8,9 @@ Provides:
 
 Relies on the following third-party libraries:
 1. `numpy` for faster array operations
-2. `numba` for just-in-time compilation
+
+Potential Optimizations:
+1. Use the `numba` library, which allows you to JIT-compile some code.
 
 Notes:
 - Functions have docstrings autoconfigured to work with Sphinx. That is not currently set up, but you should be able to set it up to automatically generate documentation formatted identically to https://pyslm.readthedocs.io/en/latest/index.html using the docstrings found here.
@@ -21,14 +23,12 @@ from copy import deepcopy
 # Third-Party Imports
 import numpy as np
 from nptyping import NDArray
-from numba import njit
 import timeit
 
 # Local Imports
 from defs import Vertex, Segment, BoundingBox
 
 
-# @njit
 def split_long_vectors(vertex_list: np.ndarray, cutoff: int) -> NDArray[Segment]:
     """Splits a given list of segments such that no post-split segment is longer than `cutoff`.
 
@@ -63,7 +63,6 @@ def split_long_vectors(vertex_list: np.ndarray, cutoff: int) -> NDArray[Segment]
     return output
 
 
-# @njit
 def split_vector(segment: Segment, cutoff: int) -> NDArray[Segment]:
     """Splits a given segment into segments such that each individual segment is no longer than `cutoff`.
 
@@ -96,7 +95,6 @@ def split_vector(segment: Segment, cutoff: int) -> NDArray[Segment]:
     return np.array(output)
 
 
-# @ njit
 def get_scaled_point(segment: Segment, fraction: float) -> Vertex:
     """Takes the provided segment and returns the subsegment starting at the provided fraction along the part.
 
