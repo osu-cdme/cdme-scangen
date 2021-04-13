@@ -1,15 +1,19 @@
 """
-Vector Standardization
-=====
+Vector Shortening
+=================
 
 Provides:
+
 1. Splitting vectors above a certain length via `split_long_vectors()`
+
 2. "Extending" vectors below a certain length by adding jump vectors via `extend_short_vectors()`
 
 Relies on the following third-party libraries:
+
 1. `numpy` for faster array operations
 
 Potential Optimizations:
+
 1. Use the `numba` library, which allows you to JIT-compile some code.
 
 Notes:
@@ -26,7 +30,7 @@ from nptyping import NDArray
 import timeit
 
 # Local Imports
-from defs import Vertex, Segment, BoundingBox
+from .defs import Vertex, Segment, BoundingBox
 
 
 def split_long_vectors(vertex_list: np.ndarray, cutoff: int) -> NDArray[Segment]:

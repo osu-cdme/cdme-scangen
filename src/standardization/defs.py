@@ -3,6 +3,7 @@ import math
 
 
 class Vertex:
+    """A generic vertex object."""
 
     def __init__(self, *args, **kwargs):
 
@@ -30,6 +31,8 @@ class Vertex:
 
 
 class Segment:
+    """A generic class:`Segment` object made up of two vertices."""
+
     def __init__(self, *args, **kwargs):
 
         # Zero-argument constructor
@@ -54,6 +57,8 @@ class Segment:
 
 
 class BoundingBox:
+    """A generic Bounding Box object representing an area by two corners."""
+
     def __init__(self, tl: Vertex = Vertex(), tr: Vertex = Vertex(), bl: Vertex = Vertex(), br: Vertex = Vertex()):
         self.tl = tl
         self.tr = tr
