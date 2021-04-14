@@ -21,8 +21,8 @@ from PowderBedFusion import hatching
 from PowderBedFusion.genLayer import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 
-Part = PowderBedFusion.Part('Parameter_quality_nut_2')
-Part.setGeometry('Parameter_quality_nut_2.stl')
+Part = PowderBedFusion.Part('nist')
+Part.setGeometry('nist.stl')
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
@@ -55,13 +55,15 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
     # Split into smaller vectors by a defined cutoff
+    '''
     CUTOFF = .25  # mm
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = split_long_vectors(geometry.coords, CUTOFF)
             geometry.coords = coords
+    '''
 
-            # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
+    # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
     for geometry in layer.geometry:
         geometry.mid = 1
