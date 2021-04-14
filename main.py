@@ -22,7 +22,7 @@ from PowderBedFusion.genLayer import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 
 Part = PowderBedFusion.Part('nist')
-Part.setGeometry('nist.stl')
+Part.setGeometry('TestGeometry/nut.stl')
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
@@ -69,6 +69,10 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         geometry.mid = 1
         geometry.bid = 1
     layers.append(layer)
+
+    # Change hatch angle every layer
+    myHatcher.hatchAngle += 66.7
+    myHatcher.hatchAngle %= 360
 
 bstyle = PowderBedFusion.genLayer.BuildStyle()
 bstyle.bid = 1
