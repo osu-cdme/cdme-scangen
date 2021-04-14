@@ -18,6 +18,7 @@ from tqdm import tqdm
 # Local Imports
 import PowderBedFusion
 from PowderBedFusion import hatching
+from src.island.island import BasicIslandHatcherRandomOrder
 
 Part = PowderBedFusion.Part('Parameter_quality_nut_2')
 Part.setGeometry('Parameter_quality_nut_2.stl')
