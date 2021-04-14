@@ -1079,56 +1079,46 @@ class BasicIslandHatcher(Hatcher):
         hatchOrder = 0
         coords = []
 
-        # Generate random order
-        island_order = np.empty((numIslands ** 2, 2), dtype=int)
-        idx = 0
         for i in np.arange(0, numIslands):
             for j in np.arange(0, numIslands):
-                island_order[idx] = np.array([i, j])
-                idx += 1
-        np.random.shuffle(island_order)
 
-        # Iterate through islands and gen hatches
-        for island_coords in island_order:
-            i, j = island_coords[0], island_coords[1]
+                startX = -bboxRadius + i * \
+                    (self._islandWidth) - self._islandOverlap
+                endX = startX + (self._islandWidth) + self._islandOverlap
 
-            startX = -bboxRadius + i * \
-                (self._islandWidth) - self._islandOverlap
-            endX = startX + (self._islandWidth) + self._islandOverlap
+                startY = -bboxRadius + j * \
+                    (self._islandWidth) - self._islandOverlap
+                endY = startY + (self._islandWidth) + self._islandOverlap
 
-            startY = -bboxRadius + j * \
-                (self._islandWidth) - self._islandOverlap
-            endY = startY + (self._islandWidth) + self._islandOverlap
+                if np.mod(i + j, 2):
+                    y = np.tile(np.arange(startY + np.mod(i + j, 2) * self._islandOffset * hatchSpacing,
+                                          endY +
+                                          np.mod(i + j, 2) * self._islandOffset *
+                                          hatchSpacing, hatchSpacing,
+                                          dtype=np.float32).reshape(-1, 1), (2)).flatten()
 
-            if np.mod(i + j, 2):
-                y = np.tile(np.arange(startY + np.mod(i + j, 2) * self._islandOffset * hatchSpacing,
-                                      endY +
-                                      np.mod(i + j, 2) * self._islandOffset *
-                                      hatchSpacing, hatchSpacing,
-                                      dtype=np.float32).reshape(-1, 1), (2)).flatten()
+                    x = np.array([startX, endX])
+                    x = np.resize(x, y.shape)
+                    z = np.arange(hatchOrder, hatchOrder +
+                                  y.shape[0] / 2, 0.5).astype(np.int64)
 
-                x = np.array([startX, endX])
-                x = np.resize(x, y.shape)
-                z = np.arange(hatchOrder, hatchOrder +
-                              y.shape[0] / 2, 0.5).astype(np.int64)
+                else:
+                    x = np.tile(np.arange(startX + np.mod(i + j, 2) * self._islandOffset * hatchSpacing,
+                                          endX +
+                                          np.mod(i + j, 2) * self._islandOffset *
+                                          hatchSpacing, hatchSpacing,
+                                          dtype=np.float32).reshape(-1, 1), (2)).flatten()
 
-            else:
-                x = np.tile(np.arange(startX + np.mod(i + j, 2) * self._islandOffset * hatchSpacing,
-                                      endX +
-                                      np.mod(i + j, 2) * self._islandOffset *
-                                      hatchSpacing, hatchSpacing,
-                                      dtype=np.float32).reshape(-1, 1), (2)).flatten()
+                    y = np.array([startY, endY])
+                    y = np.resize(y, x.shape)
+                    z = np.arange(hatchOrder, hatchOrder +
+                                  y.shape[0] / 2, 0.5).astype(np.int64)
 
-                y = np.array([startY, endY])
-                y = np.resize(y, x.shape)
-                z = np.arange(hatchOrder, hatchOrder +
-                              y.shape[0] / 2, 0.5).astype(np.int64)
+                hatchOrder += x.shape[0] / 2
 
-            hatchOrder += x.shape[0] / 2
-
-            coords += [np.hstack([x.reshape(-1, 1),
-                                  y.reshape(-1, 1),
-                                  z.reshape(-1, 1)])]
+                coords += [np.hstack([x.reshape(-1, 1),
+                                      y.reshape(-1, 1),
+                                      z.reshape(-1, 1)])]
 
         coords = np.vstack(coords)
 
