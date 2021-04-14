@@ -1134,6 +1134,6 @@ class BasicIslandHatcher(Hatcher):
 
         # Apply the rotation matrix and translate to bounding box centre
         coords = np.matmul(R, coords.T)
-        coords = coords.T + np.hstack([bboxCentre, 0.0])j
+        coords = coords.T + np.hstack([bboxCentre, 0.0])
 
         return coords
