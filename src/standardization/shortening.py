@@ -93,7 +93,8 @@ def split_vector(segment: Segment, cutoff: int) -> NDArray[Segment]:
     while math.dist([end_point.x, end_point.y], [segment.v1.x, segment.v1.y]) <= segment.length + .0000001:
         output.append(Segment(start_point, end_point))
         segments_away += 1
-        start_point = deepcopy(end_point)
+        start_point.x = end_point.x
+        start_point.y = end_point.y
         end_point = get_scaled_point(
             segment, (cutoff * segments_away) // segment.length)
     return np.array(output)
