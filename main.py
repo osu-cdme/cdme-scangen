@@ -63,7 +63,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     # Vector Splitting; to use, switch to Hatcher()
     '''
-    CUTOFF = .25  # mm
+    CUTOFF = 2  # mm
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = split_long_vectors(geometry.coords, CUTOFF)
@@ -71,11 +71,13 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     '''
 
     # Vector Lengthening; to use, switch to Hatcher()
-    CUTOFF = .5 # mm
+    '''
+    CUTOFF = 2 # mm
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = lengthen_short_vectors(geometry.coords, CUTOFF)
             geometry.coords = coords
+    '''
 
     # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
@@ -100,11 +102,11 @@ model.mid = 1
 model.buildStyles.append(bstyle)
 resolution = 0.2
 
-# Plot the results
-# pyslm.visualise.plotLayers(layers[0:len(layers)])
-# plt.show()
-
+# Output Options 
 GENERATE_OUTPUT = True
+OUTPUT_PNG = True 
+OUTPUT_SVG = False 
+
 if GENERATE_OUTPUT:
 
     # Create/wipe folder
@@ -118,8 +120,13 @@ if GENERATE_OUTPUT:
     for i in tqdm(range(len(layers)), desc="Generating Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=False, plotHatches=True, plotContours=True, handle=(fig, ax))
-        fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
+            layers[i], plot3D=False, plotOrderLine=True, plotHatches=True, plotContours=True, handle=(fig, ax))
+
+        if OUTPUT_PNG:
+            fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
+        if OUTPUT_SVG:
+            fig.savefig("LayerFiles/Layer{}.svg".format(i), bbox_inches='tight')
+
         plt.cla()
         plt.close(fig)
 
