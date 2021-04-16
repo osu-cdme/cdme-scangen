@@ -8,7 +8,6 @@ This library generates the scan vectors used in Powder Bed Fusion (PBF) Additive
 Clone the repository **with submodules** with the command `git clone https://github.com/harshilpatel1799/PowderBedFusion_ScanGenerator --recurse-submodules`. You can optionally specify a folder name by including it as another command line parameter after the URL. 
 - We need to clone with submodules because we keep a library we hook into, `pyslm`, as a submodule, which makes it easy to contribute back into the library should we make changes beneficial to the overall community.
 - If you cloned normally by mistake, either delete and reclone or execute `git submodule update --init --recursive`.
-- To update all submodules to their most recent remote commit, execute `http://openmetric.org/til/programming/git-pull-with-submodule/`. 
 
 See [here](http://openmetric.org/til/programming/git-pull-with-submodule/) and [here](https://stackoverflow.com/questions/1030169/easy-way-to-pull-latest-of-all-git-submodules) for more details.
 
