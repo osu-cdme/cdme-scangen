@@ -6,8 +6,6 @@ Provides:
 
 1. Splitting vectors above a certain length via `split_long_vectors()`
 
-2. "Extending" vectors below a certain length by adding jump vectors via `extend_short_vectors()`
-
 Relies on the following third-party libraries:
 
 1. `numpy` for faster array operations
