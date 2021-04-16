@@ -23,6 +23,7 @@ import pyslm.visualise
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
+from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 
 
@@ -33,7 +34,7 @@ Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
 # Create a BasicIslandHatcher object for performing any hatching operations (
-myHatcher = hatching.BasicIslandHatcher()
+myHatcher = hatching.Hatcher()
 myHatcher.islandWidth = 3.0
 myHatcher.islandOffset = 0
 myHatcher.islandOverlap = 0
@@ -60,7 +61,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     geom_slice = Part.getVectorSlice(z)  # Slice layer
     layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
-    # Split into smaller vectors by a defined cutoff
+    # Vector Splitting; to use, switch to Hatcher()
     '''
     CUTOFF = .25  # mm
     for geometry in layer.geometry:
@@ -68,6 +69,13 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
             coords = split_long_vectors(geometry.coords, CUTOFF)
             geometry.coords = coords
     '''
+
+    # Vector Lengthening; to use, switch to Hatcher()
+    CUTOFF = .5 # mm
+    for geometry in layer.geometry:
+        if isinstance(geometry, HatchGeometry):
+            coords = lengthen_short_vectors(geometry.coords, CUTOFF)
+            geometry.coords = coords
 
     # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
