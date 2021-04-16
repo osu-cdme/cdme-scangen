@@ -3,10 +3,11 @@ Created on Wed Feb  3 14:37:32 2021
 
 @author: harsh
 
-Example showing how to use pyPowderBedFusion for generating scan vector
+Example showing how to use pypyslm for generating scan vector
 """
 
 # Standard Library Imports
+import sys
 import os
 import glob
 
@@ -16,12 +17,15 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # Local Imports
-import PowderBedFusion
-from PowderBedFusion import hatching
-from PowderBedFusion.genLayer import HatchGeometry
+sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
+import pyslm
+import pyslm.visualise
+from pyslm.hatching import hatching
+from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 
-Part = PowderBedFusion.Part('nist')
+
+Part = pyslm.Part('nist')
 Part.setGeometry('TestGeometry/nut.stl')
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
@@ -74,20 +78,20 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
 
-bstyle = PowderBedFusion.genLayer.BuildStyle()
+bstyle = pyslm.geometry.BuildStyle()
 bstyle.bid = 1
 bstyle.laserSpeed = 200.0  # [mm/s]
 bstyle.laserPower = 200  # [W]#
 bstyle.pointDistance = 60  # (60 microns)
 bstyle.pointExposureTime = 30  # (30 micro seconds)
 
-model = PowderBedFusion.genLayer.Model()
+model = pyslm.geometry.Model()
 model.mid = 1
 model.buildStyles.append(bstyle)
 resolution = 0.2
 
 # Plot the results
-# PowderBedFusion.outputtools.plotLayers(layers[0:len(layers)])
+# pyslm.visualize.plotLayers(layers[0:len(layers)])
 # plt.show()
 
 GENERATE_OUTPUT = True
@@ -103,7 +107,7 @@ if GENERATE_OUTPUT:
     # Generate new output
     for i in tqdm(range(len(layers)), desc="Generating Plots"):
         fig, ax = plt.subplots()
-        PowderBedFusion.outputtools.plot(
+        pyslm.visualize.plot(
             layers[i], plot3D=False, plotOrderLine=False, plotHatches=True, plotContours=True, handle=(fig, ax))
         fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
         plt.cla()
@@ -113,6 +117,6 @@ if GENERATE_OUTPUT:
 If we want to change to a subplot-based system, here's most of the code for it:
 NUM_ROWS, NUM_COLS = 200, 2
 fig, axarr = plt.subplots(NUM_ROWS, NUM_COLS)
-PowderBedFusion.outputtools.plot(layers[i], plot3D=False, plotOrderLine=True,
+pyslm.visualize.plot(layers[i], plot3D=False, plotOrderLine=True,
                                  plotHatches=True, plotContours=True, handle=(fig, axarr[i // NUM_COLS, i % NUM_COLS]))
 '''
