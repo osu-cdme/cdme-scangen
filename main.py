@@ -91,7 +91,7 @@ model.buildStyles.append(bstyle)
 resolution = 0.2
 
 # Plot the results
-# pyslm.visualize.plotLayers(layers[0:len(layers)])
+# pyslm.visualise.plotLayers(layers[0:len(layers)])
 # plt.show()
 
 GENERATE_OUTPUT = True
@@ -107,7 +107,7 @@ if GENERATE_OUTPUT:
     # Generate new output
     for i in tqdm(range(len(layers)), desc="Generating Plots"):
         fig, ax = plt.subplots()
-        pyslm.visualize.plot(
+        pyslm.visualise.plot(
             layers[i], plot3D=False, plotOrderLine=False, plotHatches=True, plotContours=True, handle=(fig, ax))
         fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
         plt.cla()
@@ -117,6 +117,6 @@ if GENERATE_OUTPUT:
 If we want to change to a subplot-based system, here's most of the code for it:
 NUM_ROWS, NUM_COLS = 200, 2
 fig, axarr = plt.subplots(NUM_ROWS, NUM_COLS)
-pyslm.visualize.plot(layers[i], plot3D=False, plotOrderLine=True,
+pyslm.visualise.plot(layers[i], plot3D=False, plotOrderLine=True,
                                  plotHatches=True, plotContours=True, handle=(fig, axarr[i // NUM_COLS, i % NUM_COLS]))
 '''
