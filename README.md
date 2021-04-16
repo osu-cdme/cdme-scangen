@@ -4,28 +4,47 @@ This library generates the scan vectors used in Powder Bed Fusion (PBF) Additive
 
 ## To Install
 
-The following are required:
+### 1. Clone the repo 
+Clone the repository **with submodules** with the command `git clone https://github.com/harshilpatel1799/PowderBedFusion_ScanGenerator --recurse-submodules`. You can optionally specify a folder name by including it as another command line parameter after the URL. 
+- We need to clone with submodules because we keep a library we hook into, `pyslm`, as a submodule, which makes it easy to contribute back into the library should we make changes beneficial to the overall community.
+- If you cloned normally by mistake, either delete and reclone or execute `git submodule update --init --recursive`.
+- To update all submodules to their most recent remote commit, execute `http://openmetric.org/til/programming/git-pull-with-submodule/`. 
+
+See [here](http://openmetric.org/til/programming/git-pull-with-submodule/) and [here](https://stackoverflow.com/questions/1030169/easy-way-to-pull-latest-of-all-git-submodules) for more details.
+
+### 2. Install Dependencies
+Install the following dependencies:
 
 - **Microsoft Visual C++ 14.0**: Required for one of the Python libraries; downloading the installer [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and installing the defaults under "C++ Build Tools" (and possibly MSVC v140 if that doesn't work) should be enough.
-- **Python**: Overall codebase runs on it. **Overall codebase is only tested on Python 3.9.1**. We can't speak for other versions, but we know 3.6.8 breaks. 
+- **Python**: The codebase is only tested on **Python 3.9.1/3.9.4**, so we recommend one of those. We can't speak for other versions, but we know 3.6.8 breaks. 
 - **Python Prerequisites**: A bunch of libraries. Run `python -mpip install -r requirements.txt` in the base directory of this repository to install them all.
+
+### 3. Compile PySLM
+As we interface with the module by cloning it down rather than through PyPi or an automated online repository, we need to build it from source, which is easy enough.
+- `cd` into the `pyslm` folder in the top level of this repo. This one will have `build`, `dist`, `docs`, `examples`, and other folders in it. Execute `python setup.py install` from here, which will compile the module.
+- **Best I can tell, any changes you make to pyslm require you to run this command again to apply those changes.** 
+    - TODO: Figure out why this is 
 
 ## To Run
 
-The `main.py` file currently has basic overall usage implemented, and is pretty well outlined. Simply run it with `python main.py`. 
+The `main.py` file currently has basic overall usage implemented, and is pretty well outlined. Simply run it with `python main.py` from the top level of this repository. 
 
-Experiment with changing the line `myHatcher = hatching.Hatcher()` to `myHatcher = hatching.StripeHatcher()` or `myHatcher = hatching.BasicIslandHatcher()` to try out scan paths other than the basic alternating one.
+Experiment with changing the line `myHatcher = hatching.Hatcher()` to `myHatcher = hatching.StripeHatcher()` or `myHatcher = hatching.BasicIslandHatcher()` to try out scan paths other than the basic alternating one. Output will be generated in the `LayerFiles/` directory as a `.png` image for each layer.
 
 ## To Develop
+All you really need is an editor. Visual Studio Code is recommended, as the .vscode folder in this repository includes some debugger configuration you may find useful. 
 
-1. Get an editor. 
-    - Visual Studio Code is recommended; the .vscode folder in this repository includes some useful debugger configurations. 
-2. Set up `autopep8` for formatting. 
-    - Visual Studio Code, the editor setting "Format on Save" is recommended.
+### Writing New Algorithms
+You're good to start writing new algorithms! There's some documentation on Box inside the "Scan Path Generation" folder; more will be written in the coming weeks. 
 
-You're good to start writing new algorithms in the PowderBedFusion/genScan folder! There's some documentation on Box inside the "Scan Path Generation" folder; more will be written in the coming weeks. 
+We recommend writing new algorithms in the `src` folder rather than doing so inside the `pyslm` library itself. We should keep `pyslm` as close to vanilla as possible so that it's easy to recontribute changes.
 
-## To Document
+## Documentation
+
+### View Documentation
+Documentation is not currently hosted online; however, the tool outlined below, `sphinx`, generates `.html` files you can view with any popular web browser.
+
+### Generate Documentation
 I've set up `sphinx`, which automatically does some documentation based solely on docstrings. It isn't necessary, but it's a more graphical way to look at function definitions and so on and didn't take much time to set up. 
 
 **To Install:** To get Sphinx installed, run `python -mpip install -U sphinx`. You will likely need to add `<path to Python install>/Scripts` (which will now have `sphinx-build.exe` in it) to your PATH environment variable. If you do it correctly, `sphinx-build --version` in a terminal won't give you an error.
@@ -36,4 +55,4 @@ I've set up `sphinx`, which automatically does some documentation based solely o
 
 ## Attributions
 
-This infrastucture heavily uses [pyslm](https://github.com/drlukeparry/pyslm/), which is built by [@drlukeparry](https://github.com/drlukeparry). Note that we've done some renaming to make this closer to other bits of our architecture, particularly the OASIS framework.
+This infrastucture makes heavy use of the [pyslm](https://github.com/drlukeparry/pyslm/) library written by [@drlukeparry](https://github.com/drlukeparry). 
