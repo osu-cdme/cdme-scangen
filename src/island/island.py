@@ -7,9 +7,9 @@ import numpy as np
 # Local Imports
 # ...have to make these absolute because the __name__ of this file is src.island.island for some reason
 #   See here for details: https://stackoverflow.com/questions/14132789/relative-imports-for-the-billionth-time/14132912
-from PowderBedFusion.genScan.hatching import Hatcher
-from PowderBedFusion.genLayer import Layer, LayerGeometry, ContourGeometry, HatchGeometry
-from PowderBedFusion import hatching as hatching
+from pyslm.hatching.hatching import Hatcher
+from pyslm.geometry import Layer, LayerGeometry, ContourGeometry, HatchGeometry
+from pyslm.hatching import hatching
 
 
 class BasicIslandHatcherRandomOrder(Hatcher):
