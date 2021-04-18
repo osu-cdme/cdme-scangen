@@ -10,16 +10,20 @@ Example showing how to use pypyslm for generating scan vector
 import sys
 import os
 import glob
+import time
+import statistics as stats
 
 # Third-Party Imports
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import sklearn.preprocessing
 
 # Local Imports
-sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
+#sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
 import pyslm
 import pyslm.visualise
+import pyslm.analysis
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
@@ -49,12 +53,39 @@ myHatcher.numInnerContours = 2
 myHatcher.numOuterContours = 2
 myHatcher.hatchSortMethod = hatching.AlternateSort()
 
+# Set model and build style parameters
+bstyle = pyslm.geometry.BuildStyle()
+bstyle.bid = 1
+bstyle.laserSpeed = 200.0  # [mm/s]
+bstyle.laserPower = 200  # [W]#
+bstyle.pointDistance = 60  # (60 microns)
+bstyle.pointExposureTime = 30  # (30 micro seconds)
+
+model = pyslm.geometry.Model()
+model.mid = 1
+model.buildStyles.append(bstyle)
+resolution = 0.2
+
 # Set the layer thickness
 LAYER_THICKNESS = 1  # [mm]
 
-# Perform the hatching operations
-layers = []
 
+# Lists are for in-process monitoring of time spent on each layer and scaling other parameters accordingly
+layers = []
+layer_times = []
+layer_lens = []
+layer_powers = []
+layer_speeds = []
+layer_widths = []
+
+# Options for parameter scaling between layers based on vector length or scan time of the previous layer
+PARAMETER_SCALING = True
+POWER = True
+ISLAND_WIDTH = True
+SPEED = True
+N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 1 works best 
+
+# Perform the hatching operations
 for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
@@ -84,23 +115,63 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
+     
+    # Analyze total layer path parameters
+    layer_lens.append(pyslm.analysis.getLayerPathLength(layer))
+    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+    layer_powers.append(model.buildStyles[0].laserPower)
+    layer_speeds.append(model.buildStyles[0].laserSpeed)
+    layer_widths.append(myHatcher.islandWidth)
+    
+    # Scale parameters by time/layer differential 
+        # There will likely be problems with this inter-layer scaling method
+        # Ultimately we want sensor data for this kind of inter-layer adjustment
+    if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
+        # Time of current layer
+        t1 = pyslm.analysis.getLayerTime(layer, [model])
+        # Moving average of previous layers
+        prev_ts = []
+        for i in range(len(layers) - N_MOVING_AVG, len(layers)):
+            prev_ts.append(pyslm.analysis.getLayerTime(layers[i], [model]))
+        moving_avg = stats.mean(prev_ts)  
+        if POWER:
+            # As time goes down, so should power
+            model.buildStyles[0].laserPower *= 1 - (t1 - moving_avg)/moving_avg
+        if ISLAND_WIDTH:
+            # As time goes down, increase island width
+            myHatcher.islandWidth *= 1 + (t1 - moving_avg)/moving_avg
+        if SPEED:
+            # As time goes down, so should speed
+            model.buildStyles[0].laserSpeed *= 1 - (t1 - moving_avg)/moving_avg
+
+    
     layers.append(layer)
+    
 
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
 
-bstyle = pyslm.geometry.BuildStyle()
-bstyle.bid = 1
-bstyle.laserSpeed = 200.0  # [mm/s]
-bstyle.laserPower = 200  # [W]#
-bstyle.pointDistance = 60  # (60 microns)
-bstyle.pointExposureTime = 30  # (30 micro seconds)
+# Diagnostic plots for parameter scaling    
+plt.figure()
+plt.title("Normalized Process Parameters by Layer")
+plt.xlabel("Layer number")
+plt.ylabel("Normalized process parameters")
+plt.plot(sklearn.preprocessing.scale(layer_times))
+plt.plot(sklearn.preprocessing.scale(layer_powers))
+plt.plot(sklearn.preprocessing.scale(layer_speeds))
+plt.plot(sklearn.preprocessing.scale(layer_widths))
+plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
+plt.show()
 
-model = pyslm.geometry.Model()
-model.mid = 1
-model.buildStyles.append(bstyle)
-resolution = 0.2
+# print("layer times")
+# print(layer_times)
+# print("layer powers")
+# print(layer_powers)
+# print("layer speeds")
+# print(layer_speeds)
+# print("layer widths")
+# print(layer_widths)
 
 # Output Options 
 GENERATE_OUTPUT = True
