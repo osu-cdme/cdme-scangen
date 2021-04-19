@@ -20,8 +20,7 @@ from tqdm import tqdm
 import sklearn.preprocessing
 
 # Local Imports
-sys.path.insert(0, os.path.abspath("pyslm"))  # nopep8
-sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
+# sys.path.insert(0, os.path.abspath("pyslm"))  # nopep8
 import pyslm
 import pyslm.visualise
 import pyslm.analysis
