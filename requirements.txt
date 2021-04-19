@@ -10,3 +10,7 @@ triangle
 scikit-image
 cython
 pyclipper
+
+# Our requirements 
+tqdm # progress bars 
+nptyping # numpy array type hints 
