@@ -152,17 +152,19 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
 
-# Diagnostic plots for parameter scaling    
-plt.figure()
-plt.title("Normalized Process Parameters by Layer")
-plt.xlabel("Layer number")
-plt.ylabel("Normalized process parameters")
-plt.plot(sklearn.preprocessing.scale(layer_times))
-plt.plot(sklearn.preprocessing.scale(layer_powers))
-plt.plot(sklearn.preprocessing.scale(layer_speeds))
-plt.plot(sklearn.preprocessing.scale(layer_widths))
-plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
-plt.show()
+# Diagnostic plots for parameter scaling 
+SHOW_PARAMETER_SCALING = False 
+    if SHOW_PARAMETER_SCALING:   
+    plt.figure()
+    plt.title("Normalized Process Parameters by Layer")
+    plt.xlabel("Layer number")
+    plt.ylabel("Normalized process parameters")
+    plt.plot(sklearn.preprocessing.scale(layer_times))
+    plt.plot(sklearn.preprocessing.scale(layer_powers))
+    plt.plot(sklearn.preprocessing.scale(layer_speeds))
+    plt.plot(sklearn.preprocessing.scale(layer_widths))
+    plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
+    plt.show()
 
 # print("layer times")
 # print(layer_times)

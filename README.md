@@ -19,10 +19,12 @@ Install the following dependencies:
 - **Python Prerequisites**: A bunch of libraries. Run `python -mpip install -r requirements.txt` in the base directory of this repository to install them all.
 
 ### 3. Compile PySLM
+**Note that you will get import issues until you do this. Do not forget this.**
+
 As we interface with the module by cloning it down rather than through PyPi or an automated online repository, we need to build it from source, which is easy enough.
-- `cd` into the `pyslm` folder in the top level of this repo. This one will have `build`, `dist`, `docs`, `examples`, and other folders in it. Execute `python setup.py install` from here, which will compile the module.
+- `cd` into the `pyslm` folder in the top level of this repo. This one will have `build`, `dist`, `docs`, `examples`, and other folders in it. Execute `python setup.py install` from here, which will compile the module. If you are on Windows (which we recommend) you will need to launch this from an elevated command prompt.
 - **Best I can tell, any changes you make to pyslm require you to run this command again to apply those changes.** 
-    - TODO: Figure out why this is 
+    - TODO: Figure out why this is. We don't change pyslm much so it's not super annoying or anything, but would be nice to know why it works like that.
 
 ## To Run
 
