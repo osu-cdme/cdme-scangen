@@ -20,7 +20,7 @@ from tqdm import tqdm
 import sklearn.preprocessing
 
 # Local Imports
-# sys.path.insert(0, os.path.abspath("pyslm"))  # nopep8
+#sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
 import pyslm
 import pyslm.visualise
 import pyslm.analysis
@@ -82,7 +82,7 @@ layer_widths = []
 PARAMETER_SCALING = True
 POWER = True
 ISLAND_WIDTH = True
-SPEED = True
+SPEED = False
 N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 1 works best 
 
 # Perform the hatching operations
@@ -116,55 +116,59 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         geometry.mid = 1
         geometry.bid = 1
      
-    # Analyze total layer path parameters
-    layer_lens.append(pyslm.analysis.getLayerPathLength(layer))
-    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    layer_powers.append(model.buildStyles[0].laserPower)
-    layer_speeds.append(model.buildStyles[0].laserSpeed)
-    layer_widths.append(myHatcher.islandWidth)
+    # Get parameters for each layer and collect
+    length = pyslm.analysis.getLayerPathLength(layer)
+    ltime = pyslm.analysis.getLayerTime(layer, [model])
+    power = model.buildStyles[0].laserPower
+    speed = model.buildStyles[0].laserSpeed
+    width = myHatcher.islandWidth
+    layer_lens.append(length)
+    layer_times.append(ltime)
+    layer_powers.append(power)
+    layer_speeds.append(speed)
+    layer_widths.append(width)
     
-    # Scale parameters by time/layer differential 
-        # There will likely be problems with this inter-layer scaling method
-        # Ultimately we want sensor data for this kind of inter-layer adjustment
+    '''
+    Scale parameters by time/layer differential 
+    There will likely be problems with this inter-layer scaling method
+    Ultimately we want sensor data for this kind of inter-layer adjustment
+    '''
     if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
-        # Time of current layer
-        t1 = pyslm.analysis.getLayerTime(layer, [model])
+        # Time or distance of current layer
+        #l0 = ltime
+        l0 = length
         # Moving average of previous layers
-        prev_ts = []
+        prev_l0 = []
         for i in range(len(layers) - N_MOVING_AVG, len(layers)):
-            prev_ts.append(pyslm.analysis.getLayerTime(layers[i], [model]))
-        moving_avg = stats.mean(prev_ts)  
+            prev_l0.append(pyslm.analysis.getLayerTime(layers[i], [model]))
+        moving_avg = stats.mean(prev_l0)  
         if POWER:
             # As time goes down, so should power
-            model.buildStyles[0].laserPower *= 1 - (t1 - moving_avg)/moving_avg
+            model.buildStyles[0].laserPower *= 1 - (l0 - moving_avg)/moving_avg
         if ISLAND_WIDTH:
             # As time goes down, increase island width
-            myHatcher.islandWidth *= 1 + (t1 - moving_avg)/moving_avg
+            myHatcher.islandWidth *= 1 + (l0 - moving_avg)/moving_avg
         if SPEED:
             # As time goes down, so should speed
-            model.buildStyles[0].laserSpeed *= 1 - (t1 - moving_avg)/moving_avg
-
-    
+            model.buildStyles[0].laserSpeed *= 1 - (l0 - moving_avg)/moving_avg
+  
     layers.append(layer)
-    
 
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
 
-# Diagnostic plots for parameter scaling 
-SHOW_PARAMETER_SCALING = False 
-    if SHOW_PARAMETER_SCALING:   
-    plt.figure()
-    plt.title("Normalized Process Parameters by Layer")
-    plt.xlabel("Layer number")
-    plt.ylabel("Normalized process parameters")
-    plt.plot(sklearn.preprocessing.scale(layer_times))
-    plt.plot(sklearn.preprocessing.scale(layer_powers))
-    plt.plot(sklearn.preprocessing.scale(layer_speeds))
-    plt.plot(sklearn.preprocessing.scale(layer_widths))
-    plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
-    plt.show()
+# Diagnostic plots for parameter scaling    
+plt.figure()
+plt.title("Normalized Process Parameters by Layer")
+plt.xlabel("Layer number")
+plt.ylabel("Normalized process parameters")
+plt.plot(sklearn.preprocessing.scale(layer_times))
+plt.plot(sklearn.preprocessing.scale(layer_powers))
+plt.plot(sklearn.preprocessing.scale(layer_speeds))
+plt.plot(sklearn.preprocessing.scale(layer_widths))
+plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
+plt.show()
 
 # print("layer times")
 # print(layer_times)
