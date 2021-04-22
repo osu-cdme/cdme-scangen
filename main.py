@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import sklearn.preprocessing
+import pandas as pd 
 
 # Local Imports
 #sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
@@ -30,9 +31,21 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 
+# Import Excel Parameters
+def eval_bool(str):
+    return True if str == "Yes" else False
+
+values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
+PART_NAME = values[2]
+GENERATE_OUTPUT = eval_bool(values[5]) 
+OUTPUT_PNG = eval_bool(values[6])
+OUTPUT_SVG = eval_bool(values[7])
+PLOT_CONTOURS = eval_bool(values[8])
+PLOT_HATCHES = eval_bool(values[9])
+PLOT_CENTROIDS = eval_bool(values[10])
 
 Part = pyslm.Part('nist')
-Part.setGeometry('TestGeometry/nut.stl')
+Part.setGeometry('Geometry/' + PART_NAME)
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
@@ -181,11 +194,6 @@ if SHOW_PARAMETER_SCALING:
 # print("layer widths")
 # print(layer_widths)
 
-# Output Options 
-GENERATE_OUTPUT = True
-OUTPUT_PNG = True 
-OUTPUT_SVG = False 
-
 if GENERATE_OUTPUT:
 
     # Create/wipe folder
@@ -199,7 +207,7 @@ if GENERATE_OUTPUT:
     for i in tqdm(range(len(layers)), desc="Generating Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=True, plotHatches=True, plotContours=True, handle=(fig, ax))
+            layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, handle=(fig, ax))
 
         if OUTPUT_PNG:
             fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
