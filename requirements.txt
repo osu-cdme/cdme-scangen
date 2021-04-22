@@ -14,3 +14,6 @@ pyclipper
 # Our requirements 
 tqdm # progress bars 
 nptyping # numpy array type hints 
+sklearn # input and general processing 
+pandas # interface w/ Excel input file 
+openpyxl # Needed by pandas to interface with Excel input file 
