@@ -25,6 +25,7 @@ import pandas as pd
 import pyslm
 import pyslm.visualise
 import pyslm.analysis
+import pyslm.geometry
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
@@ -43,15 +44,16 @@ OUTPUT_SVG = eval_bool(values[10])
 PLOT_CONTOURS = eval_bool(values[11])
 PLOT_HATCHES = eval_bool(values[12])
 PLOT_CENTROIDS = eval_bool(values[13])
+PLOT_JUMPS = eval_bool(values[14])
 
 CHANGE_PARAMS = eval_bool(values[3]) 
 CHANGE_POWER = eval_bool(values[4]) 
 CHANGE_SPEED = eval_bool(values[5]) 
 
-PLOT_TIME = eval_bool(values[14]) 
-PLOT_CHANGE_PARAMS = eval_bool(values[15]) 
-PLOT_POWER = eval_bool(values[16]) 
-PLOT_SPEED = eval_bool(values[17]) 
+PLOT_TIME = eval_bool(values[15]) 
+PLOT_CHANGE_PARAMS = eval_bool(values[16]) 
+PLOT_POWER = eval_bool(values[17]) 
+PLOT_SPEED = eval_bool(values[18]) 
 
 # Initialize Part
 Part = pyslm.Part('nist')
@@ -61,7 +63,7 @@ Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
 # Create a BasicIslandHatcher object for performing any hatching operations (
-myHatcher = hatching.Hatcher()
+myHatcher = BasicIslandHatcherRandomOrder()
 myHatcher.islandWidth = 3.0
 myHatcher.islandOffset = 0
 myHatcher.islandOverlap = 0
@@ -74,9 +76,17 @@ myHatcher.volumeOffsetHatch = 0.08
 myHatcher.spotCompensation = .06
 myHatcher.numInnerContours = 2
 myHatcher.numOuterContours = 2
-myHatcher.hatchSortMethod = hatching.AlternateSort()
 
-# Set model and build style parameters
+if values[27]=='Alternate':
+    myHatcher.hatchSortMethod = hatching.AlternateSort()
+elif values[27]=='Linear':
+    myHatcher.hatchSortMethod = hatching.LinearSort()
+elif values[27]=='Greedy':
+    myHatcher.hatchSortMethod = hatching.GreedySort()
+else:
+    myHatcher.hatchSortMethod = hatching.AlternateSort()
+    
+# Set the initial values for model and build style parameters
 bstyle = pyslm.geometry.BuildStyle()
 bstyle.bid = 1
 bstyle.laserSpeed = 200.0  # [mm/s]
@@ -93,7 +103,7 @@ resolution = 0.2
 LAYER_THICKNESS = 1  # [mm]
 
 
-# Lists are for in-process monitoring of time spent on each layer and scaling other parameters accordingly
+# Keep track of parameters
 layers = []
 layer_times = []
 layer_powers = []
@@ -176,7 +186,7 @@ if GENERATE_OUTPUT:
     for i in tqdm(range(len(layers)), desc="Generating Layer Path Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, handle=(fig, ax))
+            layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, plotJumps=PLOT_JUMPS, handle=(fig, ax))
 
         if OUTPUT_PNG:
             fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
