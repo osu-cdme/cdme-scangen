@@ -32,6 +32,7 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 
+
 # Import Excel Parameters
 def eval_bool(str):
     return True if str == "Yes" else False
@@ -57,7 +58,7 @@ PLOT_SPEED = eval_bool(values[18])
 
 # Initialize Part
 Part = pyslm.Part('nist')
-Part.setGeometry('Geometry/' + PART_NAME)
+Part.setGeometry('geometry/' + PART_NAME)
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
@@ -148,9 +149,10 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     layer_speeds.append(model.buildStyles[0].laserSpeed)
     
     '''
-    Scale parameters by time/layer differential 
-    There will likely be problems with this inter-layer scaling method
-    Ultimately we want sensor data for this kind of inter-layer adjustment
+    Scale parameters by how time it's taking to scan layers.
+    Attempts to address "pyramid problem" where as you move up in layers,
+    there is less surface area and less time for the melted material to cool off,
+    which leads to problems with the part.
     '''
     if CHANGE_PARAMS and len(layers) > N_MOVING_AVG-1:
         # Moving average of previous layers
