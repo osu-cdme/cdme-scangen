@@ -141,18 +141,26 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
-    # Get parameters for each layer and collect
-    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    layer_powers.append(model.buildStyles[0].laserPower)
-    layer_speeds.append(model.buildStyles[0].laserSpeed)
-    
+
     '''
     Scale parameters by how time it's taking to scan layers.
     Attempts to address "pyramid problem" where as you move up in layers,
     there is less surface area and less time for the melted material to cool off,
     which leads to problems with the part.
     '''
-    if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
+    if CHANGE_PARAMS and len(layers) > N_MOVING_AVG-1:
+
+        """
+        I messed this up during a merge conflict and I'm not sure what needs to be here, sorry! 
+        """
+
+        """
+        if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
+
+        # Get parameters for each layer and collect
+        layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+        layer_powers.append(model.buildStyles[0].laserPower)
+        layer_speeds.append(model.buildStyles[0].laserSpeed)
 
         # Get parameters for each layer and collect
         length = pyslm.analysis.getLayerPathLength(layer)
@@ -169,7 +177,8 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         # Time or distance of current layer
         #l0 = ltime
         l0 = length
-    if CHANGE_PARAMS and len(layers) > N_MOVING_AVG-1:
+        """
+
         # Moving average of previous layers
         prev_l0 = []
         for i in range(len(layers) - N_MOVING_AVG, len(layer_times)):
@@ -188,7 +197,6 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
-       
 
 if GENERATE_OUTPUT:
 
