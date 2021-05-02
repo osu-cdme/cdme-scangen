@@ -36,13 +36,16 @@ def eval_bool(str):
     return True if str == "Yes" else False
 
 values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
+
+# "Parameters" for the file 
 PART_NAME = values[2]
 GENERATE_OUTPUT = eval_bool(values[5]) 
 OUTPUT_PNG = eval_bool(values[6])
 OUTPUT_SVG = eval_bool(values[7])
 PLOT_CONTOURS = eval_bool(values[8])
 PLOT_HATCHES = eval_bool(values[9])
-PLOT_CENTROIDS = eval_bool(values[10])
+PLOT_JUMPS = eval_bool(values[10])
+PLOT_CENTROIDS = eval_bool(values[11])
 
 Part = pyslm.Part('nist')
 Part.setGeometry('Geometry/' + PART_NAME)
@@ -92,7 +95,7 @@ layer_speeds = []
 layer_widths = []
 
 # Options for parameter scaling between layers based on vector length or scan time of the previous layer
-PARAMETER_SCALING = True
+PARAMETER_SCALING = False
 POWER = True
 ISLAND_WIDTH = True
 SPEED = False
@@ -111,35 +114,21 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = split_long_vectors(geometry.coords, CUTOFF)
-            geometry.coords = coords
+            geometry.coords = coord
     '''
 
     # Vector Lengthening; to use, switch to Hatcher()
-    '''
     CUTOFF = 2 # mm
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = lengthen_short_vectors(geometry.coords, CUTOFF)
             geometry.coords = coords
-    '''
 
     # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
-     
-    # Get parameters for each layer and collect
-    length = pyslm.analysis.getLayerPathLength(layer)
-    ltime = pyslm.analysis.getLayerTime(layer, [model])
-    power = model.buildStyles[0].laserPower
-    speed = model.buildStyles[0].laserSpeed
-    width = myHatcher.islandWidth
-    layer_lens.append(length)
-    layer_times.append(ltime)
-    layer_powers.append(power)
-    layer_speeds.append(speed)
-    layer_widths.append(width)
     
     '''
     Scale parameters by time/layer differential 
@@ -147,6 +136,19 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     Ultimately we want sensor data for this kind of inter-layer adjustment
     '''
     if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
+
+        # Get parameters for each layer and collect
+        length = pyslm.analysis.getLayerPathLength(layer)
+        ltime = pyslm.analysis.getLayerTime(layer, [model])
+        power = model.buildStyles[0].laserPower
+        speed = model.buildStyles[0].laserSpeed
+        width = myHatcher.islandWidth
+        layer_lens.append(length)
+        layer_times.append(ltime)
+        layer_powers.append(power)
+        layer_speeds.append(speed)
+        layer_widths.append(width)
+
         # Time or distance of current layer
         #l0 = ltime
         l0 = length
@@ -207,7 +209,7 @@ if GENERATE_OUTPUT:
     for i in tqdm(range(len(layers)), desc="Generating Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, handle=(fig, ax))
+            layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, plotJumps=PLOT_JUMPS, handle=(fig, ax))
 
         if OUTPUT_PNG:
             fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
