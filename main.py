@@ -17,7 +17,7 @@ import statistics as stats
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-import sklearn.preprocessing
+import sklearn.preprocessing as skp
 import pandas as pd 
 
 # Local Imports
@@ -25,11 +25,13 @@ import pandas as pd
 import pyslm
 import pyslm.visualise
 import pyslm.analysis
+import pyslm.geometry
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
+
 
 # Import Excel Parameters
 def eval_bool(str):
@@ -39,16 +41,26 @@ values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
 
 # "Parameters" for the file 
 PART_NAME = values[2]
-GENERATE_OUTPUT = eval_bool(values[5]) 
-OUTPUT_PNG = eval_bool(values[6])
-OUTPUT_SVG = eval_bool(values[7])
-PLOT_CONTOURS = eval_bool(values[8])
-PLOT_HATCHES = eval_bool(values[9])
-PLOT_JUMPS = eval_bool(values[10])
-PLOT_CENTROIDS = eval_bool(values[11])
+GENERATE_OUTPUT = eval_bool(values[8]) 
+OUTPUT_PNG = eval_bool(values[9])
+OUTPUT_SVG = eval_bool(values[10])
+PLOT_CONTOURS = eval_bool(values[11])
+PLOT_HATCHES = eval_bool(values[12])
+PLOT_CENTROIDS = eval_bool(values[13])
+PLOT_JUMPS = eval_bool(values[14])
 
+CHANGE_PARAMS = eval_bool(values[3]) 
+CHANGE_POWER = eval_bool(values[4]) 
+CHANGE_SPEED = eval_bool(values[5]) 
+
+PLOT_TIME = eval_bool(values[15]) 
+PLOT_CHANGE_PARAMS = eval_bool(values[16]) 
+PLOT_POWER = eval_bool(values[17]) 
+PLOT_SPEED = eval_bool(values[18]) 
+
+# Initialize Part
 Part = pyslm.Part('nist')
-Part.setGeometry('Geometry/' + PART_NAME)
+Part.setGeometry('geometry/' + PART_NAME)
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
@@ -60,16 +72,24 @@ myHatcher.islandOffset = 0
 myHatcher.islandOverlap = 0
 
 # Set the base hatching parameters which are generated within Hatcher
-myHatcher.hatchAngle = 45  # [°] The angle used for the islands
+myHatcher.hatchAngle = values[22]  # [°] The angle used for the islands
 # [mm] Offset between internal and external boundary
-myHatcher.volumeOffsetHatch = 0.08
+myHatcher.volumeOffsetHatch = values[23]
 # [mm] Additional offset to account for laser spot size
-myHatcher.spotCompensation = .06
-myHatcher.numInnerContours = 2
-myHatcher.numOuterContours = 2
-myHatcher.hatchSortMethod = hatching.AlternateSort()
+myHatcher.spotCompensation = values[24]
+myHatcher.numInnerContours = values[25]
+myHatcher.numOuterContours = values[26]
 
-# Set model and build style parameters
+if values[27]=='Alternate':
+    myHatcher.hatchSortMethod = hatching.AlternateSort()
+elif values[27]=='Linear':
+    myHatcher.hatchSortMethod = hatching.LinearSort()
+elif values[27]=='Greedy':
+    myHatcher.hatchSortMethod = hatching.GreedySort()
+else:
+    myHatcher.hatchSortMethod = hatching.AlternateSort()
+    
+# Set the initial values for model and build style parameters
 bstyle = pyslm.geometry.BuildStyle()
 bstyle.bid = 1
 bstyle.laserSpeed = 200.0  # [mm/s]
@@ -86,19 +106,11 @@ resolution = 0.2
 LAYER_THICKNESS = 1  # [mm]
 
 
-# Lists are for in-process monitoring of time spent on each layer and scaling other parameters accordingly
+# Keep track of parameters
 layers = []
 layer_times = []
-layer_lens = []
 layer_powers = []
 layer_speeds = []
-layer_widths = []
-
-# Options for parameter scaling between layers based on vector length or scan time of the previous layer
-PARAMETER_SCALING = False
-POWER = True
-ISLAND_WIDTH = True
-SPEED = False
 N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 1 works best 
 
 # Perform the hatching operations
@@ -129,11 +141,16 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
+    # Get parameters for each layer and collect
+    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+    layer_powers.append(model.buildStyles[0].laserPower)
+    layer_speeds.append(model.buildStyles[0].laserSpeed)
     
     '''
-    Scale parameters by time/layer differential 
-    There will likely be problems with this inter-layer scaling method
-    Ultimately we want sensor data for this kind of inter-layer adjustment
+    Scale parameters by how time it's taking to scan layers.
+    Attempts to address "pyramid problem" where as you move up in layers,
+    there is less surface area and less time for the melted material to cool off,
+    which leads to problems with the part.
     '''
     if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
 
@@ -152,49 +169,26 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         # Time or distance of current layer
         #l0 = ltime
         l0 = length
+    if CHANGE_PARAMS and len(layers) > N_MOVING_AVG-1:
         # Moving average of previous layers
         prev_l0 = []
-        for i in range(len(layers) - N_MOVING_AVG, len(layers)):
-            prev_l0.append(pyslm.analysis.getLayerTime(layers[i], [model]))
-        moving_avg = stats.mean(prev_l0)  
-        if POWER:
-            # As time goes down, so should power
-            model.buildStyles[0].laserPower *= 1 - (l0 - moving_avg)/moving_avg
-        if ISLAND_WIDTH:
-            # As time goes down, increase island width
-            myHatcher.islandWidth *= 1 + (l0 - moving_avg)/moving_avg
-        if SPEED:
-            # As time goes down, so should speed
-            model.buildStyles[0].laserSpeed *= 1 - (l0 - moving_avg)/moving_avg
+        for i in range(len(layers) - N_MOVING_AVG, len(layer_times)):
+            prev_l0.append(layer_times[i])
+        moving_avg = stats.mean(prev_l0)
+        if moving_avg != 0:
+            if CHANGE_POWER:
+                # As time goes down, so should power
+                model.buildStyles[0].laserPower *= 1 + (layer_times[len(layer_times)-1] - moving_avg)/moving_avg
+            if CHANGE_SPEED:
+                # As time goes down, so should speed
+                model.buildStyles[0].laserSpeed *= 1 + (layer_times[len(layer_times)-1] - moving_avg)/moving_avg
   
     layers.append(layer)
 
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
-
-SHOW_PARAMETER_SCALING = False
-if SHOW_PARAMETER_SCALING:
-    # Diagnostic plots for parameter scaling    
-    plt.figure()
-    plt.title("Normalized Process Parameters by Layer")
-    plt.xlabel("Layer number")
-    plt.ylabel("Normalized process parameters")
-    plt.plot(sklearn.preprocessing.scale(layer_times))
-    plt.plot(sklearn.preprocessing.scale(layer_powers))
-    plt.plot(sklearn.preprocessing.scale(layer_speeds))
-    plt.plot(sklearn.preprocessing.scale(layer_widths))
-    plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
-    plt.show()
-
-# print("layer times")
-# print(layer_times)
-# print("layer powers")
-# print(layer_powers)
-# print("layer speeds")
-# print(layer_speeds)
-# print("layer widths")
-# print(layer_widths)
+       
 
 if GENERATE_OUTPUT:
 
@@ -206,7 +200,7 @@ if GENERATE_OUTPUT:
             os.remove(f)
 
     # Generate new output
-    for i in tqdm(range(len(layers)), desc="Generating Plots"):
+    for i in tqdm(range(len(layers)), desc="Generating Layer Path Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
             layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, plotJumps=PLOT_JUMPS, handle=(fig, ax))
@@ -218,6 +212,42 @@ if GENERATE_OUTPUT:
 
         plt.cla()
         plt.close(fig)
+    
+    if PLOT_TIME:
+        plt.figure()
+        plt.title("Time by Layer")
+        plt.xlabel("Layer number")
+        plt.ylabel("Time (s)")
+        plt.plot(layer_times)
+        plt.show()
+    
+    if PLOT_CHANGE_PARAMS:
+        # Diagnostic plots for parameter scaling    
+        plt.figure()
+        plt.title("Normalized Process Parameters by Layer")
+        plt.xlabel("Layer number")
+        plt.ylabel("Normalized process parameters")
+        plt.plot(skp.scale(layer_times))
+        plt.plot(skp.scale(layer_powers))
+        plt.plot(skp.scale(layer_speeds))
+        plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
+        plt.show()
+    
+        if PLOT_POWER:
+            plt.figure()
+            plt.title("Power by Layer")
+            plt.xlabel("Layer number")
+            plt.ylabel("Power (W)")
+            plt.plot(layer_powers)
+            plt.show()        
+        
+        if PLOT_SPEED:
+            plt.figure()
+            plt.title("Speed by Layer")
+            plt.xlabel("Layer number")
+            plt.ylabel("Speed (mm/s)")
+            plt.plot(layer_speeds)
+            plt.show()
 
 '''
 If we want to change to a subplot-based system, here's most of the code for it:

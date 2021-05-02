@@ -1,4 +1,4 @@
-# PowderBedFusion_ScanGenerator
+# CDME Scan Generation
 
 This library generates the scan vectors used in Powder Bed Fusion (PBF) Additive Manufacturing (AM) Systems. Built for the Ohio State University Center for Design and Manufacturing Excellence (CDME) to prototype and develop new scanning algorithms.
 
