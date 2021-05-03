@@ -21,6 +21,7 @@ from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 import src.output.xml_config as xml_config
 from src.output.xml_io import ConfigFile, XMLWriter
+from pyslm.geometry import ScanMode
 
 
 '''
@@ -147,13 +148,14 @@ for layer in layers:
     
 
 '''
-STEP 3: Write the XML files and zip in a .scn        
+STEP 3: Write the XML files and zip       
 '''
 
 output_path = 'xml'
+scan_mode = ScanMode.ContourFirst # Currently, scan mode is the same for all layers. We should change this at some point.
 config = ConfigFile('OASIS Ex_ Parameter_quality_nut_2.xls')
 xml_out = XMLWriter(output_path, config)   
-xml_out.output_xml(contour_layers, hatch_layers)
+xml_out.output_xml(contour_layers, hatch_layers, scan_mode)
 xml_out.output_zip()
 
 
