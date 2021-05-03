@@ -58,6 +58,15 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
+# TODO: Convert an Excel specification of area to a dictionary to use as input for next step
+bounds_sheet = pd.ExcelFile(r'config.xlsx').parse(1)
+bounds = np.array([bounds_sheet["min_x"], bounds_sheet["min_y"], bounds_sheet["min_z"], 
+    bounds_sheet["max_x"], bounds_sheet["max_y"], bounds_sheet["max_z"]])
+areas = np.hstack([arr.reshape(-1, 1) for arr in bounds])
+scanpaths = np.array(bounds_sheet["scanpath"])
+print(areas)
+print(scanpaths)
+
 WRITE_DEBUG = eval_bool(values[30])
 debug_file = open("debug.txt", "w")
 if WRITE_DEBUG:
@@ -101,7 +110,15 @@ Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
-# Create a BasicIslandHatcher object for performing any hatching operations (
+# Create the multiple hatcher object, passing in an array of [Area, Scan Path] arrays as constructor arguments 
+# Where each `Area` is of size 6, representing [min_x, min_y, min_z, max_x, max_y, max_z] for the specific area
+# And Scan Path is a string (one of "default", "island" for now) representing the scan path to use in that area.
+# Note that any unspecified area of the part will have the "default" scan path applied to it. 
+area_scanpath_pairs = []
+for i in range(areas.shape[0]):
+    area_scanpath_pairs.append([areas[i], scanpaths[i]])
+
+# Create a BasicIslandHatcher object for performing any hatching operations
 myHatcher = hatching.Hatcher()
 myHatcher.islandWidth = 3.0
 myHatcher.islandOffset = 0
