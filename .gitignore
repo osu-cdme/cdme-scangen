@@ -137,5 +137,11 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Our output files (specific to our system)
-LayerFiles/*
+# SPECIFIC TO US; everything above is from an outside .gitignore 
+
+# Temporary output
+LayerFiles/* 
+debug.txt 
+
+# Excel lock file
+~$config.xlsx
