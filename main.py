@@ -32,11 +32,13 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 
+# TODO: Split all this input/output into a separate Python file 
 
 # Import Excel Parameters
 def eval_bool(str):
     return True if str == "Yes" else False
 
+# "Parameters" for the file 
 values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
 PART_NAME = values[2]
 GENERATE_OUTPUT = eval_bool(values[8]) 
@@ -56,8 +58,44 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
+WRITE_DEBUG = eval_bool(values[30])
+debug_file = open("debug.txt", "w")
+if WRITE_DEBUG:
+
+    # Run Configuration 
+    debug_file.writelines("General\n")
+    debug_file.write("--------------------\n")
+    debug_file.write("PART_NAME: {}\n".format(PART_NAME))
+    debug_file.write("\n")
+
+    # Parameter Changing
+    debug_file.write("Parameter Changing\n")
+    debug_file.write("--------------------\n")
+    debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
+    debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
+    debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
+    debug_file.write("\n")
+
+    # Plotting
+    debug_file.write("Plotting\n")
+    debug_file.write("--------------------\n")
+    debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
+    debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
+    debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
+    debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
+    debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
+    debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
+    debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
+    debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
+    debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
+    debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
+    debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
+    debug_file.write("\n")
+
+    debug_file.close()  
+
 # Initialize Part
-Part = pyslm.Part('nist')
+Part = pyslm.Part(PART_NAME)
 Part.setGeometry('geometry/' + PART_NAME)
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
@@ -103,13 +141,11 @@ resolution = 0.2
 # Set the layer thickness
 LAYER_THICKNESS = 1  # [mm]
 
-
 # Keep track of parameters
 layers = []
 layer_times = []
 layer_powers = []
 layer_speeds = []
-
 N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 1 works best 
 
 # Perform the hatching operations
@@ -125,11 +161,11 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = split_long_vectors(geometry.coords, CUTOFF)
-            geometry.coords = coords
+            geometry.coords = coord
     '''
 
-    # Vector Lengthening; to use, switch to Hatcher()
     '''
+    # Vector Lengthening; to use, switch to Hatcher()
     CUTOFF = 2 # mm
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
@@ -142,12 +178,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
-    
-    # Get parameters for each layer and collect
-    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    layer_powers.append(model.buildStyles[0].laserPower)
-    layer_speeds.append(model.buildStyles[0].laserSpeed)
-    
+
     '''
     Scale parameters by how time it's taking to scan layers.
     Attempts to address "pyramid problem" where as you move up in layers,
@@ -155,6 +186,36 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     which leads to problems with the part.
     '''
     if CHANGE_PARAMS and len(layers) > N_MOVING_AVG-1:
+
+        """
+        I messed this up during a merge conflict and I'm not sure what needs to be here, sorry! 
+        """
+
+        """
+        if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
+
+        # Get parameters for each layer and collect
+        layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+        layer_powers.append(model.buildStyles[0].laserPower)
+        layer_speeds.append(model.buildStyles[0].laserSpeed)
+
+        # Get parameters for each layer and collect
+        length = pyslm.analysis.getLayerPathLength(layer)
+        ltime = pyslm.analysis.getLayerTime(layer, [model])
+        power = model.buildStyles[0].laserPower
+        speed = model.buildStyles[0].laserSpeed
+        width = myHatcher.islandWidth
+        layer_lens.append(length)
+        layer_times.append(ltime)
+        layer_powers.append(power)
+        layer_speeds.append(speed)
+        layer_widths.append(width)
+
+        # Time or distance of current layer
+        #l0 = ltime
+        l0 = length
+        """
+
         # Moving average of previous layers
         prev_l0 = []
         for i in range(len(layers) - N_MOVING_AVG, len(layer_times)):
@@ -173,7 +234,6 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
-       
 
 if GENERATE_OUTPUT:
 
@@ -185,7 +245,7 @@ if GENERATE_OUTPUT:
             os.remove(f)
 
     # Generate new output
-    for i in tqdm(range(len(layers)), desc="Generating Layer Path Plots"):
+    for i in tqdm(range(len(layers)), desc="Generating Layer Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
             layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, plotJumps=PLOT_JUMPS, handle=(fig, ax))

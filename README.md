@@ -21,10 +21,16 @@ Install the following dependencies:
 ### 3. Compile PySLM
 **Note that you will get import issues until you do this. Do not forget this.**
 
-As we interface with the module by cloning it down rather than through PyPi or an automated online repository, we need to build it from source, which is easy enough.
-- `cd` into the `pyslm` folder in the top level of this repo. This one will have `build`, `dist`, `docs`, `examples`, and other folders in it. Execute `python setup.py install` from here, which will compile the module. If you are on Windows (which we recommend) you will need to launch this from an elevated command prompt.
-- **Best I can tell, any changes you make to pyslm require you to run this command again to apply those changes.** 
-    - TODO: Figure out why this is. We don't change pyslm much so it's not super annoying or anything, but would be nice to know why it works like that.
+As we interface with the module by cloning it down rather than through PyPi or an automated online repository, we need to build it from source, which is easy enough. First, `cd` into the `pyslm` folder in the top level of this repo. This one will have `build`, `dist`, `docs`, `examples`, and other folders in it.
+
+If you do not plan to make modifications to `pyslm`:
+-  Execute `python setup.py install` from here, which will compile the module. 
+    - NOTE: If you are on Windows (which we recommend) you will need to launch this from an elevated command prompt.
+
+If you plan to make modifications to `pyslm`: 
+- Execute `python setup.py develop` from here, which will compile the module *in a way that sets up symlinks, meaning you will not need to keep recompiling when you make changes*. 
+
+See [here](https://stackoverflow.com/questions/19048732/python-setup-py-develop-vs-install) for an explanation of the difference. 
 
 ## To Run
 
