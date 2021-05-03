@@ -98,19 +98,19 @@ bounds_sheet = pd.ExcelFile(r'config.xlsx').parse(1)
 
 # Get ids corresponding to each scan path specified 
 ids = bounds_sheet["id"]
-ids = np.array(ids[~np.isnan(ids)])
+ids = np.array(ids[~np.isnan(ids)]).astype(np.uint)
 debug_file.write("ids: \n{}\n".format(ids))
 
 # Get boundaries of each scanpath 
 bounds = np.array([bounds_sheet["min_x"], bounds_sheet["min_y"], bounds_sheet["min_z"], 
     bounds_sheet["max_x"], bounds_sheet["max_y"], bounds_sheet["max_z"]])
 bounds = bounds[:, ~np.isnan(bounds).any(axis=0)] # Long story short, filters out NaN columns
-areas = np.hstack([arr.reshape(-1, 1) for arr in bounds]) # Essentially a transpose 
+areas = np.hstack([arr.reshape(-1, 1) for arr in bounds]).astype(np.uint) # Essentially a transpose 
 debug_file.write("areas: \n{}\n".format(areas))
 
 # Get the scanpath versions (i.e. default, island, ...)
 scanpaths = list(bounds_sheet["scanpath"])
-scanpaths = scanpaths[:scanpaths.index(np.nan)] # Can't use above solution because isnan() undefined for strings...
+scanpaths = np.array(scanpaths[:scanpaths.index(np.nan)]) # Can't use above solution because isnan() undefined for strings...
 debug_file.write("scanpaths: \n{}\n".format(scanpaths))
 
 # TODO: Get the general parameters to go along with the provided ids 
@@ -120,7 +120,7 @@ general_params = np.array([general_params_sheet["Hatch Distance (mm)"], general_
     general_params_sheet["# Inner Contours"], general_params_sheet["# Outer Contours"], 
     general_params_sheet["Spot Compensation (Multiple)"], general_params_sheet["Volume Offset Hatch (mm)"]])
 general_params = general_params[:, ~np.isnan(general_params).any(axis=0)] # Long story short, filters out NaN columns
-general_params = np.hstack([arr.reshape(-1, 1) for arr in general_params])
+general_params = np.hstack([arr.reshape(-1, 1) for arr in general_params]).astype(np.uint)
 debug_file.write("general_params: \n{}\n".format(general_params))
 
 # TODO: Get the custom parameters to go along with the provided ids 
@@ -129,7 +129,7 @@ custom_params = np.array([custom_params_sheet["Param 1"], custom_params_sheet["P
     custom_params_sheet["Param 3"], custom_params_sheet["Param 4"], 
     custom_params_sheet["Param 5"]])
 custom_params = custom_params[:, ~np.isnan(custom_params).any(axis=0)] # Long story short, filters out NaN columns
-custom_params = np.hstack([arr.reshape(-1, 1) for arr in custom_params])
+custom_params = np.hstack([arr.reshape(-1, 1) for arr in custom_params]).astype(np.uint)
 debug_file.write("custom_params: \n{}\n".format(custom_params))
 
 # Initialize Part
