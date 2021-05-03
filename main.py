@@ -31,7 +31,7 @@ from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
-from src.scanpath_switching.scanpath_switching import excel_to_array 
+from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
 
 # TODO: Split all this input/output into a separate Python file 
 
@@ -99,11 +99,13 @@ if WRITE_DEBUG:
 # [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
 # [2]: scanpath identifier (`default`, `island`, etc.)
 # [3]: General Parameters (True/False)
-arr = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
-print("arr: " + str(arr))
+scanpath_info = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
+print("scanpath_info: \n{}".format(scanpath_info))
 
-# TODO: Function takes in the array from the previous call and returns an array of hatcher instances
+# Function takes in the array from the previous call and returns an array of [hatcher instance, area]
 #   corresponding to the parameters and scan path type given in the array.
+scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
+print("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
 
 # Initialize Part
 Part = pyslm.Part(PART_NAME)
