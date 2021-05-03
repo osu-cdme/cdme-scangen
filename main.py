@@ -92,6 +92,8 @@ if WRITE_DEBUG:
     debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
     debug_file.write("\n")
 
+    debug_file.close()  
+
 # Initialize Part
 Part = pyslm.Part(PART_NAME)
 Part.setGeometry('geometry/' + PART_NAME)
