@@ -1,21 +1,29 @@
 # System Imports
 import io
+import sys 
 
 # Third Party Imports 
 import numpy as np 
 import pandas as pd 
 
+# Local Imports
+from pyslm.hatching import Hatcher 
+from ..island.island import BasicIslandHatcherRandomOrder
+
 # Takes in an Excel sheet 
 # TODO: Tracking IDs is redundant; remove from excel file and just use array indexes as equivalent 
 def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextIOWrapper) -> list:
-    # TODO: Docstring 
-    """[summary]
+    """Reads in an Excel file, outputting an array-based representation of areas and associated scanpaths/parameters.
 
-    :param excel_file: [description]
+    :param excel_file: The excel file to pull the information from. 
     :type excel_file: pd.io.excel._base.ExcelFile
-    :param debug_file: [description]
+    :param debug_file: A debug file to output debug output to.
     :type debug_file: io.TextIOWrapper
-    :return: [description]
+    :return: An array of arrays, each inner array with the following structure:
+        [0]: ID of the given Area (Equation: "<Row of Excel Sheet> - 2")
+        [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
+        [2]: scanpath identifier (`default`, `island`, etc.)
+        [3]: General Parameters (True/False)
     :rtype: list
     """
 
@@ -61,5 +69,56 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
     # Can't do fancy numpy stuff because they aren't all the same data type (scan paths are strings)
     output = []
     for i in range(len(ids)):
-        output.append([ids[i], bounds[i], scanpaths[i], general_params[i], custom_params[i]])
+        output.append([ids[i], areas[i], scanpaths[i], general_params[i], custom_params[i]])
     return output 
+
+def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> list:
+    """Converts the array that `excel_to_array()` returns into a list of hatchers, each initialized with
+    the correct parameters - both generic (common across all algorithms) and custom (specific to an algorithm).
+
+    :param arr: The array, formatted in the way `excel_to_array()` returns.
+    :type arr: list
+    :param debug_file: A pointer to the open `debug.txt` file to use for any debug output.
+    :type debug_file: io.TextIOWrapper
+    :return: A list of [hatcher, area] lists, where the hatcher has been initialized and all parameters have been set. 
+    :rtype: list
+    """
+    
+    # Refresher: Each scanpath has the following structure:
+    # [0]: ID of the given Area (Equation: "<Row of Excel Sheet> - 2")
+    # [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
+    # [2]: scanpath identifier (`default`, `island`, etc.)
+    # [3]: General Parameters (True/False)
+    output = []
+    for scanpath in arr:
+
+        # 1. Initialize the correct type
+        if scanpath[2] == "default":
+            hatcher = Hatcher()
+        elif scanpath[2] == "island":
+            hatcher = BasicIslandHatcherRandomOrder()
+        else:
+            sys.exit("ERROR: Unrecognized scanpath type " + str(scanpath[2]))
+
+        # 2. Set general parameters for the scan path
+        hatcher.hatchDistance = scanpath[3][0]
+        hatcher.hatchAngle = scanpath[3][1]
+        hatcher.layerAngleIncrement = scanpath[3][2]
+        hatcher.numInnerContours = scanpath[3][4]
+        hatcher.numOuterContours = scanpath[3][5]
+        hatcher.spotCompensation = scanpath[3][6]
+        hatcher.volumeOffsetHatch = scanpath[3][7]
+
+        # TODO: Broken with error `The Hatch Sort Method should be derived from the BaseSort class`. Fix!
+        # hatcher.hatchSortMethod = scanpath[3][3]
+
+        # 3. Set custom parameters for the given scan path 
+        if scanpath[2] == "island":
+            hatcher.islandWidth = scanpath[4][0]
+            hatcher.islandOverlap = scanpath[4][1]
+            hatcher.islandOffset = scanpath[4][2]
+
+        # 4. Append to output array 
+        output.append([hatcher, scanpath[1]])
+
+    return output
