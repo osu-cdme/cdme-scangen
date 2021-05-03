@@ -8,6 +8,7 @@ from shapely.geometry import Polygon, MultiLineString
 from zipfile import ZipFile
 import os
 from os.path import basename
+from pyslm.geometry import ScanMode
 
 class ConfigFile():
     def __init__(self, file_path):
@@ -121,7 +122,7 @@ class XMLWriter():
 
         return xsl_root
 
-    def make_trajectory(self, contour: List[float], hatches: List[float]): # unstack and make one list, broken down by segments instead of coordinates - do that in the test2 file, assume it is already unstacked in trajectory function
+    def make_trajectory(self, contour: List[float], hatches: List[float], scan_mode: ScanMode): # unstack and make one list, broken down by segments instead of coordinates - do that in the test2 file, assume it is already unstacked in trajectory function
           
         xtraj_root = etree.Element('TrajectoryList')
 
@@ -135,12 +136,11 @@ class XMLWriter():
         etree.SubElement(htraj, 'TrajectoryID').text = '1'
         etree.SubElement(htraj, 'PathProcessingMode').text = "sequential" # add control flow for multipart
               
-        countourFirst = 1
         for traj in [ctraj, htraj]:
             
             path = etree.SubElement(traj, 'Path') # Make path subtree - add control flow for multipart   
                             
-            if (countourFirst == 1 ):
+            if (scan_mode == ScanMode.ContourFirst):
                 etree.SubElement(path, 'Type').text = 'contour'
                 etree.SubElement(path, 'Tag').text = 'part1'
                 etree.SubElement(path, 'NumSegments').text = str(len(contour)/2)
@@ -158,7 +158,7 @@ class XMLWriter():
                     end = etree.SubElement(seg, 'End')
                     etree.SubElement(end, 'X').text = str(contour[i])
                     etree.SubElement(end, 'Y').text = str(contour[i+1])
-                countourFirst = 0
+            # Currently assumes hatches are first by default            
             else:
                 etree.SubElement(path, 'Type').text = 'hatch'
                 etree.SubElement(path, 'Tag').text = 'part1'
@@ -182,20 +182,20 @@ class XMLWriter():
     """
     Writes single XML layer file
     """            
-    def write_xml(self, Lcontour, Lhatch, layer_num: int):
+    def write_xml(self, Lcontour, Lhatch, layer_num: int, scan_mode: ScanMode):
         with etree.xmlfile(self.out + '/scan_' + str(layer_num) + '.xml') as xf:
             with xf.element('Layer'):
                 xf.write(self.make_header(layer_num), pretty_print=True)
                 xf.write(self.make_velocity_profile(), pretty_print=True)
                 xf.write(self.make_segment_style(), pretty_print=True)
-                xf.write(self.make_trajectory(Lcontour, Lhatch), pretty_print=True)
+                xf.write(self.make_trajectory(Lcontour, Lhatch, scan_mode), pretty_print=True)
 
     """
     Outputs all XML layer files
     
     Needs a flat 1D list of coordinates e.g. [x1, y2, x2, y2, x3, y3]
     """
-    def output_xml(self, contour_layers, hatch_layers):
+    def output_xml(self, contour_layers, hatch_layers, scan_mode: ScanMode):
         
         num_layers = len(contour_layers)    
         
@@ -203,7 +203,7 @@ class XMLWriter():
             print('XML Layer # ' + str(i+1) + ' Started')
             xml_path = '../../' + self.out + '/scan_' + str(i+1) + '.xml'
             print(xml_path)
-            self.write_xml(contour_layers[i], hatch_layers[i], i+1)
+            self.write_xml(contour_layers[i], hatch_layers[i], i+1, scan_mode)
             print('XML Layer # ' + str(i+1) + ' Complete\n')
             
         return
