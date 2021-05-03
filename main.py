@@ -32,14 +32,14 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 
+# TODO: Split all this input/output into a separate Python file 
 
 # Import Excel Parameters
 def eval_bool(str):
     return True if str == "Yes" else False
 
-values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
-
 # "Parameters" for the file 
+values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
 PART_NAME = values[2]
 GENERATE_OUTPUT = eval_bool(values[8]) 
 OUTPUT_PNG = eval_bool(values[9])
@@ -58,8 +58,42 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
+WRITE_DEBUG = eval_bool(values[30])
+debug_file = open("debug.txt", "w")
+if WRITE_DEBUG:
+
+    # Run Configuration 
+    debug_file.writelines("General\n")
+    debug_file.write("--------------------\n")
+    debug_file.write("PART_NAME: {}\n".format(PART_NAME))
+    debug_file.write("\n")
+
+    # Parameter Changing
+    debug_file.write("Parameter Changing\n")
+    debug_file.write("--------------------\n")
+    debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
+    debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
+    debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
+    debug_file.write("\n")
+
+    # Plotting
+    debug_file.write("Plotting\n")
+    debug_file.write("--------------------\n")
+    debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
+    debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
+    debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
+    debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
+    debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
+    debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
+    debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
+    debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
+    debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
+    debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
+    debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
+    debug_file.write("\n")
+
 # Initialize Part
-Part = pyslm.Part('nist')
+Part = pyslm.Part(PART_NAME)
 Part.setGeometry('geometry/' + PART_NAME)
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
@@ -105,7 +139,6 @@ resolution = 0.2
 # Set the layer thickness
 LAYER_THICKNESS = 1  # [mm]
 
-
 # Keep track of parameters
 layers = []
 layer_times = []
@@ -129,12 +162,14 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
             geometry.coords = coord
     '''
 
+    '''
     # Vector Lengthening; to use, switch to Hatcher()
     CUTOFF = 2 # mm
     for geometry in layer.geometry:
         if isinstance(geometry, HatchGeometry):
             coords = lengthen_short_vectors(geometry.coords, CUTOFF)
             geometry.coords = coords
+    '''
 
     # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
@@ -208,7 +243,7 @@ if GENERATE_OUTPUT:
             os.remove(f)
 
     # Generate new output
-    for i in tqdm(range(len(layers)), desc="Generating Layer Path Plots"):
+    for i in tqdm(range(len(layers)), desc="Generating Layer Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
             layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, plotJumps=PLOT_JUMPS, handle=(fig, ax))
