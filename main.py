@@ -58,14 +58,6 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
-# TODO: Convert an Excel specification of area to a dictionary to use as input for next step
-bounds_sheet = pd.ExcelFile(r'config.xlsx').parse(1)
-bounds = np.array([bounds_sheet["min_x"], bounds_sheet["min_y"], bounds_sheet["min_z"], 
-    bounds_sheet["max_x"], bounds_sheet["max_y"], bounds_sheet["max_z"]])
-areas = np.hstack([arr.reshape(-1, 1) for arr in bounds])
-scanpaths = np.array(bounds_sheet["scanpath"])
-print(areas)
-print(scanpaths)
 
 WRITE_DEBUG = eval_bool(values[30])
 debug_file = open("debug.txt", "w")
@@ -101,7 +93,44 @@ if WRITE_DEBUG:
     debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
     debug_file.write("\n")
 
-    debug_file.close()  
+# Convert an Excel specification of area to an array to use as input for next step
+bounds_sheet = pd.ExcelFile(r'config.xlsx').parse(1)
+
+# Get ids corresponding to each scan path specified 
+ids = bounds_sheet["id"]
+ids = np.array(ids[~np.isnan(ids)])
+debug_file.write("ids: \n{}\n".format(ids))
+
+# Get boundaries of each scanpath 
+bounds = np.array([bounds_sheet["min_x"], bounds_sheet["min_y"], bounds_sheet["min_z"], 
+    bounds_sheet["max_x"], bounds_sheet["max_y"], bounds_sheet["max_z"]])
+bounds = bounds[:, ~np.isnan(bounds).any(axis=0)] # Long story short, filters out NaN columns
+areas = np.hstack([arr.reshape(-1, 1) for arr in bounds]) # Essentially a transpose 
+debug_file.write("areas: \n{}\n".format(areas))
+
+# Get the scanpath versions (i.e. default, island, ...)
+scanpaths = list(bounds_sheet["scanpath"])
+scanpaths = scanpaths[:scanpaths.index(np.nan)] # Can't use above solution because isnan() undefined for strings...
+debug_file.write("scanpaths: \n{}\n".format(scanpaths))
+
+# TODO: Get the general parameters to go along with the provided ids 
+general_params_sheet = pd.ExcelFile(r'config.xlsx').parse(2)
+general_params = np.array([general_params_sheet["Hatch Distance (mm)"], general_params_sheet["Hatch Angle (mm)"], 
+    general_params_sheet["Layer Angle Increment (deg)"], general_params_sheet["Hatch Sort Method"], 
+    general_params_sheet["# Inner Contours"], general_params_sheet["# Outer Contours"], 
+    general_params_sheet["Spot Compensation (Multiple)"], general_params_sheet["Volume Offset Hatch (mm)"]])
+general_params = general_params[:, ~np.isnan(general_params).any(axis=0)] # Long story short, filters out NaN columns
+general_params = np.hstack([arr.reshape(-1, 1) for arr in general_params])
+debug_file.write("general_params: \n{}\n".format(general_params))
+
+# TODO: Get the custom parameters to go along with the provided ids 
+custom_params_sheet = pd.ExcelFile(r'config.xlsx').parse(3)
+custom_params = np.array([custom_params_sheet["Param 1"], custom_params_sheet["Param 2"], 
+    custom_params_sheet["Param 3"], custom_params_sheet["Param 4"], 
+    custom_params_sheet["Param 5"]])
+custom_params = custom_params[:, ~np.isnan(custom_params).any(axis=0)] # Long story short, filters out NaN columns
+custom_params = np.hstack([arr.reshape(-1, 1) for arr in custom_params])
+debug_file.write("custom_params: \n{}\n".format(custom_params))
 
 # Initialize Part
 Part = pyslm.Part(PART_NAME)
@@ -114,9 +143,13 @@ Part.dropToPlatform()
 # Where each `Area` is of size 6, representing [min_x, min_y, min_z, max_x, max_y, max_z] for the specific area
 # And Scan Path is a string (one of "default", "island" for now) representing the scan path to use in that area.
 # Note that any unspecified area of the part will have the "default" scan path applied to it. 
-area_scanpath_pairs = []
+# List of Lists with the following order: 
+switching_info = []
 for i in range(areas.shape[0]):
-    area_scanpath_pairs.append([areas[i], scanpaths[i]])
+    switching_info.append([areas[i], scanpaths[i]])
+
+# The intended approach is for a hatcher to be applied 
+
 
 # Create a BasicIslandHatcher object for performing any hatching operations
 myHatcher = hatching.Hatcher()
