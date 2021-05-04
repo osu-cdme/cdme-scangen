@@ -40,6 +40,14 @@ def eval_bool(str):
 
 # "Parameters" for the file 
 values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
+config_vprofiles = pd.ExcelFile(r'build_config.xls').parse(3,header=7)['Velocity Profile for build segments\nVP for jumps is selected in Region profile'][3:]
+#config_speeds = pd.ExcelFile(r'build_config.xls').parse(2, header=5)['Velocity\n(mm/s)']
+config_segstyles = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['SegmentStyle ID\nMay be integer or text'][3:]
+config_powers = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['Lead laser power (Watts)'][3:]
+segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
+                          'Powers':np.array(config_powers),
+                          'VelocityProfiles':np.array(config_vprofiles)})
+
 PART_NAME = values[2]
 CHANGE_PARAMS = eval_bool(values[3]) 
 CHANGE_POWER = eval_bool(values[4]) 
@@ -122,18 +130,26 @@ elif values[27]=='Linear':
     myHatcher.hatchSortMethod = hatching.LinearSort()
 elif values[27]=='Greedy':
     myHatcher.hatchSortMethod = hatching.GreedySort()
-    
-# Set the initial values for model and build style parameters
-bstyle = pyslm.geometry.BuildStyle()
-bstyle.bid = 1
-bstyle.laserSpeed = 200.0  # [mm/s]
-bstyle.laserPower = 200  # [W]#
-bstyle.pointDistance = 60  # (60 microns)
-bstyle.pointExposureTime = 30  # (30 micro seconds)
 
+MIN_POWER_LVL = min(config_powers.keys())
+MAX_POWER_LVL = max(config_powers.keys())
+
+# Instantiate model and set model parameters
 model = pyslm.geometry.Model()
 model.mid = 1
-model.buildStyles.append(bstyle)
+
+# Set the initial values for possible build style parameters
+for style_id, seg_style in segstyles.iterrows():    
+    bstyle = pyslm.geometry.BuildStyle()
+    bstyle.bid = style_id
+    bstyle.name = seg_style['SegStyles']
+    bstyle.laserSpeed = 200     
+    bstyle.laserPower = seg_style['Powers']  # [W]#
+    bstyle.pointDistance = 60  # (60 microns)
+    bstyle.pointExposureTime = 30  # (30 micro seconds)
+        
+    model.buildStyles.append(bstyle)
+
 resolution = 0.2
 
 # Set the layer thickness
@@ -144,9 +160,12 @@ layers = []
 layer_times = []
 layer_powers = []
 layer_speeds = []
-N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 2 works best 
+layer_segstyles = []
 
 # Perform the hatching operations
+layer_segstyle = 11
+layer_power = model.buildStyles[layer_segstyle].laserPower
+layer_speed = model.buildStyles[layer_segstyle].laserSpeed
 for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
@@ -179,28 +198,29 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     # Get parameters for each layer and collect
     layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    layer_powers.append(model.buildStyles[0].laserPower)
-    layer_speeds.append(model.buildStyles[0].laserSpeed)
-    
+    layer_powers.append(layer_power)
+    layer_speeds.append(layer_speed)
+    layer_segstyles.append(model.buildStyles[layer_segstyle].name)
     '''
-    Scale parameters by how time it's taking to scan layers.
-    Attempts to address "pyramid problem" where as you move up in layers,
-    there is less surface area and less time for the melted material to cool off,
-    which leads to problems with the part.
+    Scale parameters by how much time it's taking to scan layers.
+    Attempts to address "pyramid problem" where as you move up building a part 
+    shaped like a pyramid, layers take less time, and there's less time for 
+    things to cool off, which leads to problems with the part.
     '''
-    if CHANGE_PARAMS and len(layers) > N_MOVING_AVG - 1:
-        # Moving average of previous layers
-        prev_l = []
-        for i in range(len(layer_times) - N_MOVING_AVG - 1, len(layer_times)):
-            prev_l.append(layer_times[i])
-        moving_avg = stats.mean(prev_l)
-        if moving_avg != 0:
-            if CHANGE_POWER:
-                # As time goes down, so should power
-                model.buildStyles[0].laserPower *= 1 + (layer_times[len(layer_times)-1] - moving_avg)/moving_avg
-            if CHANGE_SPEED:
-                # As time goes down, so should speed
-                model.buildStyles[0].laserSpeed *= 1 + (layer_times[len(layer_times)-1] - moving_avg)/moving_avg
+    ACTIVATION_DIFF = .5
+    if CHANGE_PARAMS and len(layer_times) > 1:
+        dt = np.diff(layer_times)
+        if CHANGE_POWER:
+        # As time goes down, so should power
+            if dt[len(dt)-1] > ACTIVATION_DIFF and layer_segstyle < MAX_POWER_LVL:
+                layer_segstyle += 1
+            elif dt[len(dt)-1] < -ACTIVATION_DIFF and layer_segstyle > MIN_POWER_LVL:
+                layer_segstyle -= 1
+            layer_power = model.buildStyles[layer_segstyle].laserPower
+        if CHANGE_SPEED:
+        # As time goes down, so should speed
+            layer_speed = model.buildStyles[layer_segstyle].laserSpeed
+
   
     layers.append(layer)
 
@@ -248,7 +268,7 @@ if GENERATE_OUTPUT:
         plt.plot(skp.scale(layer_times))
         plt.plot(skp.scale(layer_powers))
         plt.plot(skp.scale(layer_speeds))
-        plt.legend(['Time','Power','Speed','Island Width'], loc='upper right')
+        plt.legend(['Time','Power','Speed'], loc='upper right')
         plt.show()
     
         if PLOT_POWER:

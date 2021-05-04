@@ -8,7 +8,7 @@ from shapely.geometry import Polygon, MultiLineString
 from zipfile import ZipFile
 import os
 from os.path import basename
-from pyslm.geometry import ScanMode
+from pyslm.geometry import ScanMode, BuildStyle
 
 class ConfigFile():
     def __init__(self, file_path):
@@ -112,7 +112,7 @@ class XMLWriter():
                 sl.VelocityProfileID)
             etree.SubElement(xsl, 'LaserMode').text = str(sl.LaserMode)
 
-            xtl = etree.SubElement(xsl_root, 'Traveler')
+            xtl = etree.SubElement(xsl, 'Traveler')
 
             etree.SubElement(xtl, 'ID').text = str(sl.Traveler.ID)
             etree.SubElement(xtl, 'SyncDelay').text = str(
@@ -122,7 +122,7 @@ class XMLWriter():
 
         return xsl_root
 
-    def make_trajectory(self, contour: List[float], hatches: List[float], scan_mode: ScanMode): # unstack and make one list, broken down by segments instead of coordinates - do that in the test2 file, assume it is already unstacked in trajectory function
+    def make_trajectory(self, contour, hatches, layer_segstyle: str, scan_mode: ScanMode): # unstack and make one list, broken down by segments instead of coordinates - do that in the test2 file, assume it is already unstacked in trajectory function
           
         xtraj_root = etree.Element('TrajectoryList')
 
@@ -136,66 +136,102 @@ class XMLWriter():
         etree.SubElement(htraj, 'TrajectoryID').text = '1'
         etree.SubElement(htraj, 'PathProcessingMode').text = "sequential" # add control flow for multipart
               
-        for traj in [ctraj, htraj]:
             
-            path = etree.SubElement(traj, 'Path') # Make path subtree - add control flow for multipart   
-                            
-            if (scan_mode == ScanMode.ContourFirst):
-                etree.SubElement(path, 'Type').text = 'contour'
-                etree.SubElement(path, 'Tag').text = 'part1'
-                etree.SubElement(path, 'NumSegments').text = str(len(contour)/2)
-                etree.SubElement(path, 'SkyWritingMode').text = str(0) # Why is it a dict with one key 'Main'?
-                start = etree.SubElement(path, 'Start')
-                etree.SubElement(start, 'X').text = str(contour[0])
-                etree.SubElement(start, 'Y').text = str(contour[1])
+        cpath = etree.SubElement(ctraj, 'Path') # Make path subtree - add control flow for multipart   
+        hpath = etree.SubElement(htraj, 'Path')
+        
+        if (scan_mode == ScanMode.ContourFirst):
                 
-                # Create segments for each contour and hatch coordinates
-                for i in range(2, len(contour), 2):
-                    seg = etree.SubElement(path, 'Segment')
-                    # index of segment in list
-                    etree.SubElement(seg, 'SegmentID').text = str(int(i/2))
-                    etree.SubElement(seg, 'SegStyle').text = 'Contour1'
-                    end = etree.SubElement(seg, 'End')
-                    etree.SubElement(end, 'X').text = str(contour[i])
-                    etree.SubElement(end, 'Y').text = str(contour[i+1])
-            # Currently assumes hatches are first by default            
-            else:
-                etree.SubElement(path, 'Type').text = 'hatch'
-                etree.SubElement(path, 'Tag').text = 'part1'
-                etree.SubElement(path, 'NumSegments').text = str(len(hatches)/2)
-                etree.SubElement(path, 'SkyWritingMode').text = str(0) # Why is it a dict with one key 'Main'?
-                start = etree.SubElement(path, 'Start')
-                etree.SubElement(start, 'X').text = str(hatches[0])
-                etree.SubElement(start, 'Y').text = str(hatches[1])
+            etree.SubElement(cpath, 'Type').text = 'contour'
+            etree.SubElement(cpath, 'Tag').text = 'part1'
+            etree.SubElement(cpath, 'NumSegments').text = str(len(contour)/2)
+            etree.SubElement(cpath, 'SkyWritingMode').text = str(0)
+            start = etree.SubElement(cpath, 'Start')
+            etree.SubElement(start, 'X').text = str(contour[0])
+            etree.SubElement(start, 'Y').text = str(contour[1])
+                
+            # Create segments for each contour and hatch coordinates
+            for i in range(2, len(contour), 2):
+                seg = etree.SubElement(cpath, 'Segment')
+                # index of segment in list
+                etree.SubElement(seg, 'SegmentID').text = str(int(i/2))
+                etree.SubElement(seg, 'SegStyle').text = layer_segstyle
+                end = etree.SubElement(seg, 'End')
+                etree.SubElement(end, 'X').text = str(contour[i])
+                etree.SubElement(end, 'Y').text = str(contour[i+1])
+                    
+            etree.SubElement(hpath, 'Type').text = 'hatch'
+            etree.SubElement(hpath, 'Tag').text = 'part1'
+            etree.SubElement(hpath, 'NumSegments').text = str(len(hatches)/2)
+            etree.SubElement(hpath, 'SkyWritingMode').text = str(0) # Why is it a dict with one key 'Main'?
+            start = etree.SubElement(hpath, 'Start')
+            etree.SubElement(start, 'X').text = str(hatches[0])
+            etree.SubElement(start, 'Y').text = str(hatches[1])
 
-                for i in range(2, len(hatches), 2):
-                    seg = etree.SubElement(path, 'Segment')
-                    # index of segment in list
-                    etree.SubElement(seg, 'SegmentID').text = str(int(i/2))
-                    etree.SubElement(seg, 'SegStyle').text = 'Hatch1'
-                    end = etree.SubElement(seg, 'End')
-                    etree.SubElement(end, 'X').text = str(hatches[i])
-                    etree.SubElement(end, 'Y').text = str(hatches[i+1])
+            for i in range(2, len(hatches), 2):
+                seg = etree.SubElement(hpath, 'Segment')
+                # index of segment in list
+                etree.SubElement(seg, 'SegmentID').text = str(int(i/2))
+                etree.SubElement(seg, 'SegStyle').text = layer_segstyle
+                end = etree.SubElement(seg, 'End')
+                etree.SubElement(end, 'X').text = str(hatches[i])
+                etree.SubElement(end, 'Y').text = str(hatches[i+1])
+                       
+        else:
+            etree.SubElement(hpath, 'Type').text = 'hatch'
+            etree.SubElement(hpath, 'Tag').text = 'part1'
+            etree.SubElement(hpath, 'NumSegments').text = str(len(hatches)/2)
+            etree.SubElement(hpath, 'SkyWritingMode').text = str(0) # Why is it a dict with one key 'Main'?
+            start = etree.SubElement(hpath, 'Start')
+            etree.SubElement(start, 'X').text = str(hatches[0])
+            etree.SubElement(start, 'Y').text = str(hatches[1])
+
+            for i in range(2, len(hatches), 2):
+                seg = etree.SubElement(hpath, 'Segment')
+                # index of segment in list
+                etree.SubElement(seg, 'SegmentID').text = str(int(i/2))
+                etree.SubElement(seg, 'SegStyle').text = layer_segstyle.name
+                end = etree.SubElement(seg, 'End')
+                etree.SubElement(end, 'X').text = str(hatches[i])
+                etree.SubElement(end, 'Y').text = str(hatches[i+1])
+                
+            etree.SubElement(cpath, 'Type').text = 'contour'
+            etree.SubElement(cpath, 'Tag').text = 'part1'
+            etree.SubElement(cpath, 'NumSegments').text = str(len(contour)/2)
+            etree.SubElement(cpath, 'SkyWritingMode').text = str(0)
+            start = etree.SubElement(cpath, 'Start')
+            etree.SubElement(start, 'X').text = str(contour[0])
+            etree.SubElement(start, 'Y').text = str(contour[1])
+                
+            # Create segments for each contour and hatch coordinates
+            for i in range(2, len(contour), 2):
+                seg = etree.SubElement(cpath, 'Segment')
+                # index of segment in list
+                etree.SubElement(seg, 'SegmentID').text = str(int(i/2))
+                etree.SubElement(seg, 'SegStyle').text = layer_segstyle.name
+                end = etree.SubElement(seg, 'End')
+                etree.SubElement(end, 'X').text = str(contour[i])
+                etree.SubElement(end, 'Y').text = str(contour[i+1])
                                                   
         return xtraj_root
     
     """
     Writes single XML layer file
     """            
-    def write_xml(self, Lcontour, Lhatch, layer_num: int, scan_mode: ScanMode):
+    def write_xml(self, Lcontour, Lhatch, layer_num: int, layer_segstyle: str, scan_mode: ScanMode):
         with etree.xmlfile(self.out + '/scan_' + str(layer_num) + '.xml') as xf:
             with xf.element('Layer'):
                 xf.write(self.make_header(layer_num), pretty_print=True)
                 xf.write(self.make_velocity_profile(), pretty_print=True)
                 xf.write(self.make_segment_style(), pretty_print=True)
-                xf.write(self.make_trajectory(Lcontour, Lhatch, scan_mode), pretty_print=True)
+                xf.write(self.make_trajectory(Lcontour, Lhatch, layer_segstyle, scan_mode), pretty_print=True)
 
     """
     Outputs all XML layer files
     
     Needs a flat 1D list of coordinates e.g. [x1, y2, x2, y2, x3, y3]
     """
-    def output_xml(self, contour_layers, hatch_layers, scan_mode: ScanMode):
+    def output_xml(self, contour_layers, hatch_layers, layer_segstyles: List[BuildStyle], scan_mode: ScanMode):
         
         num_layers = len(contour_layers)    
         
@@ -203,7 +239,7 @@ class XMLWriter():
             print('XML Layer # ' + str(i+1) + ' Started')
             xml_path = '../../' + self.out + '/scan_' + str(i+1) + '.xml'
             print(xml_path)
-            self.write_xml(contour_layers[i], hatch_layers[i], i+1, scan_mode)
+            self.write_xml(contour_layers[i], hatch_layers[i], i+1, layer_segstyles[i], scan_mode)
             print('XML Layer # ' + str(i+1) + ' Complete\n')
             
         return
