@@ -41,6 +41,10 @@ def eval_bool(str):
 # "Parameters" for the file 
 values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
 PART_NAME = values[2]
+CHANGE_PARAMS = eval_bool(values[3]) 
+CHANGE_POWER = eval_bool(values[4]) 
+CHANGE_SPEED = eval_bool(values[5])
+
 GENERATE_OUTPUT = eval_bool(values[8]) 
 OUTPUT_PNG = eval_bool(values[9])
 OUTPUT_SVG = eval_bool(values[10])
@@ -48,12 +52,8 @@ PLOT_CONTOURS = eval_bool(values[11])
 PLOT_HATCHES = eval_bool(values[12])
 PLOT_CENTROIDS = eval_bool(values[13])
 PLOT_JUMPS = eval_bool(values[14])
-
-CHANGE_PARAMS = eval_bool(values[3]) 
-CHANGE_POWER = eval_bool(values[4]) 
-CHANGE_SPEED = eval_bool(values[5]) 
-
 PLOT_TIME = eval_bool(values[15]) 
+ 
 PLOT_CHANGE_PARAMS = eval_bool(values[16]) 
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
@@ -122,8 +122,6 @@ elif values[27]=='Linear':
     myHatcher.hatchSortMethod = hatching.LinearSort()
 elif values[27]=='Greedy':
     myHatcher.hatchSortMethod = hatching.GreedySort()
-else:
-    myHatcher.hatchSortMethod = hatching.AlternateSort()
     
 # Set the initial values for model and build style parameters
 bstyle = pyslm.geometry.BuildStyle()
@@ -146,7 +144,7 @@ layers = []
 layer_times = []
 layer_powers = []
 layer_speeds = []
-N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 1 works best 
+N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 2 works best 
 
 # Perform the hatching operations
 for z in tqdm(np.arange(0, Part.boundingBox[5],
@@ -179,48 +177,23 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         geometry.mid = 1
         geometry.bid = 1
 
+    # Get parameters for each layer and collect
+    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+    layer_powers.append(model.buildStyles[0].laserPower)
+    layer_speeds.append(model.buildStyles[0].laserSpeed)
+    
     '''
     Scale parameters by how time it's taking to scan layers.
     Attempts to address "pyramid problem" where as you move up in layers,
     there is less surface area and less time for the melted material to cool off,
     which leads to problems with the part.
     '''
-    if CHANGE_PARAMS and len(layers) > N_MOVING_AVG-1:
-
-        """
-        I messed this up during a merge conflict and I'm not sure what needs to be here, sorry! 
-        """
-
-        """
-        if PARAMETER_SCALING and len(layers) > N_MOVING_AVG-1:
-
-        # Get parameters for each layer and collect
-        layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-        layer_powers.append(model.buildStyles[0].laserPower)
-        layer_speeds.append(model.buildStyles[0].laserSpeed)
-
-        # Get parameters for each layer and collect
-        length = pyslm.analysis.getLayerPathLength(layer)
-        ltime = pyslm.analysis.getLayerTime(layer, [model])
-        power = model.buildStyles[0].laserPower
-        speed = model.buildStyles[0].laserSpeed
-        width = myHatcher.islandWidth
-        layer_lens.append(length)
-        layer_times.append(ltime)
-        layer_powers.append(power)
-        layer_speeds.append(speed)
-        layer_widths.append(width)
-
-        # Time or distance of current layer
-        #l0 = ltime
-        l0 = length
-        """
-
+    if CHANGE_PARAMS and len(layers) > N_MOVING_AVG - 1:
         # Moving average of previous layers
-        prev_l0 = []
-        for i in range(len(layers) - N_MOVING_AVG, len(layer_times)):
-            prev_l0.append(layer_times[i])
-        moving_avg = stats.mean(prev_l0)
+        prev_l = []
+        for i in range(len(layer_times) - N_MOVING_AVG - 1, len(layer_times)):
+            prev_l.append(layer_times[i])
+        moving_avg = stats.mean(prev_l)
         if moving_avg != 0:
             if CHANGE_POWER:
                 # As time goes down, so should power
