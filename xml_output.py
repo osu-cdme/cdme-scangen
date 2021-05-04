@@ -1,12 +1,13 @@
 
 """
-Example showing how to use this project to output XML files for the
+This file also serves as an example showing how to use this project to output XML files for the
 ALSAM controller
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import statistics as stats
 from tqdm import tqdm
 
 # Local Imports
@@ -33,12 +34,20 @@ def eval_bool(str):
     return True if str == "Yes" else False
 
 values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
+config_vprofiles = pd.ExcelFile(r'build_config.xls').parse(3,header=7)['Velocity Profile for build segments\nVP for jumps is selected in Region profile'][3:]
+#config_speeds = pd.ExcelFile(r'build_config.xls').parse(2, header=5)['Velocity\n(mm/s)']
+config_segstyles = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['SegmentStyle ID\nMay be integer or text'][3:]
+config_powers = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['Lead laser power (Watts)'][3:]
+segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
+                          'Powers':np.array(config_powers),
+                          'VelocityProfiles':np.array(config_vprofiles)})
+
 PART_NAME = values[2] 
 
 PLOT_TIME = eval_bool(values[15]) 
-PLOT_CHANGE_PARAMS = eval_bool(values[16]) 
-PLOT_POWER = eval_bool(values[17]) 
-PLOT_SPEED = eval_bool(values[18]) 
+CHANGE_PARAMS = eval_bool(values[3]) 
+CHANGE_POWER = eval_bool(values[4]) 
+CHANGE_SPEED = eval_bool(values[5])
 
 # Initialize Part
 Part = pyslm.Part('nut')
@@ -68,20 +77,26 @@ elif values[27]=='Linear':
     myHatcher.hatchSortMethod = hatching.LinearSort()
 elif values[27]=='Greedy':
     myHatcher.hatchSortMethod = hatching.GreedySort()
-else:
-    myHatcher.hatchSortMethod = hatching.AlternateSort()
     
-# Set the initial values for model and build style parameters
-bstyle = pyslm.geometry.BuildStyle()
-bstyle.bid = 1
-bstyle.laserSpeed = 200.0  # [mm/s]
-bstyle.laserPower = 200  # [W]#
-bstyle.pointDistance = 60  # (60 microns)
-bstyle.pointExposureTime = 30  # (30 micro seconds)
+MIN_POWER_LVL = min(config_powers.keys())
+MAX_POWER_LVL = max(config_powers.keys())
 
+# Instantiate model and set model parameters
 model = pyslm.geometry.Model()
 model.mid = 1
-model.buildStyles.append(bstyle)
+
+# Set the initial values for possible build style parameters
+for style_id, seg_style in segstyles.iterrows():    
+    bstyle = pyslm.geometry.BuildStyle()
+    bstyle.bid = style_id
+    bstyle.name = seg_style['SegStyles']
+    bstyle.laserSpeed = 200     
+    bstyle.laserPower = seg_style['Powers']  # [W]#
+    bstyle.pointDistance = 60  # (60 microns)
+    bstyle.pointExposureTime = 30  # (30 micro seconds)
+        
+    model.buildStyles.append(bstyle)
+    
 resolution = 0.2
 
 # Set the layer thickness
@@ -89,10 +104,15 @@ LAYER_THICKNESS = 1  # [mm]
 
 # Keep track of parameters
 layers = []
-
-N_MOVING_AVG = 1 # This should be dependent on the number of layers in the part. For only 22 layers, 1 works best 
+layer_times = []
+layer_powers = []
+layer_speeds = []
+layer_segstyles = []
 
 # Perform the hatching operations
+layer_segstyle = 11
+layer_power = model.buildStyles[layer_segstyle].laserPower
+layer_speed = model.buildStyles[layer_segstyle].laserSpeed
 for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
@@ -122,7 +142,33 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
-      
+    
+    # Get parameters for each layer and collect
+    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+    layer_powers.append(layer_power)
+    layer_speeds.append(layer_speed)
+    layer_segstyles.append(model.buildStyles[layer_segstyle].name)
+    '''
+    Scale parameters by how much time it's taking to scan layers.
+    Attempts to address "pyramid problem" where as you move up building a part 
+    shaped like a pyramid, layers take less time, and there's less time for 
+    things to cool off, which leads to problems with the part.
+    '''
+    ACTIVATION_DIFF = .5
+    if CHANGE_PARAMS and len(layer_times) > 1:
+        dt = np.diff(layer_times)
+        if CHANGE_POWER:
+        # As time goes down, so should power
+            if dt[len(dt)-1] > ACTIVATION_DIFF and layer_segstyle < MAX_POWER_LVL:
+                layer_segstyle += 1
+            elif dt[len(dt)-1] < -ACTIVATION_DIFF and layer_segstyle > MIN_POWER_LVL:
+                layer_segstyle -= 1
+            layer_power = model.buildStyles[layer_segstyle].laserPower
+        if CHANGE_SPEED:
+        # As time goes down, so should speed
+            layer_speed = model.buildStyles[layer_segstyle].laserSpeed
+
+    
     layers.append(layer)
 
     # Change hatch angle every layer
@@ -131,7 +177,9 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
 
 '''
-STEP 2: Get list of coordinates, one list for each trajectory, e.g. hatches and contours.        
+STEP 2: Get list of coordinates, one list for each trajectory, e.g. hatches and contours.
+        Note that SegStyle parameters for each layer, e.g. power and speed,
+        are stored in layer_segstyles       
 '''
 
 #Coordinates For Hatches - flat 1D array, segments 0:1, 2:3, 4:5, etc.
@@ -153,10 +201,11 @@ STEP 3: Write the XML files and zip
 
 output_path = 'xml'
 scan_mode = ScanMode.ContourFirst # Currently, scan mode is the same for all layers. We should change this at some point.
-config = ConfigFile('OASIS Ex_ Parameter_quality_nut_2.xls')
+config = ConfigFile('build_config.xls')
 xml_out = XMLWriter(output_path, config)   
-xml_out.output_xml(contour_layers, hatch_layers, scan_mode)
+xml_out.output_xml(contour_layers, hatch_layers, layer_segstyles, scan_mode)
 xml_out.output_zip()
+print(layer_segstyles)
 
 
 
