@@ -26,6 +26,7 @@ import pyslm
 import pyslm.visualise
 import pyslm.analysis
 import pyslm.geometry
+import pyslm.hatching.multiple
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
@@ -59,6 +60,7 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
+USE_SCANPATH_SWITCHING = True
 
 WRITE_DEBUG = eval_bool(values[30])
 debug_file = open("debug.txt", "w")
@@ -94,18 +96,20 @@ if WRITE_DEBUG:
     debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
     debug_file.write("\n")
 
-# Function takes in a pd.ExcelFile() instance (and debug file) and returns an array of arrays, each inside array with the following structure:
-# [0]: ID of the given Area (Equation: "<Row of Excel Sheet> - 2")
-# [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
-# [2]: scanpath identifier (`default`, `island`, etc.)
-# [3]: General Parameters (True/False)
-scanpath_info = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
-print("scanpath_info: \n{}".format(scanpath_info))
+if USE_SCANPATH_SWITCHING:
 
-# Function takes in the array from the previous call and returns an array of [hatcher instance, area]
-#   corresponding to the parameters and scan path type given in the array.
-scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
-print("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
+    # Function takes in a pd.ExcelFile() instance (and debug file) and returns an array of arrays, each inside array with the following structure:
+    # [0]: ID of the given Area (Equation: "<Row of Excel Sheet> - 2")
+    # [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
+    # [2]: scanpath identifier (`default`, `island`, etc.)
+    # [3]: General Parameters (True/False)
+    scanpath_info = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
+    print("scanpath_info: \n{}".format(scanpath_info))
+
+    # Function takes in the array from the previous call and returns an array of [hatcher instance, area]
+    #   corresponding to the parameters and scan path type given in the array.
+    scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
+    print("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
 
 # Initialize Part
 Part = pyslm.Part(PART_NAME)
@@ -166,7 +170,11 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
-    layer = myHatcher.hatch(geom_slice)  # Hatch layer
+
+    if USE_SCANPATH_SWITCHING:
+
+    else:
+        layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
     # Vector Splitting; to use, switch to Hatcher()
     '''
