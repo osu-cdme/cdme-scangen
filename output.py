@@ -1,7 +1,8 @@
 
 """
-This file also serves as an example showing how to use this project to output XML files for the
-ALSAM controller
+HEADER:
+    output.py is an example for how to use PySLM and this project to output 
+    XML files for the ALSAM controller and HDF5 files for research data
 """
 
 import numpy as np
@@ -20,8 +21,8 @@ from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
-import src.output.xml_config as xml_config
-from src.output.xml_io import ConfigFile, XMLWriter
+import src.output.config_build as config_build
+from src.output.xml_hdf5_io import ConfigFile, XMLWriter, HDF5Writer
 from pyslm.geometry import ScanMode
 
 
@@ -175,41 +176,84 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
 
-
 '''
-STEP 2: Get list of coordinates, one list for each trajectory, e.g. hatches and contours.
+STEP 2: 
+    
+        * This part of the workflow needs help with performance *
+    
+        Get list of coordinates, one list for each trajectory, e.g. hatches and contours.
         Note that SegStyle parameters for each layer, e.g. power and speed,
         are stored in layer_segstyles       
 '''
 
-#Coordinates For Hatches - flat 1D array, segments 0:1, 2:3, 4:5, etc.
-hatch_layers = []
+
+hatches_layers = np.empty(len(layers),dtype=object)
+contours_layers = np.empty(len(layers),dtype=object)
+coords_layers = np.empty(len(layers),dtype=object)
+i = 0       
 for layer in layers:
-    hatches = np.array([hatchGeom.coords for hatchGeom in layer.getHatchGeometry()], dtype='object').reshape(-1)
-    hatch_layers.append(hatches)
+     
+    # Hatch coordinates    
+    hatch_coords_len = 0
+    for hatchGeom in layer.getHatchGeometry():
+        hatch_coords_len += len(hatchGeom.coords.flatten())
+    hatches_layers[i] = np.empty(hatch_coords_len, dtype=object)
+    j = 0
+    for hatchGeom in layer.getHatchGeometry():           
+        for coord in hatchGeom.coords.flatten():
+            hatches_layers[i][j] = coord
+            j += 1
     
-#Coordinates For Contours - flat 1D array, segments 0:1, 2:3, 4:5, etc.
-contour_layers = []
-for layer in layers:
-    contours = np.array([contourGeom.coords for contourGeom in layer.getContourGeometry()], dtype='object').reshape(-1)
-    contour_layers.append(contours)
+    # Contour coordinates
+    contour_coords_len = 0
+    for contourGeom in layer.getContourGeometry():
+        contour_coords_len += len(contourGeom.coords.flatten())
+    contours_layers[i] = np.empty(contour_coords_len, dtype=object)
+    j = 0
+    for contourGeom in layer.getContourGeometry():           
+        for coord in contourGeom.coords.flatten():
+            contours_layers[i][j] = coord
+            j += 1
+    
+    # All coordinates together     
+    coords_layers[i] = np.empty(hatch_coords_len + contour_coords_len, dtype='d') 
+    scan_mode = ScanMode.HatchFirst    
+    for j in range(len(coords_layers[i])):
+        if scan_mode == ScanMode.HatchFirst:
+            for k in range(len(hatches_layers[i])):
+                coords_layers[i][k] = hatches_layers[i][k]
+            for k in range(len(contours_layers[i])):
+                coords_layers[i][len(hatches_layers[i])+k] = contours_layers[i][k]
+        else:
+            for k in range(len(contours_layers[i])):
+                coords_layers[i][k] = contours_layers[i][k]
+            for k in range(len(hatches_layers[i])):
+                coords_layers[i][len(contours_layers[i])+k] = hatches_layers[i][k]
+    i += 1
+    
+        
+
     
 
 '''
-STEP 3: Write the XML files and zip       
+STEP 3 part 1: Write the XML files and zip       
 '''
 
 output_path = 'xml'
 scan_mode = ScanMode.ContourFirst # Currently, scan mode is the same for all layers. We should change this at some point.
 config = ConfigFile('build_config.xls')
 xml_out = XMLWriter(output_path, config)   
-xml_out.output_xml(contour_layers, hatch_layers, layer_segstyles, scan_mode)
+xml_out.output_xml(contours_layers, hatches_layers, layer_segstyles, scan_mode)
 xml_out.output_zip()
-print(layer_segstyles)
 
+'''
+STEP 3 part 2: Write to the HDF5 File       
+'''
 
-
-
+output_path = 'hdf5'
+config = ConfigFile('build_config.xls')
+hdf5_out = HDF5Writer(output_path, config)
+hdf5_out.output_hdf5(coords_layers, layer_powers, layer_speeds)
 
 
 

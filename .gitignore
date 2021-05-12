@@ -138,7 +138,8 @@ dmypy.json
 cython_debug/
 
 .pdf
-xml/
+xml/*
+hdf5/*
 
 # SPECIFIC TO US; everything above is from an outside .gitignore 
 
@@ -148,4 +149,5 @@ debug.txt
 
 # Excel lock file
 ~$config.xlsx
+~$build_config.xls
 
