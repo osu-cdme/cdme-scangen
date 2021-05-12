@@ -201,6 +201,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     layer_powers.append(layer_power)
     layer_speeds.append(layer_speed)
     layer_segstyles.append(model.buildStyles[layer_segstyle].name)
+    
     '''
     Scale parameters by how much time it's taking to scan layers.
     Attempts to address "pyramid problem" where as you move up building a part 
