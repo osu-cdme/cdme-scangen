@@ -1,4 +1,4 @@
-
+#%%
 """
 HEADER:
     output.py is an example for how to use PySLM and this project to output 
@@ -26,8 +26,9 @@ from src.output.xml_hdf5_io import ConfigFile, XMLWriter, HDF5Writer
 from pyslm.geometry import ScanMode
 
 
+#%%
 '''
-STEP 1: Initialize part, slice the part, and generate scan path (per main.py)
+STEP 1: Initialize part, build, and program parameters
 '''
 
 # Import Excel Parameters
@@ -49,6 +50,10 @@ PLOT_TIME = eval_bool(values[15])
 CHANGE_PARAMS = eval_bool(values[3]) 
 CHANGE_POWER = eval_bool(values[4]) 
 CHANGE_SPEED = eval_bool(values[5])
+
+SCAN_MODE = ScanMode.HatchFirst
+if(eval_bool(values[30])):
+    SCAN_MODE = ScanMode.ContourFirst
 
 # Initialize Part
 Part = pyslm.Part('nut')
@@ -103,23 +108,29 @@ resolution = 0.2
 # Set the layer thickness
 LAYER_THICKNESS = 1  # [mm]
 
+#%%
+'''
+STEP 2: Slice part and generate scan paths. Format data for XML and HDF5
+'''
 # Keep track of parameters
 layers = []
 layer_times = []
 layer_powers = []
 layer_speeds = []
-layer_segstyles = []
+layers_segstyles = []
+layers_paths = np.empty(len(np.arange(0, Part.boundingBox[5],
+                        LAYER_THICKNESS)), dtype=object)
 
-# Perform the hatching operations
-layer_segstyle = 11
-layer_power = model.buildStyles[layer_segstyle].laserPower
-layer_speed = model.buildStyles[layer_segstyle].laserSpeed
+segstyle_index = 60
+layer_power = model.buildStyles[segstyle_index].laserPower
+layer_speed = model.buildStyles[segstyle_index].laserSpeed
+i = 0
 for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
-    layer = myHatcher.hatch(geom_slice)  # Hatch layer
-
+    layer = myHatcher.hatch(geom_slice)  # Scan strategy / slicer
+    
     # Vector Splitting; to use, switch to Hatcher()
     '''
     CUTOFF = 2  # mm
@@ -137,9 +148,29 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
             coords = lengthen_short_vectors(geometry.coords, CUTOFF)
             geometry.coords = coords
     '''
+    
+    hatch_geoms = layer.getHatchGeometry()
+    if len(hatch_geoms) > 0:
+        hatches = np.vstack([hatch_geom.coords.reshape(-1, 2) for hatch_geom in hatch_geoms])
+        
+    contour_geoms = layer.getContourGeometry()
+    if len(contour_geoms) > 0:
+        contours = np.vstack([contour_geom.coords.reshape(-1, 2) for contour_geom in contour_geoms])
+    
+    # Always do contour first
+    paths = [None, None]
+    if SCAN_MODE == ScanMode.ContourFirst:
+        paths[0] = contours
+        paths[1] = hatches
+    else:
+        paths[0] = hatches
+        paths[1] = contours
+    
+    layers_paths[i] = paths
 
     # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
+    
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
@@ -148,7 +179,9 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
     layer_powers.append(layer_power)
     layer_speeds.append(layer_speed)
-    layer_segstyles.append(model.buildStyles[layer_segstyle].name)
+    
+    layers_segstyles.append(model.buildStyles[segstyle_index].name)
+    
     '''
     Scale parameters by how much time it's taking to scan layers.
     Attempts to address "pyramid problem" where as you move up building a part 
@@ -160,14 +193,14 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         dt = np.diff(layer_times)
         if CHANGE_POWER:
         # As time goes down, so should power
-            if dt[len(dt)-1] > ACTIVATION_DIFF and layer_segstyle < MAX_POWER_LVL:
-                layer_segstyle += 1
-            elif dt[len(dt)-1] < -ACTIVATION_DIFF and layer_segstyle > MIN_POWER_LVL:
-                layer_segstyle -= 1
-            layer_power = model.buildStyles[layer_segstyle].laserPower
+            if dt[len(dt)-1] > ACTIVATION_DIFF and segstyle_index < MAX_POWER_LVL:
+                segstyle_index += 1
+            elif dt[len(dt)-1] < -ACTIVATION_DIFF and segstyle_index > MIN_POWER_LVL:
+                segstyle_index -= 1
+            layer_power = model.buildStyles[segstyle_index].laserPower
         if CHANGE_SPEED:
         # As time goes down, so should speed
-            layer_speed = model.buildStyles[layer_segstyle].laserSpeed
+            layer_speed = model.buildStyles[segstyle_index].laserSpeed
 
     
     layers.append(layer)
@@ -175,66 +208,13 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
-
-'''
-STEP 2: 
     
-        * This part of the workflow needs help with performance *
-    
-        Get list of coordinates, one list for each trajectory, e.g. hatches and contours.
-        Note that SegStyle parameters for each layer, e.g. power and speed,
-        are stored in layer_segstyles       
-'''
-
-
-hatches_layers = np.empty(len(layers),dtype=object)
-contours_layers = np.empty(len(layers),dtype=object)
-coords_layers = np.empty(len(layers),dtype=object)
-i = 0       
-for layer in layers:
-     
-    # Hatch coordinates    
-    hatch_coords_len = 0
-    for hatchGeom in layer.getHatchGeometry():
-        hatch_coords_len += len(hatchGeom.coords.flatten())
-    hatches_layers[i] = np.empty(hatch_coords_len, dtype=object)
-    j = 0
-    for hatchGeom in layer.getHatchGeometry():           
-        for coord in hatchGeom.coords.flatten():
-            hatches_layers[i][j] = coord
-            j += 1
-    
-    # Contour coordinates
-    contour_coords_len = 0
-    for contourGeom in layer.getContourGeometry():
-        contour_coords_len += len(contourGeom.coords.flatten())
-    contours_layers[i] = np.empty(contour_coords_len, dtype=object)
-    j = 0
-    for contourGeom in layer.getContourGeometry():           
-        for coord in contourGeom.coords.flatten():
-            contours_layers[i][j] = coord
-            j += 1
-    
-    # All coordinates together     
-    coords_layers[i] = np.empty(hatch_coords_len + contour_coords_len, dtype='d') 
-    scan_mode = ScanMode.HatchFirst    
-    for j in range(len(coords_layers[i])):
-        if scan_mode == ScanMode.HatchFirst:
-            for k in range(len(hatches_layers[i])):
-                coords_layers[i][k] = hatches_layers[i][k]
-            for k in range(len(contours_layers[i])):
-                coords_layers[i][len(hatches_layers[i])+k] = contours_layers[i][k]
-        else:
-            for k in range(len(contours_layers[i])):
-                coords_layers[i][k] = contours_layers[i][k]
-            for k in range(len(hatches_layers[i])):
-                coords_layers[i][len(contours_layers[i])+k] = hatches_layers[i][k]
-    i += 1
+    i+=1
     
         
 
     
-
+#%%
 '''
 STEP 3 part 1: Write the XML files and zip       
 '''
@@ -243,9 +223,10 @@ output_path = 'xml'
 scan_mode = ScanMode.ContourFirst # Currently, scan mode is the same for all layers. We should change this at some point.
 config = ConfigFile('build_config.xls')
 xml_out = XMLWriter(output_path, config)   
-xml_out.output_xml(contours_layers, hatches_layers, layer_segstyles, scan_mode)
+xml_out.output_xml(layers_paths, layers_segstyles, scan_mode)
 xml_out.output_zip()
 
+#%%
 '''
 STEP 3 part 2: Write to the HDF5 File       
 '''
@@ -253,7 +234,7 @@ STEP 3 part 2: Write to the HDF5 File
 output_path = 'hdf5'
 config = ConfigFile('build_config.xls')
 hdf5_out = HDF5Writer(output_path, config)
-hdf5_out.output_hdf5(coords_layers, layer_powers, layer_speeds)
+hdf5_out.output_hdf5(layers_paths, layer_powers, layer_speeds)
 
 
 

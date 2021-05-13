@@ -85,7 +85,7 @@ class XMLWriter():
             str(self.pl.header.DosingFactor)
         return h
 
-    def make_velocity_profile(self):
+    def make_velocity_profiles(self):
         vpl = etree.Element('VelocityProfileList')
 
         ls_vpl = self.pl.vel_profile
@@ -103,7 +103,7 @@ class XMLWriter():
 
         return vpl
 
-    def make_segment_style(self):
+    def make_segment_styles(self):
         xsl_root = etree.Element('SegmentStyleList')
 
         ls_seg = self.pl.seg_style
@@ -114,108 +114,58 @@ class XMLWriter():
             etree.SubElement(xsl, 'VelocityProfileID').text = str(
                 sl.VelocityProfileID)
             etree.SubElement(xsl, 'LaserMode').text = str(sl.LaserMode)
-
-            xtl = etree.SubElement(xsl, 'Traveler')
-
-            etree.SubElement(xtl, 'ID').text = str(sl.Traveler.ID)
-            etree.SubElement(xtl, 'SyncDelay').text = str(
-                sl.Traveler.SyncDelay)
-            etree.SubElement(xtl, 'Power').text = str(sl.Traveler.Power)
-            etree.SubElement(xtl, 'SpotSize').text = str(sl.Traveler.SpotSize)
+            
+            if (etree.SubElement(xsl, 'ID').text != "Jump"):
+                xtl = etree.SubElement(xsl, 'Traveler')
+    
+                etree.SubElement(xtl, 'ID').text = str(sl.Traveler.ID)
+                etree.SubElement(xtl, 'SyncDelay').text = str(
+                    sl.Traveler.SyncDelay)
+                etree.SubElement(xtl, 'Power').text = str(sl.Traveler.Power)
+                etree.SubElement(xtl, 'SpotSize').text = str(sl.Traveler.SpotSize)
 
         return xsl_root
 
-    def make_trajectory(self, contours: List[float], hatches: List[float], layer_segstyle: str, scan_mode: ScanMode): # unstack and make one list, broken down by segments instead of coordinates - do that in the test2 file, assume it is already unstacked in trajectory function
+    
+    def make_traj_list(self, layer_paths: np.ndarray, layer_segstyle: str, scan_mode: ScanMode): # unstack and make one list, broken down by segments instead of coordinates - do that in the test2 file, assume it is already unstacked in trajectory function
           
         xtraj_root = etree.Element('TrajectoryList')
 
-        # Contour trajectory
-        ctraj = etree.SubElement(xtraj_root, 'Trajectory')
-        etree.SubElement(ctraj, 'TrajectoryID').text = '0'
-        etree.SubElement(ctraj, 'PathProcessingMode').text = "sequential" # add control flow for multipart       
-
-        # Hatches trajectory
-        htraj = etree.SubElement(xtraj_root, 'Trajectory')
-        etree.SubElement(htraj, 'TrajectoryID').text = '1'
-        etree.SubElement(htraj, 'PathProcessingMode').text = "sequential" # add control flow for multipart
-              
-            
-        cpath = etree.SubElement(ctraj, 'Path') # Make path subtree - add control flow for multipart   
-        hpath = etree.SubElement(htraj, 'Path')
+        # Add control flow for >1 trajectory            
+        traj = etree.SubElement(xtraj_root, 'Trajectory')
+        etree.SubElement(traj, 'TrajectoryID').text = '0'
+        etree.SubElement(traj, 'PathProcessingMode').text = "sequential" # add control flow for multipart                               
         
-        if (scan_mode == ScanMode.ContourFirst):
-                
-            etree.SubElement(cpath, 'Type').text = 'contour'
-            etree.SubElement(cpath, 'Tag').text = 'part1'
-            etree.SubElement(cpath, 'NumSegments').text = str(len(contours)//2)
-            etree.SubElement(cpath, 'SkyWritingMode').text = str(0)
-            start = etree.SubElement(cpath, 'Start')
-            etree.SubElement(start, 'X').text = str(contours[0])
-            etree.SubElement(start, 'Y').text = str(contours[1])
-                
-            # Create segments for each contour and hatch coordinates
-            for i in range(2, len(contours), 2):
-                seg = etree.SubElement(cpath, 'Segment')
-                # index of segment in list
-                etree.SubElement(seg, 'SegmentID').text = str(int(i//2))
-                etree.SubElement(seg, 'SegStyle').text = layer_segstyle
-                end = etree.SubElement(seg, 'End')
-                etree.SubElement(end, 'X').text = str(contours[i])
-                etree.SubElement(end, 'Y').text = str(contours[i+1])
-                    
-            etree.SubElement(hpath, 'Type').text = 'hatch'
-            etree.SubElement(hpath, 'Tag').text = 'part1'
-            etree.SubElement(hpath, 'NumSegments').text = str(len(hatches)//2)
-            etree.SubElement(hpath, 'SkyWritingMode').text = str(0) # Why is it a dict with one key 'Main'?
-            start = etree.SubElement(hpath, 'Start')
-            etree.SubElement(start, 'X').text = str(hatches[0])
-            etree.SubElement(start, 'Y').text = str(hatches[1])
-
-            for i in range(2, len(hatches), 2):
-                seg = etree.SubElement(hpath, 'Segment')
-                # index of segment in list
-                etree.SubElement(seg, 'SegmentID').text = str(int(i//2))
-                etree.SubElement(seg, 'SegStyle').text = layer_segstyle
-                end = etree.SubElement(seg, 'End')
-                etree.SubElement(end, 'X').text = str(hatches[i])
-                etree.SubElement(end, 'Y').text = str(hatches[i+1])
-                       
-        else:
+        for path in range(len(layer_paths)):
             
-            etree.SubElement(hpath, 'Type').text = 'hatch'
-            etree.SubElement(hpath, 'Tag').text = 'part1'
-            etree.SubElement(hpath, 'NumSegments').text = str(len(hatches)//2)
-            etree.SubElement(hpath, 'SkyWritingMode').text = str(0) # Why is it a dict with one key 'Main'?
-            start = etree.SubElement(hpath, 'Start')
-            etree.SubElement(start, 'X').text = str(hatches[0])
-            etree.SubElement(start, 'Y').text = str(hatches[1])
-
-            for i in range(2, len(hatches), 2):
-                seg = etree.SubElement(hpath, 'Segment')
-                # index of segment in list
-                etree.SubElement(seg, 'SegmentID').text = str(int(i//2))
-                etree.SubElement(seg, 'SegStyle').text = layer_segstyle.name
-                end = etree.SubElement(seg, 'End')
-                etree.SubElement(end, 'X').text = str(hatches[i])
-                etree.SubElement(end, 'Y').text = str(hatches[i+1])
+            xpath = etree.SubElement(traj, 'Path')
+            
+            if scan_mode == ScanMode.ContourFirst:
+                etree.SubElement(xpath, 'Type').text = 'contour'
+                scan_mode = ScanMode.HatchFirst
+            else:
+                etree.SubElement(xpath, 'Type').text = 'hatch'
                 
-            etree.SubElement(cpath, 'Type').text = 'contour'
-            etree.SubElement(cpath, 'Tag').text = 'part1'
-            etree.SubElement(cpath, 'NumSegments').text = str(len(contours)//2)
-            etree.SubElement(cpath, 'SkyWritingMode').text = str(0)
-            start = etree.SubElement(cpath, 'Start')
-            etree.SubElement(start, 'X').text = str(contours[0])
-            etree.SubElement(start, 'Y').text = str(contours[1])
-                
+            etree.SubElement(xpath, 'Tag').text = 'part1'
+            etree.SubElement(xpath, 'NumSegments').text = str(len(layer_paths[0])-1)
+            etree.SubElement(xpath, 'SkyWritingMode').text = str(0)
+            start = etree.SubElement(xpath, 'Start')
+            etree.SubElement(start, 'X').text = str(layer_paths[path][(0,0)])
+            etree.SubElement(start, 'Y').text = str(layer_paths[path][(0,1)])
+                    
             # Create segments for each contour and hatch coordinates
-            for i in range(2, len(contours), 2):
-                seg = etree.SubElement(cpath, 'Segment')
-                # index of segment in list
-                etree.SubElement(seg, 'SegmentID').text = str(int(i//2))
-                etree.SubElement(seg, 'SegStyle').text = layer_segstyle.name
+            for i in range(1, len(layer_paths[path])):
+                seg = etree.SubElement(xpath, 'Segment')
+                etree.SubElement(seg, 'SegmentID').text = str(i)
+                # For hatches, every other segment is going to be a jump vector
+                if (path == 1 and i % 2 == 0):
+                    etree.SubElement(seg, 'SegStyle').text = 'Jump'                    
+                else: 
+                    etree.SubElement(seg, 'SegStyle').text = layer_segstyle
                 end = etree.SubElement(seg, 'End')
-                etree.SubElement(end, 'X').text = str(contours[i])
-                etree.SubElement(end, 'Y').text = str(contours[i+1])
+                etree.SubElement(end, 'X').text = str(layer_paths[path][(i,0)])
+                etree.SubElement(end, 'Y').text = str(layer_paths[path][(i,1)])
+                                                 
                                                   
         return xtraj_root
     
@@ -224,35 +174,33 @@ class XMLWriter():
     
     Needs flat 1D lists of coordinates for Lcontour and Lhatch e.g. [x1, y2, x2, y2, x3, y3]
     """            
-    def write_layer(self, Lcontour, Lhatch, layer_num: int, layer_segstyle: str, scan_mode: ScanMode):
+    def write_layer(self, layer_paths: np.ndarray, layer_num: int, layer_segstyle: str, scan_mode: ScanMode):
         with etree.xmlfile(self.out + '/scan_' + str(layer_num) + '.xml') as xf:
             with xf.element('Layer'):
                 xf.write(self.make_header(layer_num), pretty_print=True)
-                xf.write(self.make_velocity_profile(), pretty_print=True)
-                xf.write(self.make_segment_style(), pretty_print=True)
-                xf.write(self.make_trajectory(Lcontour, Lhatch, layer_segstyle, scan_mode), pretty_print=True)
+                xf.write(self.make_velocity_profiles(), pretty_print=True)
+                xf.write(self.make_segment_styles(), pretty_print=True)
+                xf.write(self.make_traj_list(layer_paths, layer_segstyle, scan_mode), pretty_print=True)
 
     """
     Outputs all XML layer files
     
     Needs a List of Lists of flat 1D of coordinates, see above
     """
-    def output_xml(self, contour_layers, hatch_layers, layer_segstyles: List[str], scan_mode: ScanMode):
+    def output_xml(self, layers_paths: np.ndarray, layers_segstyles: List[str], scan_mode: ScanMode):
         
         # Create/wipe folder
         if not os.path.exists("xml"):
             os.makedirs("xml")
         else:
             for f in glob.glob("xml/*"):
-                os.remove(f)
+                os.remove(f)  
         
-        num_layers = len(contour_layers)    
-        
-        for i in range(0, num_layers):
+        for i in range(0, len(layers_paths)):
             print('XML Layer # ' + str(i+1) + ' Started')
             xml_path = '../../' + self.out + '/scan_' + str(i+1) + '.xml'
             print(xml_path)
-            self.write_layer(contour_layers[i], hatch_layers[i], i+1, layer_segstyles[i], scan_mode)
+            self.write_layer(layers_paths[i], i+1, layers_segstyles[i], scan_mode)
             print('XML Layer # ' + str(i+1) + ' Complete\n')
             
         return
@@ -275,6 +223,10 @@ class XMLWriter():
         print(self.out + '/scanpath_files.zip was created successfully')
         return
 
+'''
+This does not use ConfigFile to get any of its data. The method parameters() 
+takes coordinates,  
+'''
 class HDF5Writer():
     
     def __init__(self, output_path: str, print_loader: ConfigFile):
@@ -282,11 +234,15 @@ class HDF5Writer():
         self.pl = print_loader
     
     # Get data for HDF5 File
-    def parameters(self, layer_coords: List[float], layer_power: float, 
+    def parameters(self, layer_paths: np.ndarray, layer_power: float, 
                    layer_speed: float, layer_num: int):
         
         # preallocate points data
-        points = np.reshape(layer_coords, (-1,2))
+        segments_len = 0
+        for path in layer_paths:
+            segments_len += len(path)
+        points = np.concatenate((layer_paths[0], layer_paths[1]), axis=0)
+        
         times = np.empty(len(points), dtype='d')
         
         # preallocate edge data
@@ -343,9 +299,9 @@ class HDF5Writer():
         return (powers,velocities,edges,points,times,dlt,flt,lh,lt,lst,lengths,neighbors)
     
     # Writes 1 layer to HDF5
-    def write_layer(self, layer_coords: List[float], layer_power: float, 
+    def write_layer(self, layer_paths: np.ndarray, layer_power: float, 
                     layer_speed: float, layer_num: int):
-        params = self.parameters(layer_coords, layer_power, layer_speed, 
+        params = self.parameters(layer_paths, layer_power, layer_speed, 
                                  layer_num)
         with h5py.File(self.out + "/Nut.hdf5", "a") as f:
             grp = f.create_group(str(layer_num))
@@ -362,7 +318,7 @@ class HDF5Writer():
             subgrp1.create_dataset('neighbors', data=params[11])
     
     # Writes data to HDF5 file
-    def output_hdf5(self, coords_layers: List[List[float]], 
+    def output_hdf5(self, layers_paths: np.ndarray, 
                     powers_layers: List[float], speeds_layers: List[float]):
         
         # Create/wipe folder
@@ -372,15 +328,15 @@ class HDF5Writer():
             for f in glob.glob("hdf5/*"):
                 os.remove(f)
         
-        data_layer_times = np.zeros(len(coords_layers), dtype='d')
-        file_layer_times = np.zeros(len(coords_layers), dtype='d')
-        layer_height = np.zeros(len(coords_layers), dtype='d')
-        layer_thickness = np.zeros(len(coords_layers), dtype='d')
-        layer_start_times = np.zeros((len(coords_layers),1), dtype='d')
+        data_layer_times = np.zeros(len(layers_paths), dtype='d')
+        file_layer_times = np.zeros(len(layers_paths), dtype='d')
+        layer_height = np.zeros(len(layers_paths), dtype='d')
+        layer_thickness = np.zeros(len(layers_paths), dtype='d')
+        layer_start_times = np.zeros((len(layers_paths),1), dtype='d')
         
-        for layer in range(len(coords_layers)):
+        for layer in range(len(layers_paths)):
         
-            params = self.parameters(coords_layers[layer], 
+            params = self.parameters(layers_paths[layer], 
                                      powers_layers[layer], 
                                      speeds_layers[layer], layer)
         
@@ -396,7 +352,7 @@ class HDF5Writer():
                 st2 = layer_start_times[layer-1] + data_layer_times[layer-1]
                 layer_start_times[layer] = st2
         
-            self.write_layer(coords_layers[layer], powers_layers[layer], 
+            self.write_layer(layers_paths[layer], powers_layers[layer], 
                              speeds_layers[layer], layer)
         
         
@@ -409,4 +365,17 @@ class HDF5Writer():
             f.create_dataset("/layer_thickness", data=layer_thickness, dtype='d')
         
         print(self.out + "/Nut.hdf5 was created successfully")
-    
+
+'''
+Requires in_dir to contain only XML files
+
+Requires out_path to be in an existing directory
+'''
+def xml_to_hdf5(in_dir: str, out_path: str):
+    pass
+
+'''
+Requires in_path to be an HDF5 file in an existing directory
+'''
+def hdf5_to_xml(in_path: str, out_dir: str):
+    pass
