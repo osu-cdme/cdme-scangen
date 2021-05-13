@@ -137,15 +137,15 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-.pdf
-xml/*
-hdf5/*
 
 # SPECIFIC TO US; everything above is from an outside .gitignore 
 
 # Temporary output
 LayerFiles/* 
-debug.txt 
+debug.txt
+.pdf
+xml/*
+hdf5/*
 
 # Excel lock file
 ~$config.xlsx
