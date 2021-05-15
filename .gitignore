@@ -144,7 +144,7 @@ cython_debug/
 LayerFiles/* 
 debug.txt
 .pdf
-xml/*
+xml\*
 hdf5/*
 
 # Excel lock file
