@@ -51,9 +51,10 @@ CHANGE_PARAMS = eval_bool(values[3])
 CHANGE_POWER = eval_bool(values[4]) 
 CHANGE_SPEED = eval_bool(values[5])
 
-SCAN_MODE = ScanMode.HatchFirst
 if(eval_bool(values[30])):
     SCAN_MODE = ScanMode.ContourFirst
+else:
+    SCAN_MODE = ScanMode.HatchFirst
 
 # Initialize Part
 Part = pyslm.Part('nut')
@@ -220,10 +221,9 @@ STEP 3 part 1: Write the XML files and zip
 '''
 
 output_path = 'xml'
-scan_mode = ScanMode.ContourFirst # Currently, scan mode is the same for all layers. We should change this at some point.
 config = ConfigFile('build_config.xls')
 xml_out = XMLWriter(output_path, config)   
-xml_out.output_xml(layers_paths, layers_segstyles, scan_mode)
+xml_out.output_xml(layers_paths, layers_segstyles, SCAN_MODE)
 xml_out.output_zip()
 
 #%%
@@ -231,10 +231,10 @@ xml_out.output_zip()
 STEP 3 part 2: Write to the HDF5 File       
 '''
 
-output_path = 'hdf5'
-config = ConfigFile('build_config.xls')
-hdf5_out = HDF5Writer(output_path, config)
-hdf5_out.output_hdf5(layers_paths, layer_powers, layer_speeds)
+output_dir = 'hdf5'
+file_name = PART_NAME[0:len(PART_NAME)-4] + ".hdf5"
+hdf5_out = HDF5Writer(output_dir)
+hdf5_out.output_hdf5(layers_paths, layer_powers, layer_speeds, file_name, SCAN_MODE)
 
 
 
