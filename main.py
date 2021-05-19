@@ -62,39 +62,37 @@ PLOT_SPEED = eval_bool(values[18])
 
 USE_SCANPATH_SWITCHING = True
 
-WRITE_DEBUG = eval_bool(values[30])
 debug_file = open("debug.txt", "w")
-if WRITE_DEBUG:
 
-    # Run Configuration 
-    debug_file.writelines("General\n")
-    debug_file.write("--------------------\n")
-    debug_file.write("PART_NAME: {}\n".format(PART_NAME))
-    debug_file.write("\n")
+# Run Configuration 
+debug_file.writelines("General\n")
+debug_file.write("--------------------\n")
+debug_file.write("PART_NAME: {}\n".format(PART_NAME))
+debug_file.write("\n")
 
-    # Parameter Changing
-    debug_file.write("Parameter Changing\n")
-    debug_file.write("--------------------\n")
-    debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
-    debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
-    debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
-    debug_file.write("\n")
+# Parameter Changing
+debug_file.write("Parameter Changing\n")
+debug_file.write("--------------------\n")
+debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
+debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
+debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
+debug_file.write("\n")
 
-    # Plotting
-    debug_file.write("Plotting\n")
-    debug_file.write("--------------------\n")
-    debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
-    debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
-    debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
-    debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
-    debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
-    debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
-    debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
-    debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
-    debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
-    debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
-    debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
-    debug_file.write("\n")
+# Plotting
+debug_file.write("Plotting\n")
+debug_file.write("--------------------\n")
+debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
+debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
+debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
+debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
+debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
+debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
+debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
+debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
+debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
+debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
+debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
+debug_file.write("\n")
 
 if USE_SCANPATH_SWITCHING:
 
@@ -104,12 +102,12 @@ if USE_SCANPATH_SWITCHING:
     # [2]: scanpath identifier (`default`, `island`, etc.)
     # [3]: General Parameters (True/False)
     scanpath_info = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
-    print("scanpath_info: \n{}".format(scanpath_info))
+    debug_file.write("scanpath_info: \n{}".format(scanpath_info))
 
     # Function takes in the array from the previous call and returns an array of [hatcher instance, area]
     #   corresponding to the parameters and scan path type given in the array.
     scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
-    print("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
+    debug_file.write("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
 
 # Initialize Part
 Part = pyslm.Part(PART_NAME)
@@ -172,7 +170,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
     if USE_SCANPATH_SWITCHING:
-
+        pass 
     else:
         layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
