@@ -14,6 +14,8 @@ from ..island.island import BasicIslandHatcherRandomOrder
 # TODO: Tracking IDs is redundant; remove from excel file and just use array indexes as equivalent 
 def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextIOWrapper) -> list:
     """Reads in an Excel file, outputting an array-based representation of areas and associated scanpaths/parameters.
+    The first set of values corresponds to the *default hatcher*. This is to be initialized and everything, but will 
+    *not* have an area tied to it. 
 
     :param excel_file: The excel file to pull the information from. 
     :type excel_file: pd.io.excel._base.ExcelFile
