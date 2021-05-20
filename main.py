@@ -26,13 +26,13 @@ import pyslm
 import pyslm.visualise
 import pyslm.analysis
 import pyslm.geometry
-import pyslm.hatching.multiple
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
+from pyslm.hatching.multiple import hatch_multiple
 
 # TODO: Split all this input/output into a separate Python file 
 
@@ -170,7 +170,8 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
     if USE_SCANPATH_SWITCHING:
-        pass 
+        print(type(scanpath_area_pairs))
+        hatch_multiple(scanpath_area_pairs[1:], geom_slice, scanpath_area_pairs[0][0])
     else:
         layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
