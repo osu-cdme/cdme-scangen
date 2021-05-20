@@ -74,7 +74,7 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
         output.append([ids[i], areas[i], scanpaths[i], general_params[i], custom_params[i]])
     return output 
 
-def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> list:
+def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
     """Converts the array that `excel_to_array()` returns into a list of hatchers, each initialized with
     the correct parameters - both generic (common across all algorithms) and custom (specific to an algorithm).
 
@@ -121,6 +121,6 @@ def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> list:
             hatcher.islandOffset = scanpath[4][2]
 
         # 4. Append to output array 
-        output.append([hatcher, scanpath[1]])
+        output.append((hatcher, scanpath[1]))
 
     return output
