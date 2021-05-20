@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-from lxml.etree import Element, SubElement, ElementTree as et, xmlfile
+from lxml.etree import Element, SubElement, xmlfile
+import xml.etree.ElementTree as et
 from typing import List, Dict
 from . import config_build as settings
 from datetime import date
@@ -214,7 +215,7 @@ class XMLWriter():
     """
     def output_zip(self):
         # create a ZipFile object
-        with ZipFile(self.out + '/scanpath_files.scn', 'w') as zip_file:
+        with ZipFile(self.out + '/scanpath_files.zip', 'w') as zip_file:
            # Iterate over all the files in directory
            for folder_name, subfolders, file_names in os.walk(self.out):
                for file_name in file_names:
@@ -222,7 +223,7 @@ class XMLWriter():
                    file_path = os.path.join(folder_name, file_name)
                    # Add file to zip
                    zip_file.write(file_path, basename(file_path))
-        print(self.out + '/scanpath_files.scn was created successfully')
+        print(self.out + '/scanpath_files.zip was created successfully')
         return
 
 '''
@@ -271,7 +272,8 @@ class HDF5Writer():
             else:
                 powers[i // 2] = layer_power
                 velocities[i // 2] = layer_speed
-                if (i < len(points) - 1): lengths[i // 2] = np.linalg.norm(points[i+1] - points[i])
+                if (i < len(points) - 1): 
+                    lengths[i // 2] = np.linalg.norm(points[i+1] - points[i])
                     
             '''
             Neighbors are defined in this code as being continuous off 
@@ -308,7 +310,7 @@ class HDF5Writer():
         
         return (powers,velocities,edges,points,times,dlt,flt,lh,lt,lst,lengths,neighbors)
     
-    # Writes 1 layer to HDF5
+    # Writes 1 layer to HDF5 File
     def write_layer(self, layer_paths: np.ndarray, layer_power: float, 
                     layer_speed: float, layer_num: int, file_name: str, 
                     scan_mode: ScanMode):
@@ -350,8 +352,8 @@ class HDF5Writer():
         for layer in range(len(layers_paths)):
         
             params = self.parameters(layers_paths[layer], 
-                                     powers_layers[layer], 
-                                     speeds_layers[layer], 
+                                     powers_layers[layer][0], 
+                                     speeds_layers[layer][0], 
                                      layer,
                                      scan_mode)
         
@@ -367,8 +369,12 @@ class HDF5Writer():
                 st2 = layer_start_times[layer-1] + data_layer_times[layer-1]
                 layer_start_times[layer] = st2
         
-            self.write_layer(layers_paths[layer], powers_layers[layer], 
-                             speeds_layers[layer], layer, file_name, scan_mode)
+            self.write_layer(layers_paths[layer], 
+                             powers_layers[layer][0], 
+                             speeds_layers[layer][0], 
+                             layer, 
+                             file_name, 
+                             scan_mode)
         
         
         #Writing to HDF5 file for all the layers
@@ -382,29 +388,82 @@ class HDF5Writer():
         print(self.out + "/" + file_name + " was created successfully")
 
 '''
-Requires in_dir to contain only XML file.
+Requires in_dir to be a valid directory and to contain only the following:
+    XML files for each layer [1, n] e.g. layer_1.xml
+    The zipped file (.scn or .zip) (or any arbitrary 1 additional file) 
 
-Requires out_file to be an .hdf5 file
+Requires out_file to be a .hdf5 file
 '''
 def xml_to_hdf5(in_dir: str, out_file: str):
     
-    hdf = HDF5Writer('hdf5/' + out_file)
-    num_layers = len(os.listdir(in_dir + '/'))
-    layers_paths = np.empty(num_layers, dtype=object)
-    layer_powers = np.empty(num_layers, dtype=object)
-    layer_speeds = np.empty(num_layers, dtype=object)
-    for layer_num in range(num_layers):   
-        with xmlfile(in_dir + '/scan_' + str(layer_num + 1) + '.xml') as xml:            
-            layer = et.parse(xml)
-            segstyles = [] # expression for segstyles
-            layer_paths = [] # expression for paths
-            for path in layer_paths:
-                pass
-    hdf.output_hdf5(layers_paths, layer_powers, layer_speeds, out_file)
+    hdf = HDF5Writer('hdf5')
+    num_layers = len(os.listdir(in_dir + '/')) - 1 # subtract .scn file
+    
+    layers_paths = []
+    layers_powers = []
+    layers_speeds = []
+    
+    # XPath Element Tree Evaluators for efficiency
+    
+    for layer_num in range(num_layers):
+            
+        layer = et.parse(in_dir + '/scan_' + str(layer_num + 1) + '.xml').getroot()
+        velprofiles = layer.find('VelocityProfileList')          
+        segstyles = layer.find('SegmentStyleList')
+        
+        paths = layer.findall('./TrajectoryList/Trajectory/Path') # expression for paths
+        layers_paths.append([])
+        if (paths[0].find('Type').text == 'contour'):
+            scan_mode = ScanMode.ContourFirst
+        else:
+            scan_mode = ScanMode.HatchFirst
+            
+        for path_num in range(len(paths)):  
+            segments = paths[path_num].findall('Segment')
+            layers_paths[layer_num].append([])
+            layers_paths[layer_num][path_num].append([float(paths[path_num].find('./Start/X').text), float(paths[path_num].find('./Start/Y').text)])
+            for seg_num in range(len(segments)):
+                layers_paths[layer_num][path_num].append([float(segments[seg_num].find('./End/X').text), float(segments[seg_num].find('./End/Y').text)])
+                    
+        all_segs = layer.findall('./TrajectoryList/Trajectory/Path/Segment')
+        layers_powers.append([])
+        layers_speeds.append([])
+            
+        for seg_num in range(len(all_segs)):
+                
+            seg_style_id = all_segs[seg_num].find('SegStyle').text              
+            # Search for seg style id
+            seg_style = segstyles.find('./SegmentStyle/*[.=\'' + seg_style_id + '\']/..')
+                
+            # Assign power for this segment
+            power = float(seg_style.find('./Traveler/Power').text)      
+            layers_powers[layer_num].append(power)
+                
+            vel_profile_id = seg_style.find('./VelocityProfileID').text
+            # Search for velocity profile id
+            vel_profile = velprofiles.find('./VelocityProfile/*[.=\'' + vel_profile_id + '\']/..')
+                
+            # Assign velocity for this segment
+            velocity = float(vel_profile.find('./Velocity').text)
+            layers_speeds[layer_num].append(velocity)
+                
+    hdf.output_hdf5(layers_paths, layers_powers, layers_speeds, out_file, scan_mode)
                 
 
 '''
 Requires in_path to be an HDF5 file in an existing directory
 '''
 def hdf5_to_xml(in_path: str, out_dir: str):
-    pass
+    config = ConfigFile('build_config.xls')
+    xml_out = XMLWriter(out_dir, config)
+    layers_paths = []
+    layers_segstyles = []
+    scan_mode = ScanMode.ContourFirst
+    with h5py.File(in_path, "r") as f:
+        # List all groups
+        for layer in range(len(f.keys())-1):
+            for point in range(f[str(layer)]['points'].shape[0]):
+                f[str(layer)]['points'][point]
+    
+    xml_out.output_xml(layers_paths, layers_segstyles, scan_mode)
+    xml_out.output_zip()

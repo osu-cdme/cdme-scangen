@@ -22,7 +22,7 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 import src.output.config_build as config_build
-from src.output.xml_hdf5_io import ConfigFile, XMLWriter, HDF5Writer
+from src.output.xml_hdf5_io import ConfigFile, XMLWriter, HDF5Writer, xml_to_hdf5, hdf5_to_xml
 from pyslm.geometry import ScanMode
 
 
@@ -115,14 +115,14 @@ STEP 2: Slice part and generate scan paths. Format data for XML and HDF5
 '''
 # Keep track of parameters
 layers = []
-layer_times = []
-layer_powers = []
-layer_speeds = []
+layers_times = []
+layers_powers = []
+layers_speeds = []
 layers_segstyles = []
 layers_paths = np.empty(len(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS)), dtype=object)
 
-segstyle_index = 60
+segstyle_index = 30
 layer_power = model.buildStyles[segstyle_index].laserPower
 layer_speed = model.buildStyles[segstyle_index].laserSpeed
 i = 0
@@ -176,13 +176,6 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         geometry.mid = 1
         geometry.bid = 1
     
-    # Get parameters for each layer and collect
-    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    layer_powers.append(layer_power)
-    layer_speeds.append(layer_speed)
-    
-    layers_segstyles.append(model.buildStyles[segstyle_index].name)
-    
     '''
     Scale parameters by how much time it's taking to scan layers.
     Attempts to address "pyramid problem" where as you move up building a part 
@@ -190,8 +183,8 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     things to cool off, which leads to problems with the part.
     '''
     ACTIVATION_DIFF = .5
-    if CHANGE_PARAMS and len(layer_times) > 1:
-        dt = np.diff(layer_times)
+    if CHANGE_PARAMS and len(layers_times) > 1:
+        dt = np.diff(layers_times)
         if CHANGE_POWER:
         # As time goes down, so should power
             if dt[len(dt)-1] > ACTIVATION_DIFF and segstyle_index < MAX_POWER_LVL:
@@ -205,6 +198,18 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     
     layers.append(layer)
+    
+    # Get parameters for each layer and collect
+    layers_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+    layer_powers = []
+    layer_speeds = []
+    for k in range(len(contours)+len(hatches)-1):
+        layer_powers.append(layer_power)
+        layer_speeds.append(layer_speed)
+    layers_powers.append(layer_powers)
+    layers_speeds.append(layer_speeds)
+    
+    layers_segstyles.append(model.buildStyles[segstyle_index].name)
 
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
@@ -220,9 +225,9 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 STEP 3 part 1: Write the XML files and zip       
 '''
 
-output_path = 'xml'
+output_dir = 'xml'
 config = ConfigFile('build_config.xls')
-xml_out = XMLWriter(output_path, config)   
+xml_out = XMLWriter(output_dir, config)   
 xml_out.output_xml(layers_paths, layers_segstyles, SCAN_MODE)
 xml_out.output_zip()
 
@@ -234,11 +239,23 @@ STEP 3 part 2: Write to the HDF5 File
 output_dir = 'hdf5'
 file_name = PART_NAME[0:len(PART_NAME)-4] + ".hdf5"
 hdf5_out = HDF5Writer(output_dir)
-hdf5_out.output_hdf5(layers_paths, layer_powers, layer_speeds, file_name, SCAN_MODE)
+hdf5_out.output_hdf5(layers_paths, layers_powers, layers_speeds, file_name, SCAN_MODE)
 
+#%%
+'''
+OPTIONAL: XML --> HDF5 Conversion
+'''
+in_dir = 'xml'
+out_file = PART_NAME[0:len(PART_NAME)-4] + ".hdf5"
+xml_to_hdf5(in_dir, out_file)
 
-
-
+#%%
+'''
+OPTIONAL: 'HDF5 --> XML Conversion
+'''
+in_path = 'hdf5/nut.hdf5'
+out_dir = 'xml'
+hdf5_to_xml(in_path, out_dir)
 
 
 
