@@ -170,7 +170,6 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
     if USE_SCANPATH_SWITCHING:
-        print(type(scanpath_area_pairs))
         hatch_multiple(scanpath_area_pairs[1:], geom_slice, scanpath_area_pairs[0][0])
     else:
         layer = myHatcher.hatch(geom_slice)  # Hatch layer
