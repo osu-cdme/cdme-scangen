@@ -5,6 +5,7 @@ import sys
 # Third Party Imports 
 import numpy as np 
 import pandas as pd 
+from numpy import NaN
 
 # Local Imports
 from pyslm.hatching import Hatcher 
@@ -51,27 +52,37 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
 
     # Get the general parameters to go along with the provided ids 
     general_params_sheet = excel_file.parse(2)
-    general_params = np.array([general_params_sheet["Hatch Distance (mm)"], general_params_sheet["Hatch Angle (mm)"], 
+    general_params = [general_params_sheet["Hatch Distance (mm)"], general_params_sheet["Hatch Angle (mm)"], 
         general_params_sheet["Layer Angle Increment (deg)"], general_params_sheet["Hatch Sort Method"], 
         general_params_sheet["# Inner Contours"], general_params_sheet["# Outer Contours"], 
-        general_params_sheet["Spot Compensation (Multiple)"], general_params_sheet["Volume Offset Hatch (mm)"]])
-    general_params = general_params[:, ~np.isnan(general_params).any(axis=0)] # Long story short, filters out NaN columns
-    general_params = np.hstack([arr.reshape(-1, 1) for arr in general_params]).astype(np.uint)
+        general_params_sheet["Spot Compensation (Multiple)"], general_params_sheet["Volume Offset Hatch (mm)"]]
+    print("general_params: " + str(general_params))
+    
+    # Trim NaN rows
+    for i in range(len(general_params)):
+        if general_params[i] == NaN:
+            general_params = general_params[:i]
+            break
     debug_file.write("general_params: \n{}\n".format(general_params))
 
     # Get the custom parameters to go along with the provided ids 
     custom_params_sheet = excel_file.parse(3)
-    custom_params = np.array([custom_params_sheet["Param 1"], custom_params_sheet["Param 2"], 
+    custom_params = [custom_params_sheet["Param 1"], custom_params_sheet["Param 2"], 
         custom_params_sheet["Param 3"], custom_params_sheet["Param 4"], 
-        custom_params_sheet["Param 5"]])
-    custom_params = custom_params[:, ~np.isnan(custom_params).any(axis=0)] # Long story short, filters out NaN columns
-    custom_params = np.hstack([arr.reshape(-1, 1) for arr in custom_params]).astype(np.uint)
+        custom_params_sheet["Param 5"]]
+
+    # Trim NaN rows
+    for i in range(len(custom_params)):
+        if custom_params[i] == NaN:
+            custom_params = custom_params[:i]
+            break
     debug_file.write("custom_params: \n{}\n".format(custom_params))
 
     # Can't do fancy numpy stuff because they aren't all the same data type (scan paths are strings)
     output = []
     for i in range(len(ids)):
         output.append([ids[i], areas[i], scanpaths[i], general_params[i], custom_params[i]])
+    print("output: " + str(output))
     return output 
 
 def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
@@ -102,6 +113,7 @@ def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
         else:
             sys.exit("ERROR: Unrecognized scanpath type " + str(scanpath[2]))
 
+        print("scanpath[3]: " + str(scanpath[3]))
         # 2. Set general parameters for the scan path
         hatcher.hatchDistance = scanpath[3][0]
         hatcher.hatchAngle = scanpath[3][1]
@@ -122,5 +134,7 @@ def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
 
         # 4. Append to output array 
         output.append((hatcher, scanpath[1]))
+
+    
 
     return output
