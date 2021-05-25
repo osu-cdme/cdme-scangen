@@ -4,7 +4,7 @@ from lxml.etree import Element, SubElement, xmlfile
 import xml.etree.ElementTree as et
 from typing import List, Dict
 from . import config_build as settings
-from datetime import date
+from datetime import datetime
 from shapely.geometry import Polygon, MultiLineString
 from zipfile import ZipFile
 import os
@@ -25,7 +25,7 @@ class ConfigFile():
         df = pd.read_excel(self.config_path, sheet_name=1, engine="xlrd")
         layer_thickness = df.iloc[4, 2]
         dosing_factor =  df.iloc[5, 2]
-        return settings.Header(date.today(), layer_thickness, dosing_factor)
+        return settings.Header(datetime.strptime('2020-03-23', "%Y-%m-%d"), layer_thickness, dosing_factor)
 
     def load_velocity_profile(self) -> Dict[str, settings.VelocityProfile]:
         df = pd.read_excel(self.config_path,
@@ -223,7 +223,7 @@ class XMLWriter():
                    file_path = os.path.join(folder_name, file_name)
                    # Add file to zip
                    zip_file.write(file_path, basename(file_path))
-        print(self.out + '/scanpath_files.zip was created successfully')
+        print(self.out + '/scanpath_files.scn was created successfully')
         return
 
 '''
