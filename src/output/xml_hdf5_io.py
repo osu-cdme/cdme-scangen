@@ -215,7 +215,7 @@ class XMLWriter():
     """
     def output_zip(self):
         # create a ZipFile object
-        with ZipFile(self.out + '/scanpath_files.zip', 'w') as zip_file:
+        with ZipFile(self.out + '/scanpath_files.scn', 'w') as zip_file:
            # Iterate over all the files in directory
            for folder_name, subfolders, file_names in os.walk(self.out):
                for file_name in file_names:
