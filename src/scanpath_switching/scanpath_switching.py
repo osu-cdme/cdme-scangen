@@ -5,7 +5,6 @@ import sys
 # Third Party Imports 
 import numpy as np 
 import pandas as pd 
-from numpy import NaN
 
 # Local Imports
 from pyslm.hatching import Hatcher 
@@ -56,13 +55,11 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
         general_params_sheet["Layer Angle Increment (deg)"], general_params_sheet["Hatch Sort Method"], 
         general_params_sheet["# Inner Contours"], general_params_sheet["# Outer Contours"], 
         general_params_sheet["Spot Compensation (Multiple)"], general_params_sheet["Volume Offset Hatch (mm)"]]
-    print("general_params: " + str(general_params))
-    
-    # Trim NaN rows
-    for i in range(len(general_params)):
-        if general_params[i] == NaN:
-            general_params = general_params[:i]
-            break
+    for i in range(len(general_params)): # Trim NaN values 
+        for j in range(len(general_params[i])):
+            if pd.isna(general_params[i][j]):
+                general_params[i] = general_params[i][:j]
+                break 
     debug_file.write("general_params: \n{}\n".format(general_params))
 
     # Get the custom parameters to go along with the provided ids 
@@ -70,19 +67,17 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
     custom_params = [custom_params_sheet["Param 1"], custom_params_sheet["Param 2"], 
         custom_params_sheet["Param 3"], custom_params_sheet["Param 4"], 
         custom_params_sheet["Param 5"]]
-
-    # Trim NaN rows
-    for i in range(len(custom_params)):
-        if custom_params[i] == NaN:
-            custom_params = custom_params[:i]
-            break
+    for i in range(len(custom_params)): # Trim NaN values
+        for j in range(len(custom_params[i])):
+            if pd.isna(custom_params[i][j]):
+                custom_params[i] = custom_params[i][:j]
+                break
     debug_file.write("custom_params: \n{}\n".format(custom_params))
 
     # Can't do fancy numpy stuff because they aren't all the same data type (scan paths are strings)
     output = []
     for i in range(len(ids)):
         output.append([ids[i], areas[i], scanpaths[i], general_params[i], custom_params[i]])
-    print("output: " + str(output))
     return output 
 
 def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
