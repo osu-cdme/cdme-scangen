@@ -107,28 +107,25 @@ def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
         else:
             sys.exit("ERROR: Unrecognized scanpath type " + str(scanpath[2]))
 
-        print("scanpath[3]: " + str(scanpath[3]))
         # 2. Set general parameters for the scan path
-        hatcher.hatchDistance = scanpath[3][0]
-        hatcher.hatchAngle = scanpath[3][1]
-        hatcher.layerAngleIncrement = scanpath[3][2]
-        hatcher.numInnerContours = scanpath[3][4]
-        hatcher.numOuterContours = scanpath[3][5]
-        hatcher.spotCompensation = scanpath[3][6]
-        hatcher.volumeOffsetHatch = scanpath[3][7]
-
-        # TODO: Broken with error `The Hatch Sort Method should be derived from the BaseSort class`. Fix!
-        # hatcher.hatchSortMethod = scanpath[3][3]
+        # TODO: ID is scanpath[3][0]; work support for that in or something 
+        hatcher.hatchDistance = scanpath[3][1]
+        hatcher.hatchAngle = scanpath[3][2]
+        hatcher.layerAngleIncrement = scanpath[3][3]
+        # hatcher.hatchSortMethod = scanpath[3][4] # TODO: Broken with error `The Hatch Sort Method should be derived from the BaseSort class`. Fix!
+        hatcher.numInnerContours = scanpath[3][5]
+        hatcher.numOuterContours = scanpath[3][6]
+        hatcher.spotCompensation = scanpath[3][7]
+        hatcher.volumeOffsetHatch = scanpath[3][8]
 
         # 3. Set custom parameters for the given scan path 
         if scanpath[2] == "island":
-            hatcher.islandWidth = scanpath[4][0]
-            hatcher.islandOverlap = scanpath[4][1]
-            hatcher.islandOffset = scanpath[4][2]
+            # TODO: ID is scanpath[4][0]; work support for that in or something 
+            hatcher.islandWidth = scanpath[4][1]
+            hatcher.islandOverlap = scanpath[4][2]
+            hatcher.islandOffset = scanpath[4][3]
 
         # 4. Append to output array 
         output.append((hatcher, scanpath[1]))
-
-    
 
     return output
