@@ -29,6 +29,8 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
     :rtype: list
     """
 
+    debug_file.write("excel_to_array()\n--------------------\n")
+
     # Convert an Excel specification of area to an array to use as input for next step
     bounds_sheet = excel_file.parse(1)
 
@@ -51,27 +53,24 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
 
     # Get the general parameters to go along with the provided ids 
     general_params_sheet = excel_file.parse(2)
-    general_params = [general_params_sheet["Hatch Distance (mm)"], general_params_sheet["Hatch Angle (mm)"], 
-        general_params_sheet["Layer Angle Increment (deg)"], general_params_sheet["Hatch Sort Method"], 
-        general_params_sheet["# Inner Contours"], general_params_sheet["# Outer Contours"], 
-        general_params_sheet["Spot Compensation (Multiple)"], general_params_sheet["Volume Offset Hatch (mm)"]]
-    for i in range(len(general_params)): # Trim NaN values 
-        for j in range(len(general_params[i])):
-            if pd.isna(general_params[i][j]):
-                general_params[i] = general_params[i][:j]
-                break 
+    general_params = []
+    for row in general_params_sheet.values:
+        if pd.isna(row[0]): # End of valid rows 
+            break 
+        row = row[:9] # Indices 0-8 are the ones we care about; rest is just visual info on the sheet 
+        row[5] = int(row[5]) # pyslm requires # Inner Contours as int 
+        row[6] = int(row[6]) # pyslm requires # Outer Contours as int 
+        general_params.append(row)
     debug_file.write("general_params: \n{}\n".format(general_params))
 
     # Get the custom parameters to go along with the provided ids 
     custom_params_sheet = excel_file.parse(3)
-    custom_params = [custom_params_sheet["Param 1"], custom_params_sheet["Param 2"], 
-        custom_params_sheet["Param 3"], custom_params_sheet["Param 4"], 
-        custom_params_sheet["Param 5"]]
-    for i in range(len(custom_params)): # Trim NaN values
-        for j in range(len(custom_params[i])):
-            if pd.isna(custom_params[i][j]):
-                custom_params[i] = custom_params[i][:j]
-                break
+    custom_params = []
+    for row in custom_params_sheet.values:
+        if pd.isna(row[0]):
+            break
+        row = row[:6] # Indices 0-5 are the oens we care about; rest is just visual info on the sheet 
+        custom_params.append(row)
     debug_file.write("custom_params: \n{}\n".format(custom_params))
 
     # Can't do fancy numpy stuff because they aren't all the same data type (scan paths are strings)
