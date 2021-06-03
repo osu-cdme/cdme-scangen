@@ -174,7 +174,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         for pair in scanpath_area_pairs:
             hatchers.append(pair[0])
             areas.append(pair[1])
-        hatch_multiple(hatchers[1:], areas, hatchers[0], geom_slice)
+        layer = hatch_multiple(hatchers[1:], areas, hatchers[0], geom_slice, z)
     else:
         layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
