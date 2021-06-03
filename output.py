@@ -158,7 +158,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     if len(contour_geoms) > 0:
         contours = np.vstack([contour_geom.coords.reshape(-1, 2) for contour_geom in contour_geoms])
     
-    # Always do contour first
+    # Best practice to do contour first
     paths = [None, None]
     if SCAN_MODE == ScanMode.ContourFirst:
         paths[0] = contours
@@ -251,11 +251,12 @@ xml_to_hdf5(in_dir, out_file)
 
 #%%
 '''
-OPTIONAL: 'HDF5 --> XML Conversion
+OPTIONAL: HDF5 --> XML Conversion
 '''
 in_path = 'hdf5/nut.hdf5'
 out_dir = 'xml'
-hdf5_to_xml(in_path, out_dir)
+config = ConfigFile('build_config.xls')
+hdf5_to_xml(in_path, out_dir, config)
 
 
 

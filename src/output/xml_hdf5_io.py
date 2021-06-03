@@ -153,8 +153,8 @@ class XMLWriter():
             SubElement(xpath, 'NumSegments').text = str(len(layer_paths[0])-1)
             SubElement(xpath, 'SkyWritingMode').text = str(0)
             start = SubElement(xpath, 'Start')
-            SubElement(start, 'X').text = str(layer_paths[path][(0,0)])
-            SubElement(start, 'Y').text = str(layer_paths[path][(0,1)])
+            SubElement(start, 'X').text = str(layer_paths[path][0][0])
+            SubElement(start, 'Y').text = str(layer_paths[path][0][1])
                     
             # Create segments for each contour and hatch coordinates
             for i in range(1, len(layer_paths[path])):
@@ -166,8 +166,8 @@ class XMLWriter():
                 else: 
                     SubElement(seg, 'SegStyle').text = layer_segstyle
                 end = SubElement(seg, 'End')
-                SubElement(end, 'X').text = str(layer_paths[path][(i,0)])
-                SubElement(end, 'Y').text = str(layer_paths[path][(i,1)])
+                SubElement(end, 'X').text = str(layer_paths[path][i][0])
+                SubElement(end, 'Y').text = str(layer_paths[path][i][1])
                                                  
                                                   
         return xtraj_root
@@ -188,9 +188,25 @@ class XMLWriter():
     """
     Outputs all XML layer files
     
-    Needs a List of Lists of flat 1D of coordinates, see above
+    Needs a nested list for layers_paths:
+    [    
+        layer1:
+        [ path1 numpy array: [x1,y1], [x2,y2], ... , [xn,yn]
+         ...
+         pathn numpy array: [x1,y1], [x2,y2], ... , [xn,yn]
+        ]
+         
+        ...
+        
+        layern:
+        [ path1 numpy array: [x1,y1], [x2,y2], ... , [xn,yn]
+         ...
+         pathn numpy array: [x1,y1], [x2,y2], ... , [xn,yn]
+        ]
+         
+    ]
     """
-    def output_xml(self, layers_paths: np.ndarray, layers_segstyles: List[str], scan_mode: ScanMode):
+    def output_xml(self, layers_paths: List[List[np.ndarray]], layers_segstyles: List[str], scan_mode: ScanMode):
         
         # Create/wipe folder
         if not os.path.exists("xml"):
@@ -453,17 +469,72 @@ def xml_to_hdf5(in_dir: str, out_file: str):
 '''
 Requires in_path to be an HDF5 file in an existing directory
 '''
-def hdf5_to_xml(in_path: str, out_dir: str):
-    config = ConfigFile('build_config.xls')
+def hdf5_to_xml(in_path: str, out_dir: str, config: ConfigFile):
+    
+    MIN_JUMP_SPEED = 1000
     xml_out = XMLWriter(out_dir, config)
     layers_paths = []
     layers_segstyles = []
-    scan_mode = ScanMode.ContourFirst
+    seg_style = ''
+    
     with h5py.File(in_path, "r") as f:
         # List all groups
-        for layer in range(len(f.keys())-1):
+        for layer in range(0, len(f.keys())-5):
+            
+            # Best practice to do contour first
+            paths = [ [], [] ]
+            scan_mode = ScanMode.ContourFirst
+            on_first = True
+            if (f[str(layer)]['edgeData']['power'][0] != 0 and
+                f[str(layer)]['edgeData']['power'][1] == 0 and
+                abs(f[str(layer)]['edgeData']['velocity'][0]) < MIN_JUMP_SPEED and
+                abs(f[str(layer)]['edgeData']['velocity'][1]) >= MIN_JUMP_SPEED):
+                
+                scan_mode = ScanMode.HatchFirst
+            seg_styles = []
             for point in range(f[str(layer)]['points'].shape[0]):
-                f[str(layer)]['points'][point]
-    
+                
+                x = f[str(layer)]['points'][point][0]
+                y = f[str(layer)]['points'][point][1]
+                                                            
+                seg_power = f[str(layer)]['edgeData']['power'][point // 2]
+                seg_vel = f[str(layer)]['edgeData']['velocity'][point // 2]                
+                
+                if (point < f[str(layer)]['points'].shape[0] - 2):
+                    on_hatch = (f[str(layer)]['edgeData']['power'][point // 2] != 0 and
+                            f[str(layer)]['edgeData']['power'][point // 2 + 1] == 0 and
+                            abs(f[str(layer)]['edgeData']['velocity'][point // 2]) < MIN_JUMP_SPEED and
+                            abs(f[str(layer)]['edgeData']['velocity'][point // 2 + 1]) >= MIN_JUMP_SPEED)
+                
+                if ( (scan_mode == ScanMode.ContourFirst and on_hatch) or 
+                     (scan_mode == ScanMode.HatchFirst and (not on_hatch) ) ):
+                    on_first = False
+                
+                # Assign points to appropriate path (hatch or contour)
+                if on_first:
+                    paths[0].append([x, y])
+                else:
+                    paths[1].append([x, y])
+                
+                # Assign seg style based on power and velocity               
+                if (seg_power == 0):
+                    seg_style = 'Jump'
+                else: 
+                    # search for velocity profile
+                    vel_id = None
+                    for velprofile in config.vel_profile.keys():                   
+                        if (config.vel_profile[velprofile].Velocity == seg_vel):
+                            vel_id = config.vel_profile[velprofile].ID
+                    
+                    # search for segment style
+                    for segstyle in config.seg_style.keys():
+                        if (config.seg_style[segstyle].Traveler.Power == seg_power and
+                            config.seg_style[segstyle].VelocityProfileID == vel_id):
+                            seg_style = config.seg_style[segstyle].ID
+                if (point % 2 != 0):
+                    seg_styles.append(seg_style)
+            layers_segstyles.append(seg_styles[0])
+            layers_paths.append(paths)
+            
     xml_out.output_xml(layers_paths, layers_segstyles, scan_mode)
     xml_out.output_zip()

@@ -3,7 +3,7 @@ Created on Wed Feb  3 14:37:32 2021
 
 @author: harsh
 
-Example showing how to use pypyslm for generating scan vector
+Example for PySLM slicing, data manipulation, and visualizations
 """
 
 # Standard Library Imports
@@ -31,6 +31,11 @@ from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
+
+#%%
+'''
+STEP 1: Initialize part, build, and program parameters
+'''
 
 # TODO: Split all this input/output into a separate Python file 
 
@@ -110,7 +115,7 @@ Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
 # Create a BasicIslandHatcher object for performing any hatching operations (
-myHatcher = hatching.Hatcher()
+myHatcher = BasicIslandHatcherRandomOrder()
 myHatcher.islandWidth = 3.0
 myHatcher.islandOffset = 0
 myHatcher.islandOverlap = 0
@@ -154,6 +159,11 @@ resolution = 0.2
 
 # Set the layer thickness
 LAYER_THICKNESS = 1  # [mm]
+
+#%%
+'''
+STEP 2: Slice part, generate scan paths, control parameters while slicing the part 
+'''
 
 # Keep track of parameters
 layers = []
@@ -228,6 +238,11 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     # Change hatch angle every layer
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
+
+#%%
+'''
+STEP 3: Visualization Outputs       
+'''
 
 if GENERATE_OUTPUT:
 
