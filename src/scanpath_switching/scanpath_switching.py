@@ -9,9 +9,11 @@ import pandas as pd
 # Local Imports
 from pyslm.hatching import Hatcher 
 from ..island.island import BasicIslandHatcherRandomOrder
+from typeguard import typechecked 
 
 # Takes in an Excel sheet 
 # TODO: Tracking IDs is redundant; remove from excel file and just use array indexes as equivalent 
+@typechecked 
 def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextIOWrapper) -> list:
     """Reads in an Excel file, outputting an array-based representation of areas and associated scanpaths/parameters.
     The first set of values corresponds to the *default hatcher*. This is to be initialized and everything, but will 
@@ -43,7 +45,7 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
     bounds = np.array([bounds_sheet["min_x"], bounds_sheet["min_y"], bounds_sheet["min_z"], 
         bounds_sheet["max_x"], bounds_sheet["max_y"], bounds_sheet["max_z"]])
     bounds = bounds[:, ~np.isnan(bounds).any(axis=0)] # Long story short, filters out NaN columns
-    areas = np.hstack([arr.reshape(-1, 1) for arr in bounds]).astype(np.uint) # Essentially a transpose 
+    areas = np.hstack([arr.reshape(-1, 1) for arr in bounds]).astype(np.int32) # Essentially a transpose 
     debug_file.write("areas: \n{}\n".format(areas))
 
     # Get the scanpath versions (i.e. default, island, ...)
@@ -79,7 +81,8 @@ def excel_to_array(excel_file: pd.io.excel._base.ExcelFile, debug_file: io.TextI
         output.append([ids[i], areas[i], scanpaths[i], general_params[i], custom_params[i]])
     return output 
 
-def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> tuple:
+@typechecked 
+def array_to_instances(arr: list, debug_file: io.TextIOWrapper) -> list:
     """Converts the array that `excel_to_array()` returns into a list of hatchers, each initialized with
     the correct parameters - both generic (common across all algorithms) and custom (specific to an algorithm).
 
