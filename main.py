@@ -156,7 +156,7 @@ resolution = 0.2
 # Set the layer thickness
 LAYER_THICKNESS = 1  # [mm]
 
-# Keep track of parameters
+# Keep track of parametersd
 layers = []
 layer_times = []
 layer_powers = []
@@ -174,7 +174,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         for pair in scanpath_area_pairs:
             hatchers.append(pair[0])
             areas.append(pair[1])
-        layer = hatch_multiple(hatchers[1:], areas, hatchers[0], geom_slice, z)
+        layer = hatch_multiple(hatchers[1:], areas[1:], hatchers[0], geom_slice, z)
     else:
         layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
