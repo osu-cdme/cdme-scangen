@@ -133,6 +133,7 @@
       "name": "Spot Compensation", 
       "type": "float", 
       "desc": "Additional, multiplicative offset to account for laser spot size. Set to 1 for no change.",
+      "units": "unitless",
       "default": "1"
     },
     {
@@ -152,12 +153,12 @@
       "type": "string", 
       "options": [ "None", "Alternate", "Linear", "Greedy" ],
       "desc": "Which way you'd like to sort the hatches.",
-      "default": "2"
+      "default": "None"
     }
   ],
   "Debug": [
     {
-      "name": "Write Debug", 
+      "name": "Write Debug Info", 
       "type": "bool", 
       "options": [ "Yes", "No" ],
       "desc": "Whether to write program debug information to the debug.txt file.",
