@@ -1,15 +1,15 @@
 {
-  "input": [
+  "Input": [
     {
       "name": "Scan Strategy", 
-      "type": "str", 
+      "type": "string", 
       "desc": "Which scan strategy you'd like to be used on the part.",
       "options": [ "default", "island" ],
       "default": "default"
     }, 
     {
       "name": "Part File Name", 
-      "type": "str", 
+      "type": "string", 
       "desc": "The file name of the part (which must be in the `geometry` folder; do not prefix it with `geometry`).", 
       "default": "nut.stl"
     }, 
@@ -35,7 +35,7 @@
       "default": "No"
     }
   ],
-  "output": [
+  "Output": [
     {
       "name": "Output Plots", 
       "type": "bool", 
@@ -114,7 +114,7 @@
       "default": "No"
     }
   ],
-  "hatching": [
+  "Hatching": [
     {
       "name": "Hatch Angle", 
       "type": "float", 
@@ -155,7 +155,7 @@
       "default": "2"
     }
   ],
-  "debug": [
+  "Debug": [
     {
       "name": "Write Debug", 
       "type": "bool", 
@@ -164,7 +164,7 @@
       "default": "Yes"
     }
   ],
-  "trajectory_ordering": [
+  "Trajectory Ordering": [
     {
       "name": "Contour First", 
       "type": "bool", 
