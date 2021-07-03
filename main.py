@@ -31,6 +31,8 @@ from pyslm.geometry import HatchGeometry
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
+from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
+from pyslm.hatching.multiple import hatch_multiple
 
 #%%
 '''
@@ -71,41 +73,54 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
-WRITE_DEBUG = eval_bool(values[30])
+USE_SCANPATH_SWITCHING = True
+
 debug_file = open("debug.txt", "w")
-if WRITE_DEBUG:
 
-    # Run Configuration 
-    debug_file.writelines("General\n")
-    debug_file.write("--------------------\n")
-    debug_file.write("PART_NAME: {}\n".format(PART_NAME))
-    debug_file.write("\n")
+# Run Configuration 
+debug_file.writelines("General\n")
+debug_file.write("--------------------\n")
+debug_file.write("PART_NAME: {}\n".format(PART_NAME))
+debug_file.write("\n")
 
-    # Parameter Changing
-    debug_file.write("Parameter Changing\n")
-    debug_file.write("--------------------\n")
-    debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
-    debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
-    debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
-    debug_file.write("\n")
+# Parameter Changing
+debug_file.write("Parameter Changing\n")
+debug_file.write("--------------------\n")
+debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
+debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
+debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
+debug_file.write("\n")
 
-    # Plotting
-    debug_file.write("Plotting\n")
-    debug_file.write("--------------------\n")
-    debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
-    debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
-    debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
-    debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
-    debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
-    debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
-    debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
-    debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
-    debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
-    debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
-    debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
-    debug_file.write("\n")
+# Plotting
+debug_file.write("Plotting\n")
+debug_file.write("--------------------\n")
+debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
+debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
+debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
+debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
+debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
+debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
+debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
+debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
+debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
+debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
+debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
+debug_file.write("\n")
 
-    debug_file.close()  
+if USE_SCANPATH_SWITCHING:
+
+    # Function takes in a pd.ExcelFile() instance (and debug file) and returns an array of arrays, each inside array with the following structure:
+    # [0]: ID of the given Area (Equation: "<Row of Excel Sheet> - 2")
+    # [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
+    # [2]: scanpath identifier (`default`, `island`, etc.)
+    # [3]: General Parameters (True/False)
+    scanpath_info = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
+    debug_file.write("scanpath_info: \n{}".format(scanpath_info))
+
+    # Function takes in the array from the previous call and returns an array of [hatcher instance, area]
+    #   corresponding to the parameters and scan path type given in the array.
+    scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
+    debug_file.write("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
 
 # Initialize Part
 Part = pyslm.Part(PART_NAME)
@@ -114,8 +129,8 @@ Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
-# Create a BasicIslandHatcher object for performing any hatching operations (
-myHatcher = BasicIslandHatcherRandomOrder()
+# Create a BasicIslandHatcher object for performing any hatching operations
+myHatcher = hatching.Hatcher()
 myHatcher.islandWidth = 3.0
 myHatcher.islandOffset = 0
 myHatcher.islandOverlap = 0
@@ -180,7 +195,15 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
-    layer = myHatcher.hatch(geom_slice)  # Hatch layer
+
+    if USE_SCANPATH_SWITCHING:
+        hatchers, areas = [], []
+        for pair in scanpath_area_pairs:
+            hatchers.append(pair[0])
+            areas.append(pair[1])
+        layer = hatch_multiple(hatchers[1:], areas[1:], hatchers[0], geom_slice, z)
+    else:
+        layer = myHatcher.hatch(geom_slice)  # Hatch layer
 
     # Vector Splitting; to use, switch to Hatcher()
     '''
