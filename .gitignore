@@ -145,3 +145,4 @@ debug.txt
 
 # Excel lock file
 ~$config.xlsx
+*.prof
