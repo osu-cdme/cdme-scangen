@@ -73,7 +73,7 @@ PLOT_CHANGE_PARAMS = eval_bool(values[16])
 PLOT_POWER = eval_bool(values[17]) 
 PLOT_SPEED = eval_bool(values[18]) 
 
-USE_SCANPATH_SWITCHING = True
+USE_SCANPATH_SWITCHING = False
 
 debug_file = open("debug.txt", "w")
 
