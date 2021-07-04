@@ -12,6 +12,7 @@ import os
 import glob
 import time
 import statistics as stats
+import json 
 
 # Third-Party Imports
 import numpy as np
@@ -19,6 +20,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import sklearn.preprocessing as skp
 import pandas as pd 
+from pprint import pprint 
 
 # Local Imports
 #sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
@@ -55,6 +57,32 @@ segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
                           'Powers':np.array(config_powers),
                           'VelocityProfiles':np.array(config_vprofiles)})
 
+# Go from our standardized source of fields, or our "schema"
+with open("schema.json", "r") as f:
+    schema = json.load(f)
+
+# If we have a command line argument, that's an object with the user's selected options
+if len(sys.argv) > 1:
+    config = json.loads(sys.argv[1])
+
+# Otherwise, assemble and run with the default values
+else:
+    config = {}
+    for category in schema:
+        for attribute in schema[category]: 
+            config[attribute["name"]] = attribute["default"]
+
+# Cast int/float/bool to their Python representations, rather than just leaving everything as a string
+for category in schema:
+    for attribute in schema[category]:
+        config[attribute["name"]] = int(config[attribute["name"]]) if attribute["type"] == "int" else config[attribute["name"]]
+        config[attribute["name"]] = float(config[attribute["name"]]) if attribute["type"] == "float" else config[attribute["name"]]
+        if attribute["type"] == "bool":
+            config[attribute["name"]] = True if attribute["default"] == "True" else False
+
+pprint(config)
+
+# Load in parameters from the Schema file
 PART_NAME = values[2]
 CHANGE_PARAMS = eval_bool(values[3]) 
 CHANGE_POWER = eval_bool(values[4]) 
