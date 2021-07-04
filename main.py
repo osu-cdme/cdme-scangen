@@ -78,62 +78,48 @@ for category in schema:
         config[attribute["name"]] = int(config[attribute["name"]]) if attribute["type"] == "int" else config[attribute["name"]]
         config[attribute["name"]] = float(config[attribute["name"]]) if attribute["type"] == "float" else config[attribute["name"]]
         if attribute["type"] == "bool":
-            config[attribute["name"]] = True if attribute["default"] == "True" else False
+            config[attribute["name"]] = True if attribute["default"] == "Yes" else False
 
-pprint(config)
-
-# Load in parameters from the Schema file
-PART_NAME = values[2]
-CHANGE_PARAMS = eval_bool(values[3]) 
-CHANGE_POWER = eval_bool(values[4]) 
-CHANGE_SPEED = eval_bool(values[5])
-
-GENERATE_OUTPUT = eval_bool(values[8]) 
-OUTPUT_PNG = eval_bool(values[9])
-OUTPUT_SVG = eval_bool(values[10])
-PLOT_CONTOURS = eval_bool(values[11])
-PLOT_HATCHES = eval_bool(values[12])
-PLOT_CENTROIDS = eval_bool(values[13])
-PLOT_JUMPS = eval_bool(values[14])
-PLOT_TIME = eval_bool(values[15]) 
+"""
+Example Config Object:
+{'# Inner Contours': 2,
+ '# Outer Contours': 2,
+ 'Change Parameters': False,
+ 'Change Power': False,
+ 'Change Speed': False,
+ 'Contour First': True,
+ 'Hatch Angle': 66.7,
+ 'Hatch Sorting Method': 'None',
+ 'Output .png': True,
+ 'Output .svg': False,
+ 'Output Plots': True,
+ 'Part File Name': 'nut.stl',
+ 'Plot Centroids': False,
+ 'Plot Contours': True,
+ 'Plot Hatches': True,
+ 'Plot Jump Vectors': False,
+ 'Plot Parameter Changes': False,
+ 'Plot Power': False,
+ 'Plot Speed': False,
+ 'Plot Time': False,
+ 'Scan Strategy': 'default',
+ 'Spot Compensation': 1.0,
+ 'Volume of Offset Hatch': 0.08,
+ 'Write Debug Info': True}
  
-PLOT_CHANGE_PARAMS = eval_bool(values[16]) 
-PLOT_POWER = eval_bool(values[17]) 
-PLOT_SPEED = eval_bool(values[18]) 
+(NOTE: This will change if schema.json changes, as this and the UI work directly from that.)
+"""
 
 USE_SCANPATH_SWITCHING = False
 
-debug_file = open("debug.txt", "w")
-
-# Run Configuration 
-debug_file.writelines("General\n")
-debug_file.write("--------------------\n")
-debug_file.write("PART_NAME: {}\n".format(PART_NAME))
-debug_file.write("\n")
-
-# Parameter Changing
-debug_file.write("Parameter Changing\n")
-debug_file.write("--------------------\n")
-debug_file.write("CHANGE_PARAMS: {}\n".format(CHANGE_PARAMS))
-debug_file.write("CHANGE_POWER: {}\n".format(CHANGE_POWER))
-debug_file.write("CHANGE_SPEED: {}\n".format(CHANGE_SPEED))
-debug_file.write("\n")
-
-# Plotting
-debug_file.write("Plotting\n")
-debug_file.write("--------------------\n")
-debug_file.write("GENERATE_OUTPUT: {}\n".format(GENERATE_OUTPUT))
-debug_file.write("OUTPUT_PNG: {}\n".format(OUTPUT_PNG))
-debug_file.write("OUTPUT_SVG: {}\n".format(OUTPUT_SVG))
-debug_file.write("PLOT_CONTOURS: {}\n".format(PLOT_CONTOURS))
-debug_file.write("PLOT_HATCHES: {}\n".format(PLOT_HATCHES))
-debug_file.write("PLOT_CENTROIDS: {}\n".format(PLOT_CENTROIDS))
-debug_file.write("PLOT_JUMPS: {}\n".format(PLOT_JUMPS)) 
-debug_file.write("PLOT_TIME: {}\n".format(PLOT_TIME)) 
-debug_file.write("PLOT_CHANGE_PARAMS: {}\n".format(PLOT_CHANGE_PARAMS)) 
-debug_file.write("PLOT_POWER: {}\n".format(PLOT_POWER)) 
-debug_file.write("PLOT_SPEED: {}\n".format(PLOT_SPEED)) 
-debug_file.write("\n")
+if config["Write Debug Info"]:
+    print("Logging debug information to `debug.txt`.")
+    debug_file = open("debug.txt", "w")
+    debug_file.write("Input Parameters\n")
+    debug_file.write("--------------------\n")
+    for key, value in config.items():
+        debug_file.write("{}: {}\n".format(key, value))
+    debug_file.write("\n")
 
 if USE_SCANPATH_SWITCHING:
 
@@ -151,8 +137,8 @@ if USE_SCANPATH_SWITCHING:
     debug_file.write("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
 
 # Initialize Part
-Part = pyslm.Part(PART_NAME)
-Part.setGeometry('geometry/' + PART_NAME)
+Part = pyslm.Part(config["Part File Name"])
+Part.setGeometry('geometry/' + config["Part File Name"])
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
@@ -270,17 +256,17 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     things to cool off, which leads to problems with the part.
     '''
     ACTIVATION_DIFF = .5
-    if CHANGE_PARAMS and len(layer_times) > 1:
+    if config["Change Parameters"] and len(layer_times) > 1:
         dt = np.diff(layer_times)
-        if CHANGE_POWER:
+        if config["Change Power"]:
         # As time goes down, so should power
             if dt[len(dt)-1] > ACTIVATION_DIFF and layer_segstyle < MAX_POWER_LVL:
                 layer_segstyle += 1
             elif dt[len(dt)-1] < -ACTIVATION_DIFF and layer_segstyle > MIN_POWER_LVL:
                 layer_segstyle -= 1
             layer_power = model.buildStyles[layer_segstyle].laserPower
-        if CHANGE_SPEED:
-        # As time goes down, so should speed
+        if config["Change Speed"]:
+            # As time goes down, so should speed
             layer_speed = model.buildStyles[layer_segstyle].laserSpeed
 
   
@@ -295,7 +281,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 STEP 3: Visualization Outputs       
 '''
 
-if GENERATE_OUTPUT:
+if config["Output Plots"]:
 
     # Create/wipe folder
     if not os.path.exists("LayerFiles"):
@@ -308,17 +294,17 @@ if GENERATE_OUTPUT:
     for i in tqdm(range(len(layers)), desc="Generating Layer Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=PLOT_CENTROIDS, plotHatches=PLOT_HATCHES, plotContours=PLOT_CONTOURS, plotJumps=PLOT_JUMPS, handle=(fig, ax))
+            layers[i], plot3D=False, plotOrderLine=config["Plot Centroids"], plotHatches=config["Plot Hatches"], plotContours=config["Plot Contours"], plotJumps=config["Plot Jump Vectors"], handle=(fig, ax))
 
-        if OUTPUT_PNG:
+        if config["Output .png"]:
             fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
-        if OUTPUT_SVG:
+        if config["Output .svg"]:
             fig.savefig("LayerFiles/Layer{}.svg".format(i), bbox_inches='tight')
 
         plt.cla()
         plt.close(fig)
     
-    if PLOT_TIME:
+    if config["Plot Time"]:
         plt.figure()
         plt.title("Time by Layer")
         plt.xlabel("Layer number")
@@ -326,7 +312,7 @@ if GENERATE_OUTPUT:
         plt.plot(layer_times)
         plt.show()
     
-    if PLOT_CHANGE_PARAMS:
+    if config["Plot Parameter Changes"]:
         # Diagnostic plots for parameter scaling    
         plt.figure()
         plt.title("Normalized Process Parameters by Layer")
@@ -338,7 +324,7 @@ if GENERATE_OUTPUT:
         plt.legend(['Time','Power','Speed'], loc='upper right')
         plt.show()
     
-        if PLOT_POWER:
+        if config["Plot Power"]:
             plt.figure()
             plt.title("Power by Layer")
             plt.xlabel("Layer number")
@@ -346,7 +332,7 @@ if GENERATE_OUTPUT:
             plt.plot(layer_powers)
             plt.show()        
         
-        if PLOT_SPEED:
+        if config["Plot Speed"]:
             plt.figure()
             plt.title("Speed by Layer")
             plt.xlabel("Layer number")
