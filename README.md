@@ -34,17 +34,26 @@ See [here](https://stackoverflow.com/questions/19048732/python-setup-py-develop-
 
 ## To Run
 
-The `main.py` file currently has basic overall usage implemented, and is pretty well outlined. Simply run it with `python main.py` from the top level of this repository. 
+### UI
+I'm hoping to bundle the UI for this at some point, but the steps for getting the UI working aren't currently all too difficult. Do the following:
+- Clone [this repo](https://github.com/osu-cdme/cdme-scangen-ui) when your terminal is one level up from this one, meaning your `cdme-scangen` and `cdme-scangen-ui` folders will be in the same folder. This is necessary for a few relative paths.
+- Execute `npm install` from your `cdme-scangen-ui` folder to install all the Electron requisite packages. If you don't have `npm`, install Node.js (any recent stable version should be fine) and it will come bundled.
+- Execute `npm start` from your `cdme-scangen-ui` folder and the application should show up, and it should be self-explanatory from there. 
 
-Experiment with changing the line `myHatcher = hatching.Hatcher()` to `myHatcher = hatching.StripeHatcher()` or `myHatcher = hatching.BasicIslandHatcher()` to try out scan paths other than the basic alternating one. Output will be generated in the `LayerFiles/` directory as a `.png` image for each layer.
+If you're curious, it also works off of the `schema.json` file to display input fields for the user, then takes all the values from the form and starts this script with them, passing the user-input values in as serialized JSON. The goal was to get all the input parameters in one point so that we don't need to change it all over the place, and this does that. 
+
+### Code
+The `main.py` file is your starting point for everything. Simply run it with `python main.py` from the top level of this repository. Experiment with changing the line `myHatcher = hatching.Hatcher()` to `myHatcher = hatching.StripeHatcher()` or `myHatcher = hatching.BasicIslandHatcher()` to try out scan paths other than the basic alternating one. Output will be generated in the `LayerFiles/` directory as a `.png` image for each layer.
+
+If you run this script directly (rather than from the UI), it will take all its input variables (i.e. whether to do plots and stuff like that) from whatever `schema.json` states is its default value.
 
 ## To Develop
 All you really need is an editor. Visual Studio Code is recommended, as the .vscode folder in this repository includes some debugger configuration you may find useful. 
 
 ### Writing New Algorithms
-You're good to start writing new algorithms! There's some documentation on Box inside the "Scan Path Generation" folder; more will be written in the coming weeks. 
+Writing new algorithms is currently a bit difficult; to do so, you will need to become familiar with [pyslm](https://github.com/drlukeparry/pyslm), the library we wrap around and use for most of the real functionality. For CDME employees, there's some documentation in OneDrive inside the "Scan Path Generation" folder; more will be written in the coming weeks. 
 
-We recommend writing new algorithms in the `src` folder rather than doing so inside the `pyslm` library itself. We should keep `pyslm` as close to vanilla as possible so that it's easy to recontribute changes.
+We recommend writing new algorithms in the `src` folder rather than doing so inside the `pyslm` library itself, when possible. 
 
 ## Documentation
 
@@ -62,4 +71,4 @@ I've set up `sphinx`, which automatically does some documentation based solely o
 
 ## Attributions
 
-This infrastucture makes heavy use of the [pyslm](https://github.com/drlukeparry/pyslm/) library written by [@drlukeparry](https://github.com/drlukeparry). 
+This infrastucture makes heavy use of the [pyslm](https://github.com/drlukeparry/pyslm/) library, written by [@drlukeparry](https://github.com/drlukeparry), for all the actual difficult slicing, hatching, and so on. Many thanks to him. 
