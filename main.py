@@ -14,6 +14,21 @@ import time
 import statistics as stats
 import json 
 
+# tl;dr custom PYTHONPATH and input argument stuff
+# Command line stuff is a little complicated, and that's a fair critique
+# If we get one command line argument in, we assume it's a JSON-serialized object representing the user's input parameters
+# If we get two command line arguments in, we assume the first is the user's input params and the second is a JSON-serialized list of anything to manually add to the python path
+    # Note that the second argument can be specified without specifying the first argument by simply passing in an empty JSON-serialized dictionary as the first
+
+# First command line argument is a list of the user's command 
+if len(sys.argv) > 1:
+    config = json.loads(sys.argv[1])
+if len(sys.argv) > 2: # Hacky way to ensurea given library (in our case, generally pyslm) gets loaded from the UI
+    for path in json.loads(sys.argv[2]):
+        print("Appending {} to PYTHONPATH.".format(path))
+        sys.path.append(path)
+print(sys.path)
+
 # Third-Party Imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,11 +45,11 @@ import pyslm.analysis
 import pyslm.geometry
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
+from pyslm.hatching.multiple import hatch_multiple
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
-from pyslm.hatching.multiple import hatch_multiple
 
 #%%
 '''
@@ -61,12 +76,10 @@ segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
 with open("schema.json", "r") as f:
     schema = json.load(f)
 
-# If we have a command line argument, that's an object with the user's selected options
-if len(sys.argv) > 1:
-    config = json.loads(sys.argv[1])
+
 
 # Otherwise, assemble and run with the default values
-else:
+if len(sys.argv) <= 1 or not len(config):
     config = {}
     for category in schema:
         for attribute in schema[category]: 
