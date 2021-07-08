@@ -6,12 +6,12 @@ shapely
 networkx
 Rtree
 trimesh
-triangle
 scikit-image
 cython
 pyclipper
 
 # Our requirements 
+xlrd # Reading from Excel stuff
 tqdm # progress bars 
 nptyping # numpy array type hints 
 sklearn # input and general processing 
