@@ -297,6 +297,8 @@ class HDF5Writer():
             just consecutive segments because some segments that are not the first
             or last have no neighbors. I'll have to ask Mike how to define neighbors, 
             '''
+##TODO: #1 fix identification of neighbors (assumed based on existing comment)
+
             # neighbors[i//2][1] = lengths[i//2]
             # # Each edge except the first and last
             # if j > 0 and j < ( (len(points) // 2) - 1 ):               
