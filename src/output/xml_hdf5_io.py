@@ -296,6 +296,9 @@ class HDF5Writer():
             of another segment. I don't think this is right, but it's also not
             just consecutive segments because some segments that are not the first
             or last have no neighbors. I'll have to ask Mike how to define neighbors, 
+
+            speculation: neighbors are paths that are consecutive in execution?
+
             '''
 ##TODO: #1 fix identification of neighbors (assumed based on existing comment)
 
