@@ -50,6 +50,7 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
+from src.output.xml_hdf5_io import XMLWriter,ConfigFile
 
 #%%
 '''
@@ -289,6 +290,37 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     myHatcher.hatchAngle += 66.7
     myHatcher.hatchAngle %= 360
 
+'''
+If pulling .scn output from process, the data is available here for conversion
+
+Data available is in Lists after slicing and hatching completes
+
+    layer_times->list of ints describing time to execute each layer: generated from analysis of layer object by pyslm package
+    layer_powers->list of int or string arrays pulled from config.xlsx describing laser power: property of layer_segstyle object
+    layer_speeds->list of ints describing laser speed: property of layer_segstyle object
+    layer_segstyles->list of layer_segstyle objects
+    layers->list of instances Layer class objects defined in pyslm
+'''
+
+#%%
+'''
+Fork : XML File Output       
+'''
+'''
+This chunk should be able to go where needed. It requires an output directory to an empty folder so the zip output can produce a correct .scn file
+will need to ensure input sanitation when UI hooks into this component. set generateXML to False to bypass step. Currently false for development.
+'''
+generateXML=False
+if generateXML:
+    outputDir="C:\CDME\Code\cdme-scangen\xmlnew"
+    print_loader=ConfigFile("C:\CDME\Code\cdme-scangen\\build_config.xls")
+
+    xmlWriter = XMLWriter(outputDir,print_loader)
+    xmlWriter.output_xml
+    xmlWriter.output_zip
+
+
+
 #%%
 '''
 STEP 3: Visualization Outputs       
@@ -307,7 +339,8 @@ if config["Output Plots"]:
     for i in tqdm(range(len(layers)), desc="Generating Layer Plots"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=config["Plot Centroids"], plotHatches=config["Plot Hatches"], plotContours=config["Plot Contours"], plotJumps=config["Plot Jump Vectors"], handle=(fig, ax))
+            layers[i], plot3D=False, plotOrderLine=config["Plot Centroids"], plotHatches=config["Plot Hatches"],\
+                 plotContours=config["Plot Contours"], plotJumps=config["Plot Jump Vectors"], handle=(fig, ax))
 
         if config["Output .png"]:
             fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
