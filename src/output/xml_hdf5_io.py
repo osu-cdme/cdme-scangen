@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 from lxml.etree import Element, SubElement, xmlfile
@@ -9,11 +10,16 @@ from shapely.geometry import Polygon, MultiLineString
 from zipfile import ZipFile
 import os
 from os.path import basename
-from pyslm.geometry import ScanMode, BuildStyle
+from pyslm.geometry.geometry import ScanMode, BuildStyle
 import h5py
 import glob
 
-''' Per Anden the ConfigFile() class is likely redundant as config is handled in schema.json'''
+''' 
+Per Anden the ConfigFile() class is likely redundant as config is handled in schema.json
+Appears we may need to generate a configFile instance from the schema.json after user entries
+since the writer depends on this info to work and collecting and passing into it will be 
+much easier than passing a multitude of settings in separately
+'''
 
 class ConfigFile():
     def __init__(self, file_path):
