@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 from lxml.etree import Element, SubElement, xmlfile
@@ -9,9 +10,16 @@ from shapely.geometry import Polygon, MultiLineString
 from zipfile import ZipFile
 import os
 from os.path import basename
-from pyslm.geometry import ScanMode, BuildStyle
+from pyslm.geometry.geometry import ScanMode, BuildStyle
 import h5py
 import glob
+
+''' 
+Per Anden the ConfigFile() class is likely redundant as config is handled in schema.json
+Appears we may need to generate a configFile instance from the schema.json after user entries
+since the writer depends on this info to work and collecting and passing into it will be 
+much easier than passing a multitude of settings in separately
+'''
 
 class ConfigFile():
     def __init__(self, file_path):
@@ -268,10 +276,13 @@ class HDF5Writer():
         velocities = np.empty(len(points) // 2, dtype='d')
         powers = np.empty(len(points) // 2, dtype='d')
         lengths = np.empty(len(points) // 2, dtype='d')
-        neighbors = np.empty( ( len(points) // 2 ) * 3, dtype='d').reshape(-1,3)
+        neighbors = np.empty( [( len(points) // 2 ) , 3], dtype='d')
+         #was neighbors=np.empty( ( len(points) // 2 ) * 3, dtype='d').reshape(-1,3)
+         #documentation indicates  Attribute: neighbors; NUM_VECTORSx3 matrix of vector neighbors
         
         #Iterate through each consecutive pair of points
-        neighbors[0][0] = 0 # first edge
+        neighbors[0][0] = None # first edge
+        #was neighbors[0][0]=0
         
         for i in range(len(points)):
             
@@ -296,7 +307,14 @@ class HDF5Writer():
             of another segment. I don't think this is right, but it's also not
             just consecutive segments because some segments that are not the first
             or last have no neighbors. I'll have to ask Mike how to define neighbors, 
+
+            speculation: neighbors are paths that are consecutive in execution 
+            and adjacent to each other? and may be stored like so:
+            [(1,2,3), (2,3,4), (3,4,null), (null,5,6), (5,6,7)] if there were a gap between vectors 4 and 5.
+
             '''
+            ##TODO: #1 fix identification of neighbors (assumed based on existing comment)
+
             # neighbors[i//2][1] = lengths[i//2]
             # # Each edge except the first and last
             # if j > 0 and j < ( (len(points) // 2) - 1 ):               
