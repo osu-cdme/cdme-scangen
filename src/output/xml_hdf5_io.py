@@ -19,6 +19,8 @@ Per Anden the ConfigFile() class is likely redundant as config is handled in sch
 Appears we may need to generate a configFile instance from the schema.json after user entries
 since the writer depends on this info to work and collecting and passing into it will be 
 much easier than passing a multitude of settings in separately
+
+output_xml and write_layer both require lists that are not initialized anywhere. maybe build them and store as element of config?
 '''
 
 class ConfigFile():
