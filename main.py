@@ -312,8 +312,8 @@ will need to ensure input sanitation when UI hooks into this component. set gene
 '''
 generateXML=False
 if generateXML:
-    outputDir="C:\CDME\Code\cdme-scangen\xmlnew"
-    print_loader=ConfigFile("C:\CDME\Code\cdme-scangen\\build_config.xls")
+    outputDir="C:/CDME/Code/cdme-scangen/xmlnew"
+    print_loader=ConfigFile("C:/CDME/Code/cdme-scangen/build_config.xls")
 
     xmlWriter = XMLWriter(outputDir,print_loader)
     xmlWriter.output_xml
