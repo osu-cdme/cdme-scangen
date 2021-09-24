@@ -29,6 +29,8 @@ make_velocity_profiles() <-- helper for write_layer()
 make_segment_styles() <-- helper for write_layer()
 make_traj_list() <-- helper for write_layer()
 
+hdf5_to_xml() <-- needs updated for deletion of configFile dependency/input type
+
 '''
 '''
 Data available from pySLM output
