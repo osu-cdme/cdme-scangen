@@ -296,8 +296,8 @@ If pulling .scn output from process, the data is available here for conversion
 Data available is in Lists after slicing and hatching completes
 
     layer_times->list of ints describing time to execute each layer: generated from analysis of layer object by pyslm package
-    layer_powers->list of int or string arrays pulled from config.xlsx describing laser power: property of layer_segstyle object
-    layer_speeds->list of ints describing laser speed: property of layer_segstyle object
+    layer_powers->list of int or string arrays describing laser power
+    layer_speeds->list of ints describing laser speed
     layer_segstyles->list of layer_segstyle objects
     layers->list of instances Layer class objects defined in pyslm
 '''
