@@ -42,8 +42,9 @@ class ConfigFile():
                            sheet_name=2, index_col=0, header=5, usecols="A:H")
         vel_ = {}
         for index, row in df.iterrows():
-            vel_[index] = settings.VelocityProfile(index, row.iloc[0],
-                                                         row.iloc[2], row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6], row.iloc[1])
+            vel_[index] = settings.VelocityProfile(index, row.iloc[0],\
+            row.iloc[2], row.iloc[3], row.iloc[4], row.iloc[5], row.iloc[6], row.iloc[1])
+            
         return vel_
 
     def load_segment_style(self) -> Dict[str, settings.SegmentStyle]:
