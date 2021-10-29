@@ -1,15 +1,17 @@
 import os
 import sys
+
+from pyslm.geometry.geometry import ScanMode
 sys.path.append("C:/CDME/Code/cdme-scangen")
 
 from src.output.xml_hdf5_io import XMLWriter,ConfigFile
 ##test status, currently runs but does not produce any noticable output
 
 
-outputDir="C:/CDME/Code/cdme-scangen/xmlnew"
-print_loader=ConfigFile("C:/CDME/Code/cdme-scangen/build_config.xls")
+outputDir="C:/CDME/Code/xml"
 
-xmlWriter = XMLWriter(outputDir,print_loader)
-xmlWriter.output_xml
-xmlWriter.output_zip
+
+xmlWriter = XMLWriter(outputDir)
+xmlWriter.output_xml(layers,model)
+xmlWriter.output_zip()
 
