@@ -56,14 +56,14 @@ class XMLWriter():
     '''
     generates a .xml file for a single layer of a print in the format required to convert to a .scn for use by the open controller
     '''
-    ##TODO: fix this function, sub functions are complete but parameters have not been updated here.
-    def write_layer(self, layer:Layer, layer_num: int, layer_segstyle: str, scan_mode: ScanMode):
+    
+    def write_layer(self, model:Model, layer:Layer, layer_num: int):
         with xmlfile(self.out + '/scan_' + str(layer_num) + '.xml') as xf:
             with xf.element('Layer'):
                 xf.write(self.make_header(layer_num), pretty_print=True)
-                xf.write(self.make_velocity_profiles(), pretty_print=True)
-                xf.write(self.make_segment_styles(), pretty_print=True)
-                xf.write(self.make_traj_list(layer, layer_segstyle, scan_mode), pretty_print=True)
+                xf.write(self.make_velocity_profiles(model), pretty_print=True)
+                xf.write(self.make_segment_styles(model), pretty_print=True)
+                xf.write(self.make_traj_list(layer), pretty_print=True) #<--ScanMode selector function removed for redesign, can be added back in later
 
 
     '''
@@ -77,14 +77,10 @@ class XMLWriter():
     def make_header(layerNum: int,):
        
         header=Element('Header')
-        SubElement(header, 'AmericaMakesSchemaVersion').text = \
-            "2020-03-23"
-        SubElement(header, 'LayerNum').text = \
-            str(layerNum)
-        SubElement(header, 'LayerThickness').text = \
-            ".05"
-        SubElement(header, 'DosingFactor').text = \
-            "1.75"
+        SubElement(header, 'AmericaMakesSchemaVersion').text = "2020-03-23"
+        SubElement(header, 'LayerNum').text = str(layerNum)
+        SubElement(header, 'LayerThickness').text = ".05"
+        SubElement(header, 'DosingFactor').text = "1.75"
         
         return header 
 
@@ -242,7 +238,7 @@ class XMLWriter():
     Need to review inputs to this one, can have better references for readability
     """
     ##TODO: fix this function, sub functions are complete but parameters have not been updated here.
-    def output_xml(self, layers: List[List[np.ndarray]], layer_segstyles: List[str], scan_mode: ScanMode):
+    def output_xml(self, layers: List[Layer], model:Model):
         
         # Create/wipe folder
         if not os.path.exists("xml"):
@@ -255,8 +251,8 @@ class XMLWriter():
             print('XML Layer # ' + str(i+1) + ' Started')
             xml_path = '../../' + self.out + '/scan_' + str(i+1) + '.xml'
             print(xml_path)
-            self.write_layer(layers[i], i+1, layer_segstyles[i], scan_mode)
-            print('XML Layer # ' + str(i+1) + ' Complete\n')
+            self.write_layer(model,layers[i],i)
+            print('XML Layer # ' + str(i+1) + ' Complete')
             
         return
 
