@@ -296,8 +296,8 @@ If pulling .scn output from process, the data is available here for conversion
 Data available is in Lists after slicing and hatching completes
 
     layer_times->list of ints describing time to execute each layer: generated from analysis of layer object by pyslm package
-    layer_powers->list of int or string arrays pulled from config.xlsx describing laser power: property of layer_segstyle object
-    layer_speeds->list of ints describing laser speed: property of layer_segstyle object
+    layer_powers->list of int or string arrays describing laser power
+    layer_speeds->list of ints describing laser speed
     layer_segstyles->list of layer_segstyle objects
     layers->list of instances Layer class objects defined in pyslm
 '''
@@ -312,12 +312,12 @@ will need to ensure input sanitation when UI hooks into this component. set gene
 '''
 generateXML=False
 if generateXML:
-    outputDir="C:\CDME\Code\cdme-scangen\xmlnew"
-    print_loader=ConfigFile("C:\CDME\Code\cdme-scangen\\build_config.xls")
+    outputDir="C:/CDME/Code/cdme-scangen/xmlnew"
+    
 
-    xmlWriter = XMLWriter(outputDir,print_loader)
-    xmlWriter.output_xml
-    xmlWriter.output_zip
+    xmlWriter = XMLWriter(outputDir)
+    xmlWriter.output_xml(layers,model)
+    xmlWriter.output_zip()
 
 
 
