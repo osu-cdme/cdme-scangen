@@ -160,7 +160,7 @@ class XMLWriter():
     X and Y coordinates<--passed in.
     '''
     def make_traj_list(layer: Layer):
-        #TODO: complete body
+        
         tList=Element('TrajectoryList')
 
         # create node for >1 trajectory group           
@@ -237,7 +237,7 @@ class XMLWriter():
     """
     Need to review inputs to this one, can have better references for readability
     """
-    ##TODO: fix this function, sub functions are complete but parameters have not been updated here.
+    
     def output_xml(self, layers: List[Layer], model:Model):
         
         # Create/wipe folder
