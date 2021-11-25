@@ -37,6 +37,13 @@
   ],
   "Output": [
     {
+      "name": "Output .scn", 
+      "type": "bool", 
+      "options": [ "Yes", "No" ],
+      "desc": "Whether to output a .scn file, which is what the OASIS open controller uses.",
+      "default": "Yes"
+    },
+    {
       "name": "Output Plots", 
       "type": "bool", 
       "desc": "Whether you'd like to output plots.",
