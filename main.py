@@ -20,14 +20,20 @@ import json
 # If we get two command line arguments in, we assume the first is the user's input params and the second is a JSON-serialized list of anything to manually add to the python path
     # Note that the second argument can be specified without specifying the first argument by simply passing in an empty JSON-serialized dictionary as the first
 
-# First command line argument is a list of the user's command 
+# First command line argument is a list of the user's option selections
+print("sys.argv: " + str(sys.argv)) 
 if len(sys.argv) > 1:
+    print("HANDLING FIRST COMMAND LINE ARGUMENT")
     config = json.loads(sys.argv[1])
-if len(sys.argv) > 2: # Hacky way to ensurea given library (in our case, generally pyslm) gets loaded from the UI
+    print("Loaded the following config as the first cmd line arg: " + str(config))
+
+# Second command-line argument is a list of folders to add to PYTHONPATH
+# ...it's a (hacky) way to ensure a given library (in our case, generally pyslm) gets loaded from the UI
+if len(sys.argv) > 2: 
+    print("HANDLING SECOND COMMAND LINE ARGUMENT")
     for path in json.loads(sys.argv[2]):
         print("Appending {} to PYTHONPATH.".format(path))
         sys.path.append(path)
-print(sys.path)
 
 # Third-Party Imports
 import numpy as np
@@ -57,8 +63,6 @@ from src.output.xml_hdf5_io import XMLWriter,ConfigFile
 STEP 1: Initialize part, build, and program parameters
 '''
 
-# TODO: Split all this input/output into a separate Python file 
-
 # Import Excel Parameters
 def eval_bool(str):
     return True if str == "Yes" else False
@@ -77,8 +81,6 @@ segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
 with open("schema.json", "r") as f:
     schema = json.load(f)
 
-
-
 # Otherwise, assemble and run with the default values
 if len(sys.argv) <= 1 or not len(config):
     config = {}
@@ -92,7 +94,7 @@ for category in schema:
         config[attribute["name"]] = int(config[attribute["name"]]) if attribute["type"] == "int" else config[attribute["name"]]
         config[attribute["name"]] = float(config[attribute["name"]]) if attribute["type"] == "float" else config[attribute["name"]]
         if attribute["type"] == "bool":
-            config[attribute["name"]] = True if attribute["default"] == "Yes" else False
+            config[attribute["name"]] = True if config[attribute["name"]] == "Yes" else False
 
 """
 Example Config Object:
@@ -104,6 +106,7 @@ Example Config Object:
  'Contour First': True,
  'Hatch Angle': 66.7,
  'Hatch Sorting Method': 'None',
+ 'Output .scn': True,
  'Output .png': True,
  'Output .svg': False,
  'Output Plots': True,
@@ -310,16 +313,11 @@ Fork : XML File Output
 This chunk should be able to go where needed. It requires an output directory to an empty folder so the zip output can produce a correct .scn file
 will need to ensure input sanitation when UI hooks into this component. set generateXML to False to bypass step. Currently false for development.
 '''
-generateXML=False
-if generateXML:
-    outputDir="C:/CDME/Code/cdme-scangen/xmlnew"
-    
-
+if config["Output .scn"]:
+    outputDir="output"
     xmlWriter = XMLWriter(outputDir)
     xmlWriter.output_xml(layers,model)
     xmlWriter.output_zip()
-
-
 
 #%%
 '''
