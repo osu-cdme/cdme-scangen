@@ -19,3 +19,4 @@ pandas # interface w/ Excel input file
 openpyxl # Needed by pandas to interface with Excel input file 
 typeguard # Makes runtime type checking easier (works based off of type hints and just requires a decorator)
 lxml #interface w/xml required for xml/hdf5 io
+h5py # hdf5 i/o
