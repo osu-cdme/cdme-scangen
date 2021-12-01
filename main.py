@@ -50,7 +50,7 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
-from src.output.xml_hdf5_io import XMLWriter,ConfigFile
+from src.output.xml_hdf5_io_2 import XMLWriter
 
 #%%
 '''
@@ -59,10 +59,18 @@ STEP 1: Initialize part, build, and program parameters
 
 # TODO: Split all this input/output into a separate Python file 
 
+'''
+This function isn't used for anything?
+'''
 # Import Excel Parameters
 def eval_bool(str):
     return True if str == "Yes" else False
 
+'''
+As is, if we're not passing in an excel file and trying to work from the json, 
+this code is not in a container to be skipped so the main will fail before loading from schema if this is left in
+
+'''
 # "Parameters" for the file 
 values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
 config_vprofiles = pd.ExcelFile(r'build_config.xls').parse(3,header=7)['Velocity Profile for build segments\nVP for jumps is selected in Region profile'][3:]
@@ -72,6 +80,7 @@ config_powers = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['Lead laser
 segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
                           'Powers':np.array(config_powers),
                           'VelocityProfiles':np.array(config_vprofiles)})
+
 
 # Go from our standardized source of fields, or our "schema"
 with open("schema.json", "r") as f:
@@ -308,9 +317,9 @@ Fork : XML File Output
 '''
 '''
 This chunk should be able to go where needed. It requires an output directory to an empty folder so the zip output can produce a correct .scn file
-will need to ensure input sanitation when UI hooks into this component. set generateXML to False to bypass step. Currently false for development.
+will need to ensure input sanitation when UI hooks into this component. set generateXML to False to bypass step. 
 '''
-generateXML=False
+generateXML=True
 if generateXML:
     outputDir="C:/CDME/Code/cdme-scangen/xmlnew"
     

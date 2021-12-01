@@ -11,7 +11,7 @@ from zipfile import ZipFile
 import os
 from os.path import basename
 
-from pyslm.pyslm.geometry.geometry import ScanMode, BuildStyle, Layer,Model ## Directed import to version of pyslm included in scan-gen package
+from pyslm.geometry.geometry import ScanMode, BuildStyle, Layer,Model ## Directed import to version of pyslm included in scan-gen package
 import h5py
 import glob
 
@@ -56,7 +56,7 @@ class XMLWriter():
     '''
     generates a .xml file for a single layer of a print in the format required to convert to a .scn for use by the open controller
     '''
-    
+    #TODO: write fails when directory does not exist. Need to add function that creates a new directory when new write starts.
     def write_layer(self, model:Model, layer:Layer, layer_num: int):
         with xmlfile(self.out + '/scan_' + str(layer_num) + '.xml') as xf:
             with xf.element('Layer'):
