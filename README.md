@@ -15,7 +15,7 @@ See [here](http://openmetric.org/til/programming/git-pull-with-submodule/) and [
 Install the following dependencies:
 
 - **Microsoft Visual C++ 14.0**: Required for one of the Python libraries; downloading the installer [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and installing the defaults under "C++ Build Tools" (and possibly MSVC v140 if that doesn't work) should be enough.
-- **Python**: The codebase is only tested on **Python 3.9.1/3.9.4**, so we recommend one of those. We can't speak for other versions, but we know many versions of 3.6.8 and 3.10 run into compatibility issues or just break in general.
+- **Python**: Install Python 3.9.9. The codebase theoretically works with others as well, just for compatibility reasons other versions (of ones we've tested 3.6, 3.10) break.
 - **Python Prerequisites**: A bunch of libraries. Run `python -mpip install -r requirements.txt` in the base directory of this repository to install them all.
 
 ### 3. Compile PySLM
