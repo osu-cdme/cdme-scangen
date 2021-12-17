@@ -322,10 +322,10 @@ Fork : XML File Output
 '''
 '''
 This chunk should be able to go where needed. It requires an output directory to an empty folder so the zip output can produce a correct .scn file
-will need to ensure input sanitation when UI hooks into this component. set generateXML to False to bypass step. 
+will need to ensure input sanitation when UI hooks into this component. 
 '''
 if config["Output .scn"]:
-    outputDir="output"
+    outputDir=os.path.normpath('C:\CDME\Code\cdme-scangen\ouput')
     xmlWriter = XMLWriter(outputDir)
     xmlWriter.output_xml(layers,model)
     xmlWriter.output_zip()
