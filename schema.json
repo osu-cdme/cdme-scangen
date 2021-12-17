@@ -1,182 +1,182 @@
 {
   "Input": [
     {
-      "name": "Scan Strategy", 
-      "type": "string", 
+      "name": "Scan Strategy",
+      "type": "string",
       "desc": "Which scan strategy you'd like to be used on the part.",
-      "options": [ "default", "island" ],
+      "options": ["default", "island"],
       "default": "default"
-    }, 
+    },
     {
-      "name": "Part File Name", 
-      "type": "string", 
-      "desc": "The file name of the part (which must be in the `geometry` folder; do not prefix it with `geometry`).", 
+      "name": "Part File Name",
+      "type": "string",
+      "desc": "The file name of the part (which must be in the `geometry` folder; do not prefix it with `geometry`).",
       "default": "nut.stl"
-    }, 
+    },
     {
-      "name": "Change Parameters", 
-      "type": "bool", 
+      "name": "Change Parameters",
+      "type": "bool",
       "desc": "Whether you'd like to do parameter changing on the part, which <TODO>.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Change Power", 
-      "type": "bool", 
+      "name": "Change Power",
+      "type": "bool",
       "desc": "Whether you'd like to do power changing on the part, which <TODO>.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Change Speed", 
-      "type": "bool", 
+      "name": "Change Speed",
+      "type": "bool",
       "desc": "Whether you'd like to do speed changing on the part, which <TODO>.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     }
   ],
   "Output": [
     {
-      "name": "Output .scn", 
-      "type": "bool", 
-      "options": [ "Yes", "No" ],
-      "desc": "Whether to output a .scn file, which is what the OASIS open controller uses.",
+      "name": "Output .XML",
+      "type": "bool",
+      "options": ["Yes", "No"],
+      "desc": "Whether to output OASIS XML files.",
       "default": "Yes"
     },
     {
-      "name": "Output Plots", 
-      "type": "bool", 
+      "name": "Output Plots",
+      "type": "bool",
       "desc": "Whether you'd like to output plots.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "Yes"
     },
     {
-      "name": "Output .png", 
-      "type": "bool", 
+      "name": "Output .png",
+      "type": "bool",
       "desc": "Whether you'd like to output .PNG files, which are easily openable and quick to generate but cannot be infinitely zoomed in.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "Yes"
     },
     {
-      "name": "Output .svg", 
-      "type": "bool", 
+      "name": "Output .svg",
+      "type": "bool",
       "desc": "Whether you'd like to output .svg files, which are infinitely zoomable but take longer to generate and require opening with a browser.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Plot Contours", 
-      "type": "bool", 
+      "name": "Plot Contours",
+      "type": "bool",
       "desc": "Whether you'd like to plot contours.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "Yes"
     },
     {
-      "name": "Plot Hatches", 
-      "type": "bool", 
+      "name": "Plot Hatches",
+      "type": "bool",
       "desc": "Whether you'd like to plot hatches.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "Yes"
     },
     {
-      "name": "Plot Centroids", 
-      "type": "bool", 
+      "name": "Plot Centroids",
+      "type": "bool",
       "desc": "Whether you'd like to plot a line between the centroids of the hatches, which can be useful to show order.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Plot Jump Vectors", 
-      "type": "bool", 
+      "name": "Plot Jump Vectors",
+      "type": "bool",
       "desc": "Whether you'd like to plot jump vectors, which show the path the laser takes between hatch vectors.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Plot Time", 
-      "type": "bool", 
+      "name": "Plot Time",
+      "type": "bool",
       "desc": "Whether you'd like to plot the time that this layer took. (Need to double check this is what it actually does)",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Plot Parameter Changes", 
-      "type": "bool", 
+      "name": "Plot Parameter Changes",
+      "type": "bool",
       "desc": "Whether you'd like to plot some visualizations of the parameter changing system. The next two options will not matter if you say `No`.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Plot Power", 
-      "type": "bool", 
+      "name": "Plot Power",
+      "type": "bool",
       "desc": "Whether you'd like to plot the power per layer.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     },
     {
-      "name": "Plot Speed", 
-      "type": "bool", 
+      "name": "Plot Speed",
+      "type": "bool",
       "desc": "Whether you'd like to plot the speed per layer.",
-      "options": [ "Yes", "No" ], 
+      "options": ["Yes", "No"],
       "default": "No"
     }
   ],
   "Hatching": [
     {
-      "name": "Hatch Angle", 
-      "type": "float", 
-      "desc": "The angle to rotate per layer.", 
+      "name": "Hatch Angle",
+      "type": "float",
+      "desc": "The angle to rotate per layer.",
       "units": "deg",
       "default": "66.7"
     },
     {
-      "name": "Volume of Offset Hatch", 
-      "type": "float", 
+      "name": "Volume of Offset Hatch",
+      "type": "float",
       "desc": "Offset between internal and external boundary (Need to confirm what this actually does).",
-      "units": "mm", 
+      "units": "mm",
       "default": ".08"
     },
     {
-      "name": "Spot Compensation", 
-      "type": "float", 
+      "name": "Spot Compensation",
+      "type": "float",
       "desc": "Additional, multiplicative offset to account for laser spot size. Set to 1 for no change.",
       "units": "unitless",
       "default": "1"
     },
     {
-      "name": "# Inner Contours", 
-      "type": "int", 
+      "name": "# Inner Contours",
+      "type": "int",
       "desc": "Number of inner contours. (Need to confirm difference between inner and outer contours)",
       "default": "2"
     },
     {
-      "name": "# Outer Contours", 
-      "type": "int", 
+      "name": "# Outer Contours",
+      "type": "int",
       "desc": "Number of outer contours. (Need to confirm difference between inner and outer contours)",
       "default": "2"
-    }, 
+    },
     {
-      "name": "Hatch Sorting Method", 
-      "type": "string", 
-      "options": [ "None", "Alternate", "Linear", "Greedy" ],
+      "name": "Hatch Sorting Method",
+      "type": "string",
+      "options": ["None", "Alternate", "Linear", "Greedy"],
       "desc": "Which way you'd like to sort the hatches.",
       "default": "None"
     }
   ],
   "Debug": [
     {
-      "name": "Write Debug Info", 
-      "type": "bool", 
-      "options": [ "Yes", "No" ],
+      "name": "Write Debug Info",
+      "type": "bool",
+      "options": ["Yes", "No"],
       "desc": "Whether to write program debug information to the debug.txt file.",
       "default": "Yes"
     }
   ],
   "Trajectory Ordering": [
     {
-      "name": "Contour First", 
-      "type": "bool", 
-      "options": [ "Yes", "No" ],
+      "name": "Contour First",
+      "type": "bool",
+      "options": ["Yes", "No"],
       "desc": "Whether to order contours before anything else.",
       "default": "Yes"
     }
