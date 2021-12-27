@@ -317,11 +317,9 @@ Data available is in Lists after slicing and hatching completes
 '''
 
 #%%
+
 '''
-Fork : XML File Output       
-'''
-'''
-This chunk should be able to go where needed. It requires an output directory to an empty folder so the zip output can produce a correct .scn file
+This chunk should be able to go where needed. It requires an output directory to an empty or new folder so the zip output can produce a correct .scn file
 will need to ensure input sanitation when UI hooks into this component. 
 '''
 # if config["Output .scn"]:
