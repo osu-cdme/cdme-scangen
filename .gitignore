@@ -153,3 +153,8 @@ hdf5/*
 
 
 *.prof
+
+# XML files are transient I/O and shouldn't be added to git
+xml/*.xml
+XMLOutput/*.xml
+node_modules
