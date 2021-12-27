@@ -59,34 +59,6 @@ from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_i
 from src.output.xml_hdf5_io_2 import XMLWriter
 
 #%%
-'''
-STEP 1: Initialize part, build, and program parameters
-'''
-
-# TODO: Split all this input/output into a separate Python file 
-
-'''
-This function isn't used for anything?
-'''
-# Import Excel Parameters
-def eval_bool(str):
-    return True if str == "Yes" else False
-
-'''
-As is, if we're not passing in an excel file and trying to work from the json, 
-this code is not in a container to be skipped so the main will fail before loading from schema if this is left in
-
-'''
-# "Parameters" for the file 
-values = pd.ExcelFile(r'config.xlsx').parse(0)["Value"]
-config_vprofiles = pd.ExcelFile(r'build_config.xls').parse(3,header=7)['Velocity Profile for build segments\nVP for jumps is selected in Region profile'][3:]
-#config_speeds = pd.ExcelFile(r'build_config.xls').parse(2, header=5)['Velocity\n(mm/s)']
-config_segstyles = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['SegmentStyle ID\nMay be integer or text'][3:]
-config_powers = pd.ExcelFile(r'build_config.xls').parse(3, header=7)['Lead laser power (Watts)'][3:]
-segstyles = pd.DataFrame({'SegStyles':np.array(config_segstyles),
-                          'Powers':np.array(config_powers),
-                          'VelocityProfiles':np.array(config_vprofiles)})
-
 
 # Go from our standardized source of fields, or our "schema"
 with open("schema.json", "r") as f:
@@ -178,29 +150,35 @@ myHatcher.islandOffset = 0
 myHatcher.islandOverlap = 0
 
 # Set the base hatching parameters which are generated within Hatcher
-myHatcher.hatchAngle = values[22]  # [°] The angle used for the islands
+myHatcher.hatchAngle = config["Hatch Angle"]  # [°] The angle used for the islands
 # [mm] Offset between internal and external boundary
-myHatcher.volumeOffsetHatch = values[23]
-# [mm] Additional offset to account for laser spot size
-myHatcher.spotCompensation = values[24]
-myHatcher.numInnerContours = values[25]
-myHatcher.numOuterContours = values[26]
 
-if values[27]=='Alternate':
+# TODO: There are some options here settable via pyslm but that don't currently exist in the UI yet
+# myHatcher.volumeOffsetHatch = values[23]
+myHatcher.spotCompensation = config["Spot Compensation"]
+myHatcher.numInnerContours = config["# Inner Contours"]
+myHatcher.numOuterContours = config["# Outer Contours"]
+
+if config["Hatch Sorting Method"]=='Alternate':
     myHatcher.hatchSortMethod = hatching.AlternateSort()
-elif values[27]=='Linear':
+elif config["Hatch Sorting Method"]=='Linear':
     myHatcher.hatchSortMethod = hatching.LinearSort()
-elif values[27]=='Greedy':
+elif config["Hatch Sorting Method"]=='Greedy':
     myHatcher.hatchSortMethod = hatching.GreedySort()
+else:
+    print("Invalid hatch sorting method " + config["Hatch Sorting Method"] + " passed in.")
+    myHatcher.hatchSortMethod = hatching.AlternateSort()
 
-MIN_POWER_LVL = min(config_powers.keys())
-MAX_POWER_LVL = max(config_powers.keys())
+# TODO: Figure out what these were used for and reimplement the system
+# MIN_POWER_LVL = min(config_powers.keys())
+# MAX_POWER_LVL = max(config_powers.keys())
 
 # Instantiate model and set model parameters
 model = pyslm.geometry.Model()
 model.mid = 1
 
 # Set the initial values for possible build style parameters
+"""
 for style_id, seg_style in segstyles.iterrows():    
     bstyle = pyslm.geometry.BuildStyle()
     bstyle.bid = style_id
@@ -211,10 +189,12 @@ for style_id, seg_style in segstyles.iterrows():
     bstyle.pointExposureTime = 30  # (30 micro seconds)
         
     model.buildStyles.append(bstyle)
+"""
 
 resolution = 0.2
 
 # Set the layer thickness
+# TODO: Put into the UI
 LAYER_THICKNESS = 1  # [mm]
 
 #%%
@@ -230,9 +210,9 @@ layer_speeds = []
 layer_segstyles = []
 
 # Perform the hatching operations
-layer_segstyle = 11
-layer_power = model.buildStyles[layer_segstyle].laserPower
-layer_speed = model.buildStyles[layer_segstyle].laserSpeed
+# layer_segstyle = 11
+# layer_power = model.buildStyles[layer_segstyle].laserPower
+# layer_speed = model.buildStyles[layer_segstyle].laserSpeed
 for z in tqdm(np.arange(0, Part.boundingBox[5],
                         LAYER_THICKNESS), desc="Processing Layers"):
 
@@ -272,10 +252,10 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         geometry.bid = 1
 
     # Get parameters for each layer and collect
-    layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    layer_powers.append(layer_power)
-    layer_speeds.append(layer_speed)
-    layer_segstyles.append(model.buildStyles[layer_segstyle].name)
+    # layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
+    # layer_powers.append(layer_power)
+    # layer_speeds.append(layer_speed)
+    # layer_segstyles.append(model.buildStyles[layer_segstyle].name)
     
     '''
     Scale parameters by how much time it's taking to scan layers.
@@ -284,6 +264,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     things to cool off, which leads to problems with the part.
     '''
     ACTIVATION_DIFF = .5
+    """
     if config["Change Parameters"] and len(layer_times) > 1:
         dt = np.diff(layer_times)
         if config["Change Power"]:
@@ -296,7 +277,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
         if config["Change Speed"]:
             # As time goes down, so should speed
             layer_speed = model.buildStyles[layer_segstyle].laserSpeed
-
+    """
   
     layers.append(layer)
 
@@ -324,11 +305,10 @@ will need to ensure input sanitation when UI hooks into this component.
 '''
 # if config["Output .scn"]:
 
-# Create 'output' directory if it doesn't exist
-if not os.path.exists("XMLOutput"):
-    os.makedirs("XMLOutput")
+# Create 'output' directory if it doesn't exist\
 
 # NOTE: This folder name is hardcoded into 'cdme-scangen-ui' as well, so if you change it here, change it there
+# Also note that xmlWriter creates the given output folder if it doesn't already exist
 outputDir=os.path.abspath('XMLOutput')
 xmlWriter = XMLWriter(outputDir)
 xmlWriter.output_xml(layers,model)
