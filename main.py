@@ -1,11 +1,3 @@
-"""
-Created on Wed Feb  3 14:37:32 2021
-
-@author: harsh
-
-Example for PySLM slicing, data manipulation, and visualizations
-"""
-
 # Standard Library Imports
 import sys
 import os
@@ -13,27 +5,6 @@ import glob
 import time
 import statistics as stats
 import json 
-
-# tl;dr custom PYTHONPATH and input argument stuff
-# Command line stuff is a little complicated, and that's a fair critique
-# If we get one command line argument in, we assume it's a JSON-serialized object representing the user's input parameters
-# If we get two command line arguments in, we assume the first is the user's input params and the second is a JSON-serialized list of anything to manually add to the python path
-    # Note that the second argument can be specified without specifying the first argument by simply passing in an empty JSON-serialized dictionary as the first
-
-# First command line argument is a list of the user's option selections
-print("sys.argv: " + str(sys.argv)) 
-if len(sys.argv) > 1:
-    print("HANDLING FIRST COMMAND LINE ARGUMENT")
-    config = json.loads(sys.argv[1])
-    print("Loaded the following config as the first cmd line arg: " + str(config))
-
-# Second command-line argument is a list of folders to add to PYTHONPATH
-# ...it's a (hacky) way to ensure a given library (in our case, generally pyslm) gets loaded from the UI
-if len(sys.argv) > 2: 
-    print("HANDLING SECOND COMMAND LINE ARGUMENT")
-    for path in json.loads(sys.argv[2]):
-        print("Appending {} to PYTHONPATH.".format(path))
-        sys.path.append(path)
 
 # Third-Party Imports
 import numpy as np
@@ -44,7 +15,9 @@ import pandas as pd
 from pprint import pprint 
 
 # Local Imports
-#sys.path.insert(0, os.path.abspath("pyslm/pyslm"))  # nopep8
+sys.path.insert(0, os.path.abspath("./")) # Hacky way to ensure Python can find local modules
+sys.path.insert(0, os.path.abspath("pyslm")) 
+print(sys.path)
 import pyslm
 import pyslm.visualise
 import pyslm.analysis
@@ -58,61 +31,30 @@ from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
 from src.output.xml_hdf5_io_2 import XMLWriter
 
+# Handle first command line argument, which is a JSON-serialized list of the user's option selections
+# Go from our standardized source of fields, or our "schema"
+from load_parameters import *
+if len(sys.argv) > 1:
+    print("First Command Line Argument: " + sys.argv[1])
+    config_obj = json.loads(sys.argv[1])
+    config = parse_config(config_obj)
+else: 
+    print("First Command Line Argument not specified, using default config")
+    config = default_config()
+print("Post-load config: " + str(config))
+
+# Handle second command line argument, which is a list of paths to add to the python path
+# ...it's a (hacky) way to ensure a given library (in our case, pyslm) gets properly loaded from the UI
+
+if len(sys.argv) > 2: 
+    print("Second Command Line Argument: " + sys.argv[2])
+    for path in json.loads(sys.argv[2]):
+        print("Appending {} to PYTHONPATH.".format(path))
+        sys.path.append(path)
+
 #%%
 
-# Go from our standardized source of fields, or our "schema"
-with open("schema.json", "r") as f:
-    schema = json.load(f)
-
-# Otherwise, assemble and run with the default values
-if len(sys.argv) <= 1 or not len(config):
-    config = {}
-    for category in schema:
-        for attribute in schema[category]: 
-            config[attribute["name"]] = attribute["default"]
-
-# Cast int/float/bool to their Python representations, rather than just leaving everything as a string
-for category in schema:
-    for attribute in schema[category]:
-        config[attribute["name"]] = int(config[attribute["name"]]) if attribute["type"] == "int" else config[attribute["name"]]
-        config[attribute["name"]] = float(config[attribute["name"]]) if attribute["type"] == "float" else config[attribute["name"]]
-        if attribute["type"] == "bool":
-            config[attribute["name"]] = True if config[attribute["name"]] == "Yes" else False
-
-"""
-Example Config Object:
-{'# Inner Contours': 2,
- '# Outer Contours': 2,
- 'Change Parameters': False,
- 'Change Power': False,
- 'Change Speed': False,
- 'Contour First': True,
- 'Hatch Angle': 66.7,
- 'Hatch Sorting Method': 'None',
- 'Output .scn': True,
- 'Output .png': True,
- 'Output .svg': False,
- 'Output Plots': True,
- 'Part File Name': 'nut.stl',
- 'Plot Centroids': False,
- 'Plot Contours': True,
- 'Plot Hatches': True,
- 'Plot Jump Vectors': False,
- 'Plot Parameter Changes': False,
- 'Plot Power': False,
- 'Plot Speed': False,
- 'Plot Time': False,
- 'Scan Strategy': 'default',
- 'Spot Compensation': 1.0,
- 'Volume of Offset Hatch': 0.08,
- 'Write Debug Info': True}
- 
-(NOTE: This will change if schema.json changes, as this and the UI work directly from that.)
-"""
-
-USE_SCANPATH_SWITCHING = False
-
-if config["Write Debug Info"]:
+if "Write Debug Info" in config and config["Write Debug Info"]:
     print("Logging debug information to `debug.txt`.")
     debug_file = open("debug.txt", "w")
     debug_file.write("Input Parameters\n")
@@ -121,6 +63,8 @@ if config["Write Debug Info"]:
         debug_file.write("{}: {}\n".format(key, value))
     debug_file.write("\n")
 
+"""
+USE_SCANPATH_SWITCHING = False
 if USE_SCANPATH_SWITCHING:
 
     # Function takes in a pd.ExcelFile() instance (and debug file) and returns an array of arrays, each inside array with the following structure:
@@ -135,6 +79,7 @@ if USE_SCANPATH_SWITCHING:
     #   corresponding to the parameters and scan path type given in the array.
     scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
     debug_file.write("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
+"""
 
 # Initialize Part
 Part = pyslm.Part(config["Part File Name"])
@@ -218,7 +163,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
-    if USE_SCANPATH_SWITCHING:
+    if "Use Scanpath Switching" in config and config["Use Scanpath Switching"]:
         hatchers, areas = [], []
         for pair in scanpath_area_pairs:
             hatchers.append(pair[0])
@@ -308,7 +253,7 @@ will need to ensure input sanitation when UI hooks into this component.
 # Create 'output' directory if it doesn't exist\
 
 # NOTE: This folder name is hardcoded into 'cdme-scangen-ui' as well, so if you change it here, change it there
-# Also note that xmlWriter creates the given output folder if it doesn't already exist
+# Also note that xmlWriter creates the given output folder if it doesn't already
 outputDir=os.path.abspath('XMLOutput')
 xmlWriter = XMLWriter(outputDir)
 xmlWriter.output_xml(layers,model)
@@ -319,7 +264,7 @@ xmlWriter.output_xml(layers,model)
 STEP 3: Visualization Outputs       
 '''
 
-if config["Output Plots"]:
+if "Output Plots" in config and config["Output Plots"]:
 
     # Create/wipe folder
     if not os.path.exists("LayerFiles"):

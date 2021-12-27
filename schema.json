@@ -12,108 +12,9 @@
       "type": "string",
       "desc": "The file name of the part (which must be in the `geometry` folder; do not prefix it with `geometry`).",
       "default": "nut.stl"
-    },
-    {
-      "name": "Change Parameters",
-      "type": "bool",
-      "desc": "Whether you'd like to do parameter changing on the part, which <TODO>.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Change Power",
-      "type": "bool",
-      "desc": "Whether you'd like to do power changing on the part, which <TODO>.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Change Speed",
-      "type": "bool",
-      "desc": "Whether you'd like to do speed changing on the part, which <TODO>.",
-      "options": ["Yes", "No"],
-      "default": "No"
     }
   ],
-  "Output": [
-    {
-      "name": "Output Plots",
-      "type": "bool",
-      "desc": "Whether you'd like to output plots.",
-      "options": ["Yes", "No"],
-      "default": "Yes"
-    },
-    {
-      "name": "Output .png",
-      "type": "bool",
-      "desc": "Whether you'd like to output .PNG files, which are easily openable and quick to generate but cannot be infinitely zoomed in.",
-      "options": ["Yes", "No"],
-      "default": "Yes"
-    },
-    {
-      "name": "Output .svg",
-      "type": "bool",
-      "desc": "Whether you'd like to output .svg files, which are infinitely zoomable but take longer to generate and require opening with a browser.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Plot Contours",
-      "type": "bool",
-      "desc": "Whether you'd like to plot contours.",
-      "options": ["Yes", "No"],
-      "default": "Yes"
-    },
-    {
-      "name": "Plot Hatches",
-      "type": "bool",
-      "desc": "Whether you'd like to plot hatches.",
-      "options": ["Yes", "No"],
-      "default": "Yes"
-    },
-    {
-      "name": "Plot Centroids",
-      "type": "bool",
-      "desc": "Whether you'd like to plot a line between the centroids of the hatches, which can be useful to show order.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Plot Jump Vectors",
-      "type": "bool",
-      "desc": "Whether you'd like to plot jump vectors, which show the path the laser takes between hatch vectors.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Plot Time",
-      "type": "bool",
-      "desc": "Whether you'd like to plot the time that this layer took. (Need to double check this is what it actually does)",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Plot Parameter Changes",
-      "type": "bool",
-      "desc": "Whether you'd like to plot some visualizations of the parameter changing system. The next two options will not matter if you say `No`.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Plot Power",
-      "type": "bool",
-      "desc": "Whether you'd like to plot the power per layer.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    },
-    {
-      "name": "Plot Speed",
-      "type": "bool",
-      "desc": "Whether you'd like to plot the speed per layer.",
-      "options": ["Yes", "No"],
-      "default": "No"
-    }
-  ],
+  "Output": [],
   "Hatching": [
     {
       "name": "Hatch Angle",
@@ -153,7 +54,7 @@
       "type": "string",
       "options": ["None", "Alternate", "Linear", "Greedy"],
       "desc": "Which way you'd like to sort the hatches.",
-      "default": "None"
+      "default": "Alternate"
     }
   ],
   "Debug": [
@@ -162,7 +63,7 @@
       "type": "bool",
       "options": ["Yes", "No"],
       "desc": "Whether to write program debug information to the debug.txt file.",
-      "default": "Yes"
+      "default": "No"
     }
   ],
   "Trajectory Ordering": [
@@ -170,7 +71,7 @@
       "name": "Contour First",
       "type": "bool",
       "options": ["Yes", "No"],
-      "desc": "Whether to order contours before anything else.",
+      "desc": "Whether to print contours before hatches each layer.",
       "default": "Yes"
     }
   ]
