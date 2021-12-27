@@ -324,11 +324,17 @@ Fork : XML File Output
 This chunk should be able to go where needed. It requires an output directory to an empty folder so the zip output can produce a correct .scn file
 will need to ensure input sanitation when UI hooks into this component. 
 '''
-if config["Output .scn"]:
-    outputDir=os.path.normpath('C:\CDME\Code\cdme-scangen\ouput')
-    xmlWriter = XMLWriter(outputDir)
-    xmlWriter.output_xml(layers,model)
-    xmlWriter.output_zip()
+# if config["Output .scn"]:
+
+# Create 'output' directory if it doesn't exist
+if not os.path.exists("XMLOutput"):
+    os.makedirs("XMLOutput")
+
+# NOTE: This folder name is hardcoded into 'cdme-scangen-ui' as well, so if you change it here, change it there
+outputDir=os.path.abspath('XMLOutput')
+xmlWriter = XMLWriter(outputDir)
+xmlWriter.output_xml(layers,model)
+# xmlWriter.output_zip()
 
 #%%
 '''

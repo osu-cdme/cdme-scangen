@@ -37,13 +37,6 @@
   ],
   "Output": [
     {
-      "name": "Output .XML",
-      "type": "bool",
-      "options": ["Yes", "No"],
-      "desc": "Whether to output OASIS XML files.",
-      "default": "Yes"
-    },
-    {
       "name": "Output Plots",
       "type": "bool",
       "desc": "Whether you'd like to output plots.",
