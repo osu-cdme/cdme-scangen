@@ -10,7 +10,8 @@
     {
       "name": "Part File Name",
       "type": "string",
-      "desc": "The file name of the part (which must be in the `geometry` folder; do not prefix it with `geometry`).",
+      "desc": "Which file you'd like to print. If your file isn't here, import it from the 'Import/Export' menu!",
+      "options": [],
       "default": "nut.stl"
     }
   ],
