@@ -2,10 +2,9 @@
 import json
 
 # Handles creating a "config" object for main.py 
-def parse_config():
+def parse_config(config):
     with open("schema.json", "r") as f:
         schema = json.load(f)
-    config = {}
     parse_config_data_types(config, schema) # Parse everything into its data type specified in the schema
     return config
 
