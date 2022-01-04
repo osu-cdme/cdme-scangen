@@ -22,6 +22,7 @@ import pyslm
 import pyslm.visualise
 import pyslm.analysis
 import pyslm.geometry
+from src.output.alsamTypes import SegmentStyle,VelocityProfile,Wobble,Traveler
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
 from pyslm.hatching.multiple import hatch_multiple
@@ -30,6 +31,7 @@ from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
 from src.output.xml_hdf5_io_2 import XMLWriter
+
 
 # Handle first command line argument, which is a JSON-serialized list of the user's option selections
 # Go from our standardized source of fields, or our "schema"
@@ -122,19 +124,55 @@ else:
 model = pyslm.geometry.Model()
 model.mid = 1
 
-# Set the initial values for possible build style parameters
-"""
-for style_id, seg_style in segstyles.iterrows():    
-    bstyle = pyslm.geometry.BuildStyle()
-    bstyle.bid = style_id
-    bstyle.name = seg_style['SegStyles']
-    bstyle.laserSpeed = 200     
-    bstyle.laserPower = seg_style['Powers']  # [W]#
-    bstyle.pointDistance = 60  # (60 microns)
-    bstyle.pointExposureTime = 30  # (30 micro seconds)
-        
-    model.buildStyles.append(bstyle)
-"""
+segStyleList=[]
+# pull segment style info from schema
+for style in config["SegmentStyles"]:
+    ## Create new SegmentStyle object that contains segment style info
+    segStyle = SegmentStyle()   
+    
+    # Segment Style Info 
+    segStyle.setID(style["id"]) # TYPE: string
+    segStyle.setVProfileID(style["velocityProfileID"]) # TYPE: string
+    segStyle.setLaserMode(style["laserMode"]) # TYPE: string from set {"Independent", "FollowMe"}
+    
+    # Create traveler list and add traveler objects to it
+    travelers=[]
+    for item in style["travelers"]:
+        traveler=Traveler()
+        traveler.setID(item["id"]) # TYPE: int
+        traveler.setSyncDelay(item["syncDelay"])  
+        traveler.setPower(item["power"])  # TYPE: float (Watts)
+        traveler.setSpotSize(item["spotSize"])  # TYPE: float (microns)
+        #pull wobble info
+        wobble=Wobble()
+        wobble.setOn(item["wobble"]["on"])
+        wobble.setFrequency(item["wobble"]["freq"])
+        wobble.setShape(item["wobble"]["shape"])
+        wobble.setTransAmp(item["wobble"]["transAmp"])
+        wobble.setLongAmp(item["wobble"]["longAmp"])
+
+        traveler.setWobble(wobble)
+
+        travelers.append(traveler)
+    # Attach travelers to SegmentStyle object
+    segStyle.setTravelers(travelers)
+    segStyleList.append(segStyle)
+    
+vProfileList=[]
+for style in config["VelocityProfiles"]:
+    ## Create new VelocityProfile object that contains velocity profile info
+    vProfile = VelocityProfile()   
+    # Velocity Profile Info
+    vProfile.setID(style["id"]) # TYPE: string
+    vProfile.setVelocity(style["velocity"]) # TYPE: float (mm/s)
+    vProfile.setMode(style["mode"]) # TYPE: string from set {"Delay", "Auto"}
+    vProfile.setLaserOnDelay(style["laserOnDelay"]) # TYPE: float (microseconds)
+    vProfile.setLaserOffDelay(style["laserOffDelay"]) # TYPE: float (microseconds)
+    vProfile.setJumpDelay(style["jumpDelay"]) # TYPE: float (microseconds)
+    vProfile.setMarkDelay(style["markDelay"]) # TYPE: float (microseconds)
+    vProfile.setPolygonDelay(style["polygonDelay"]) # TYPE: float (microseconds)
+
+    vProfileList.append(vProfile)
 
 resolution = 0.2
 
@@ -256,7 +294,7 @@ will need to ensure input sanitation when UI hooks into this component.
 # Also note that xmlWriter creates the given output folder if it doesn't already
 outputDir=os.path.abspath('XMLOutput')
 xmlWriter = XMLWriter(outputDir)
-xmlWriter.output_xml(layers,model)
+xmlWriter.output_xml(layers,segStyleList,vProfileList)
 # xmlWriter.output_zip()
 
 #%%
