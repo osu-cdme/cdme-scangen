@@ -15,6 +15,42 @@
       "default": "nut.stl"
     }
   ],
+  "Hatch Default ID": "default", 
+  "Contour Default ID": "default", 
+  "Segment Styles": [
+    {
+      "id": "default", 
+      "velocityProfileID": "default",
+      "laserMode": "Independent", 
+      "travelers": [
+        {
+          "id": 0, 
+          "syncDelay": 0, 
+          "power": 100, 
+          "spotSize": 1, 
+          "wobble": {
+            "on": 1, 
+            "freq": 100, 
+            "shape": 0, 
+            "transAmp": 1, 
+            "longAmp": 1
+          }
+        }
+      ]
+    }
+  ], 
+  "Velocity Profiles": [
+    {
+      "id": "default",
+      "velocity": 100, 
+      "mode": "Auto", 
+      "laserOnDelay": 20, 
+      "laserOffDelay": 20, 
+      "jumpDelay": 20, 
+      "markDelay": 20, 
+      "polygonDelay": 20
+    }
+  ],
   "Output": [],
   "Hatching": [
     {
