@@ -65,7 +65,7 @@
       "type": "float",
       "desc": "Offset between internal and external boundary (Need to confirm what this actually does).",
       "units": "mm",
-      "default": ".08"
+      "default": "0.08"
     },
     {
       "name": "Spot Compensation",
