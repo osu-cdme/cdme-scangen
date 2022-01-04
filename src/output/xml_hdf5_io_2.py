@@ -14,7 +14,7 @@ from xml.sax.saxutils import unescape
 from pyslm.geometry.geometry import ScanMode, BuildStyle, Layer,Model ## Directed import to version of pyslm included in scan-gen package
 import h5py
 import glob
-from alsamTypes import SegmentStyle,Wobble,VelocityProfile,Traveler
+from src.output.alsamTypes import SegmentStyle,Wobble,VelocityProfile,Traveler
 
 
 '''

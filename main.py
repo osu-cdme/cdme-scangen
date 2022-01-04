@@ -126,7 +126,7 @@ model.mid = 1
 
 segStyleList=[]
 # pull segment style info from schema
-for style in config["SegmentStyles"]:
+for style in config["Segment Styles"]:
     ## Create new SegmentStyle object that contains segment style info
     segStyle = SegmentStyle()   
     
@@ -159,7 +159,7 @@ for style in config["SegmentStyles"]:
     segStyleList.append(segStyle)
     
 vProfileList=[]
-for style in config["VelocityProfiles"]:
+for style in config["Velocity Profiles"]:
     ## Create new VelocityProfile object that contains velocity profile info
     vProfile = VelocityProfile()   
     # Velocity Profile Info
