@@ -1,5 +1,6 @@
 # Necessary Imports
 import json
+import os
 
 # Handles creating a "config" object for main.py 
 def parse_config(config):
@@ -12,7 +13,7 @@ def parse_config(config):
 special_keys = set(["Hatch Default ID", "Contour Default ID", "Segment Styles", "Velocity Profiles"])
 
 def default_config():
-    with open("schema.json", "r") as f:
+    with open(os.path.abspath("schema.json"), "r") as f:
         schema = json.load(f)
     config = {} 
 

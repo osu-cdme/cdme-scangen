@@ -101,14 +101,14 @@ class XMLWriter():
         
         for profile in vProfiles:
             vProfile=SubElement(vpList,'VelocityProfile')
-            SubElement(vProfile,'ID').text=profile.id()
-            SubElement(vProfile,'Velocity').text=str(profile.velocity())
-            SubElement(vProfile,'Mode').text=str(profile.mode())
-            SubElement(vProfile,'LaserOnDelay').text=str(profile.laserOnDelay()) 
-            SubElement(vProfile,'LaserOffDelay').text=str(profile.laserOffDelay())
-            SubElement(vProfile,'JumpDelay').text=str(profile.jumpDelay())
-            SubElement(vProfile,'MarkDelay').text=str(profile.markDelay())
-            SubElement(vProfile,'PolygonDelay').text=str(profile.polygonDelay())
+            SubElement(vProfile,'ID').text=profile.id
+            SubElement(vProfile,'Velocity').text=str(profile.velocity)
+            SubElement(vProfile,'Mode').text=str(profile.mode)
+            SubElement(vProfile,'LaserOnDelay').text=str(profile.laserOnDelay) 
+            SubElement(vProfile,'LaserOffDelay').text=str(profile.laserOffDelay)
+            SubElement(vProfile,'JumpDelay').text=str(profile.jumpDelay)
+            SubElement(vProfile,'MarkDelay').text=str(profile.markDelay)
+            SubElement(vProfile,'PolygonDelay').text=str(profile.polygonDelay)
 
 
         return vpList
@@ -133,18 +133,18 @@ class XMLWriter():
         
         for style in segStyleList:
             sStyle = SubElement(ssList,'SegmentStyle')
-            SubElement(sStyle, 'ID').text =style.id()
-            SubElement(sStyle, 'VelocityProfileID').text =style.vProfileID()
-            SubElement(sStyle, 'LaserMode').text =str(style.laserMode())
+            SubElement(sStyle, 'ID').text =style.id
+            SubElement(sStyle, 'VelocityProfileID').text =style.vProfileID
+            SubElement(sStyle, 'LaserMode').text =str(style.laserMode)
 
-            travelerList=style.travelers()
+            travelerList=style.travelers
             travelers=SubElement(sStyle, 'Travelers')
             for entry in travelerList:
                 traveler=SubElement(travelers, 'Traveler')
-                SubElement(traveler, 'ID').text = str(entry.id())
-                SubElement(traveler, 'SyncDelay').text =str(entry.syncDelay())
+                SubElement(traveler, 'ID').text = str(entry.id)
+                SubElement(traveler, 'SyncDelay').text =str(entry.syncDelay)
                 SubElement(traveler, 'Power').text =str(entry.power)
-                SubElement(traveler, 'SpotSize').text =str(entry.laserFocus)
+                SubElement(traveler, 'SpotSize').text =str(entry.spotSize)
 
         return ssList
 

@@ -131,31 +131,31 @@ for style in config["Segment Styles"]:
     segStyle = SegmentStyle()   
     
     # Segment Style Info 
-    segStyle.setID(style["id"]) # TYPE: string
-    segStyle.setVProfileID(style["velocityProfileID"]) # TYPE: string
-    segStyle.setLaserMode(style["laserMode"]) # TYPE: string from set {"Independent", "FollowMe"}
+    segStyle.id=style["id"] # TYPE: string
+    segStyle.vProfileID=style["velocityProfileID"] # TYPE: string
+    segStyle.laserMode=style["laserMode"] # TYPE: string from set {"Independent", "FollowMe"}
     
     # Create traveler list and add traveler objects to it
     travelers=[]
     for item in style["travelers"]:
         traveler=Traveler()
-        traveler.setID(item["id"]) # TYPE: int
-        traveler.setSyncDelay(item["syncDelay"])  
-        traveler.setPower(item["power"])  # TYPE: float (Watts)
-        traveler.setSpotSize(item["spotSize"])  # TYPE: float (microns)
+        traveler.id=item["id"] # TYPE: int
+        traveler.syncDelay=item["syncDelay"]
+        traveler.power=item["power"]  # TYPE: float (Watts)
+        traveler.spotSize=item["spotSize"]  # TYPE: float (microns)
         #pull wobble info
         wobble=Wobble()
-        wobble.setOn(item["wobble"]["on"])
-        wobble.setFrequency(item["wobble"]["freq"])
-        wobble.setShape(item["wobble"]["shape"])
-        wobble.setTransAmp(item["wobble"]["transAmp"])
-        wobble.setLongAmp(item["wobble"]["longAmp"])
+        wobble.on=item["wobble"]["on"]
+        wobble.freq=item["wobble"]["freq"]
+        wobble.shape=item["wobble"]["shape"]
+        wobble.transAmp=item["wobble"]["transAmp"]
+        wobble.longAmp=item["wobble"]["longAmp"]
 
-        traveler.setWobble(wobble)
+        traveler.wobble=wobble
 
         travelers.append(traveler)
     # Attach travelers to SegmentStyle object
-    segStyle.setTravelers(travelers)
+    segStyle.travelers=travelers
     segStyleList.append(segStyle)
     
 vProfileList=[]
@@ -163,14 +163,14 @@ for style in config["Velocity Profiles"]:
     ## Create new VelocityProfile object that contains velocity profile info
     vProfile = VelocityProfile()   
     # Velocity Profile Info
-    vProfile.setID(style["id"]) # TYPE: string
-    vProfile.setVelocity(style["velocity"]) # TYPE: float (mm/s)
-    vProfile.setMode(style["mode"]) # TYPE: string from set {"Delay", "Auto"}
-    vProfile.setLaserOnDelay(style["laserOnDelay"]) # TYPE: float (microseconds)
-    vProfile.setLaserOffDelay(style["laserOffDelay"]) # TYPE: float (microseconds)
-    vProfile.setJumpDelay(style["jumpDelay"]) # TYPE: float (microseconds)
-    vProfile.setMarkDelay(style["markDelay"]) # TYPE: float (microseconds)
-    vProfile.setPolygonDelay(style["polygonDelay"]) # TYPE: float (microseconds)
+    vProfile.id=style["id"] # TYPE: string
+    vProfile.velocity=style["velocity"] # TYPE: float (mm/s)
+    vProfile.mode=style["mode"] # TYPE: string from set {"Delay", "Auto"}
+    vProfile.laserOnDelay=style["laserOnDelay"] # TYPE: float (microseconds)
+    vProfile.laserOffDelay=style["laserOffDelay"] # TYPE: float (microseconds)
+    vProfile.jumpDelay=style["jumpDelay"] # TYPE: float (microseconds)
+    vProfile.markDelay=style["markDelay"] # TYPE: float (microseconds)
+    vProfile.polygonDelay=style["polygonDelay"] # TYPE: float (microseconds)
 
     vProfileList.append(vProfile)
 
