@@ -294,8 +294,12 @@ will need to ensure input sanitation when UI hooks into this component.
 # Also note that xmlWriter creates the given output folder if it doesn't already
 outputDir=os.path.abspath('XMLOutput')
 xmlWriter = XMLWriter(outputDir)
+
+#outputs xml layer files
 xmlWriter.output_xml(layers,segStyleList,vProfileList)
-# xmlWriter.output_zip()
+
+#outputs .scn file in same location as xml layer files
+xmlWriter.output_zip()
 
 #%%
 '''
