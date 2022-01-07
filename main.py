@@ -179,8 +179,7 @@ for style in config["Velocity Profiles"]:
 resolution = 0.2
 
 # Set the layer thickness
-# TODO: Put into the UI
-LAYER_THICKNESS = 1  # [mm]
+LAYER_THICKNESS = config["Layer Thickness"]  # [mm]
 
 #%%
 '''
