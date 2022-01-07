@@ -54,6 +54,13 @@
   "Output": [],
   "Hatching": [
     {
+      "name": "Layer Thickness",
+      "type": "float",
+      "desc": "How thick each layer should be.",
+      "units": "mm",
+      "default": "1"
+    },
+    {
       "name": "Hatch Angle",
       "type": "float",
       "desc": "The angle to rotate per layer.",
@@ -92,15 +99,6 @@
       "options": ["None", "Alternate", "Linear", "Greedy"],
       "desc": "Which way you'd like to sort the hatches.",
       "default": "Alternate"
-    }
-  ],
-  "Debug": [
-    {
-      "name": "Write Debug Info",
-      "type": "bool",
-      "options": ["Yes", "No"],
-      "desc": "Whether to write program debug information to the debug.txt file.",
-      "default": "No"
     }
   ],
   "Trajectory Ordering": [
