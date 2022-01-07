@@ -143,15 +143,17 @@ for style in config["Segment Styles"]:
         traveler.syncDelay=item["syncDelay"]
         traveler.power=item["power"]  # TYPE: float (Watts)
         traveler.spotSize=item["spotSize"]  # TYPE: float (microns)
-        #pull wobble info
-        wobble=Wobble()
-        wobble.on=item["wobble"]["on"]
-        wobble.freq=item["wobble"]["freq"]
-        wobble.shape=item["wobble"]["shape"]
-        wobble.transAmp=item["wobble"]["transAmp"]
-        wobble.longAmp=item["wobble"]["longAmp"]
 
-        traveler.wobble=wobble
+        # If wobble tag exists
+        if item["wobble"] is not None:
+            #pull wobble info
+            wobble=Wobble()
+            wobble.on=item["wobble"]["on"]
+            wobble.freq=item["wobble"]["freq"]
+            wobble.shape=item["wobble"]["shape"]
+            wobble.transAmp=item["wobble"]["transAmp"]
+            wobble.longAmp=item["wobble"]["longAmp"]
+            traveler.wobble=wobble
 
         travelers.append(traveler)
     # Attach travelers to SegmentStyle object
