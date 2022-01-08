@@ -62,8 +62,7 @@ class XMLWriter():
                 xf.write(self.make_velocity_profiles(velocityProfileList), pretty_print=True)
                 xf.write(self.make_segment_styles(SegmentStyleList), pretty_print=True)
                 xf.write(self.make_traj_list(layer, defaultContourSegmentStyleID, defaultHatchSegmentStyleID), pretty_print=True) #<--TODO:ScanMode selector function removed for redesign, add back in
-
-
+    
     '''
     Returns string that opens the <Layer> and <Header> fills in the header of the OASIS xml format and closes </header>. Required at the beginning of every layer file.
     Requires:
@@ -180,10 +179,10 @@ class XMLWriter():
             numRows=coordinates.shape[0]
 
             ## Generate start point
-            startPair=[coordinates[0,1]]
+            startPair=[coordinates[0]][0] # Weird stuff, don't worry about it, seems to work
             Start=SubElement(path,"Start")
             SubElement(Start,"X").text=str(startPair[0])
-            SubElement(Start,"Y").text=str(startPair[-1]) ## <- NOTE:likely error point, should reference y coordinate but threw error when looking at index 1
+            SubElement(Start,"Y").text=str(startPair[1])
 
             ## Generate every segment
             for i in range(1,numRows):
