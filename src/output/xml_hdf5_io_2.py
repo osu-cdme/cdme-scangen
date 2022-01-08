@@ -163,58 +163,59 @@ class XMLWriter():
         SubElement(traj, 'TrajectoryID').text = '0'
         SubElement(traj, 'PathProcessingMode').text = "sequential" # add control flow for multipart.
 
-        # create path node
-        path=SubElement(traj,'Path')
+        # TODO: There's an option in the UI whether to do contours or hatches first; need to pass that value in here and respect their choice
 
         ##write contours
+        
         for group in layer.getContourGeometry():
+            hatches_path =SubElement(traj,'Path')
             
-            SubElement(path,'Type').text="contour"
-            SubElement(path,"Tag").text="part1"
-            SubElement(path,"NumSegments").text=str(group.numContours())
-            SubElement(path,"SkyWritingMode").text="0"
+            SubElement(hatches_path,'Type').text="contour"
+            SubElement(hatches_path,"Tag").text="part1"
+            SubElement(hatches_path,"NumSegments").text=str(group.numContours())
+            SubElement(hatches_path,"SkyWritingMode").text="0"
 
             ## Get array of coordinates in numpy ndarray and its number of rows which represents the number of segments
             coordinates=group.coords
             numRows=coordinates.shape[0]
 
             ## Generate start point
-            startPair=[coordinates[0]][0] # Weird stuff, don't worry about it, seems to work
-            Start=SubElement(path,"Start")
+            startPair=coordinates[0] # Weird stuff, don't worry about it, seems to work
+            Start=SubElement(hatches_path,"Start")
             SubElement(Start,"X").text=str(startPair[0])
             SubElement(Start,"Y").text=str(startPair[1])
 
             ## Generate every segment
             for i in range(1,numRows):
-                segment=SubElement(path,"Segment")
+                segment=SubElement(hatches_path,"Segment")
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultContourSegmentStyleID)
                 end=SubElement(segment,"End")
                 SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
                 SubElement(end,"Y").text=str(coordinates[i,1])
 
-                
         ##write hatches
         for group in layer.getHatchGeometry():
+            contours_path = SubElement(traj,'Path')
             
-            SubElement(path,'Type').text="hatch"
-            SubElement(path,"Tag").text="part1"
-            SubElement(path,"NumSegments").text=str(group.numHatches())
-            SubElement(path,"SkyWritingMode").text="0"
+            SubElement(contours_path,'Type').text="hatch"
+            SubElement(contours_path,"Tag").text="part1"
+            SubElement(contours_path,"NumSegments").text=str(group.numHatches())
+            SubElement(contours_path,"SkyWritingMode").text="0"
 
             ## Get array of coordinates in numpy ndarray and its number of rows which represents the number of segments
             coordinates=group.coords
             numRows=coordinates.shape[0]
 
             ## Generate start point
-            startPair=[coordinates[0,1]]
-            Start=SubElement(path,"Start")
+            startPair=coordinates[0]
+            Start=SubElement(contours_path,"Start")
             SubElement(Start,"X").text=str(startPair[0])
-            SubElement(Start,"Y").text=str(startPair[-1])
+            SubElement(Start,"Y").text=str(startPair[1])
 
             ## Generate every segment
             for i in range(1,numRows):
-                segment=SubElement(path,"Segment")
+                segment=SubElement(contours_path,"Segment")
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
                 end=SubElement(segment,"End")
