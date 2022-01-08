@@ -52,7 +52,7 @@ class XMLWriter():
     generates a .xml file for a single layer of a print in the format required to convert to a .scn for use by the open controller
     '''
     #TODO: write fails when directory does not exist. Need to add function that creates a new directory when new write starts.
-    def write_layer(self,layer:Layer, layer_num: int,SegmentStyleList:list[SegmentStyle],velocityProfileList:list[VelocityProfile]):
+    def write_layer(self,layer:Layer, layer_num: int,SegmentStyleList:list[SegmentStyle],velocityProfileList:list[VelocityProfile], defaultContourSegmentStyleID, defaultHatchSegmentStyleID):
         #create new file at end of directory provided for the layer
         with open(os.path.join(self.out , 'scan_' + str(layer_num) + '.xml'),'wb') as layerFile:
             #write to file the layer
@@ -61,7 +61,7 @@ class XMLWriter():
                 xf.write(self.make_header(layer_num), pretty_print=True)
                 xf.write(self.make_velocity_profiles(velocityProfileList), pretty_print=True)
                 xf.write(self.make_segment_styles(SegmentStyleList), pretty_print=True)
-                xf.write(self.make_traj_list(layer), pretty_print=True) #<--TODO:ScanMode selector function removed for redesign, add back in
+                xf.write(self.make_traj_list(layer, defaultContourSegmentStyleID, defaultHatchSegmentStyleID), pretty_print=True) #<--TODO:ScanMode selector function removed for redesign, add back in
 
 
     '''
@@ -155,7 +155,7 @@ class XMLWriter():
     segment style<--references a segment style ID from the <SegmentStyleList>
     X and Y coordinates<--passed in.
     '''
-    def make_traj_list(self,layer: Layer):
+    def make_traj_list(self,layer: Layer, defaultContourSegmentStyleID: str, defaultHatchSegmentStyleID: str):
         
         tList=Element('TrajectoryList')
 
@@ -189,7 +189,7 @@ class XMLWriter():
             for i in range(1,numRows):
                 segment=SubElement(path,"Segment")
                 SubElement(segment,"SegmentID").text=str(i)
-                SubElement(segment,"SegStyle").text=str(group.bid) ##not sure on this one but seemed a good guess
+                SubElement(segment,"SegStyle").text=str(defaultContourSegmentStyleID)
                 end=SubElement(segment,"End")
                 SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
                 SubElement(end,"Y").text=str(coordinates[i,1])
@@ -217,7 +217,7 @@ class XMLWriter():
             for i in range(1,numRows):
                 segment=SubElement(path,"Segment")
                 SubElement(segment,"SegmentID").text=str(i)
-                SubElement(segment,"SegStyle").text=str(group.bid) ##not sure on this one but seemed a good guess
+                SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
                 end=SubElement(segment,"End")
                 SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
                 SubElement(end,"Y").text=str(coordinates[i,1])
@@ -234,7 +234,7 @@ class XMLWriter():
     Need to review inputs to this one, can have better references for readability
     """
     
-    def output_xml(self, layers: List[Layer], segmentStyleList:list[SegmentStyle],vProfileList:list[VelocityProfile]):
+    def output_xml(self, layers: List[Layer], segmentStyleList:list[SegmentStyle],vProfileList:list[VelocityProfile], defaultContourSegmentStyleID: str, defaultHatchSegmentStyleID: str):
         
         # Create/wipe folder
         if not os.path.exists(self.out):
@@ -247,7 +247,7 @@ class XMLWriter():
             print('XML Layer # ' + str(i+1) + ' Started')
             xml_path = os.path.join(self.out , 'scan_' + str(i+1) + '.xml')
             print(xml_path)
-            self.write_layer(layers[i],i+1,segmentStyleList,vProfileList)
+            self.write_layer(layers[i],i+1,segmentStyleList,vProfileList, defaultContourSegmentStyleID, defaultHatchSegmentStyleID)
             print('XML Layer # ' + str(i+1) + ' Complete')
             
         return

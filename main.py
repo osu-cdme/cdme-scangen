@@ -297,7 +297,7 @@ outputDir=os.path.abspath('XMLOutput')
 xmlWriter = XMLWriter(outputDir)
 
 #outputs xml layer files
-xmlWriter.output_xml(layers,segStyleList,vProfileList)
+xmlWriter.output_xml(layers,segStyleList,vProfileList, config["Contour Default ID"], config["Hatch Default ID"])
 
 #outputs .scn file in same location as xml layer files
 xmlWriter.output_zip()
