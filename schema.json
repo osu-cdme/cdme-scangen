@@ -37,6 +37,12 @@
           }
         }
       ]
+    }, 
+    {
+      "id": "jumps", 
+      "velocityProfileID": "default",
+      "laserMode": "Independent", 
+      "travelers": []
     }
   ], 
   "Velocity Profiles": [
