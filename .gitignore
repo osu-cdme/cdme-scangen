@@ -158,3 +158,5 @@ hdf5/*
 xml/*.xml
 XMLOutput/*.xml
 node_modules
+*.scn 
+*.SCN
