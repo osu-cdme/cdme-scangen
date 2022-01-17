@@ -4,7 +4,10 @@
       "name": "Scan Strategy",
       "type": "string",
       "desc": "Which scan strategy you'd like to be used on the part.",
-      "options": ["default", "island"],
+      "options": [
+        "default",
+        "island"
+      ],
       "default": "default"
     },
     {
@@ -15,45 +18,45 @@
       "default": "nut.stl"
     }
   ],
-  "Hatch Default ID": "default", 
-  "Contour Default ID": "default", 
+  "Hatch Default ID": "default",
+  "Contour Default ID": "default",
   "Segment Styles": [
     {
-      "id": "default", 
+      "id": "default",
       "velocityProfileID": "default",
-      "laserMode": "Independent", 
+      "laserMode": "Independent",
       "travelers": [
         {
-          "id": 0, 
-          "syncDelay": 0, 
-          "power": 100, 
-          "spotSize": 1, 
+          "id": 0,
+          "syncDelay": 0,
+          "power": 100,
+          "spotSize": 1,
           "wobble": {
-            "on": 1, 
-            "freq": 100, 
-            "shape": 0, 
-            "transAmp": 1, 
+            "on": 1,
+            "freq": 100,
+            "shape": 0,
+            "transAmp": 1,
             "longAmp": 1
           }
         }
       ]
-    }, 
+    },
     {
-      "id": "jumps", 
+      "id": "jumps",
       "velocityProfileID": "default",
-      "laserMode": "Independent", 
+      "laserMode": "Independent",
       "travelers": []
     }
-  ], 
+  ],
   "Velocity Profiles": [
     {
       "id": "default",
-      "velocity": 100, 
-      "mode": "Auto", 
-      "laserOnDelay": 20, 
-      "laserOffDelay": 20, 
-      "jumpDelay": 20, 
-      "markDelay": 20, 
+      "velocity": 100,
+      "mode": "Auto",
+      "laserOnDelay": 20,
+      "laserOffDelay": 20,
+      "jumpDelay": 20,
+      "markDelay": 20,
       "polygonDelay": 20
     }
   ],
@@ -64,7 +67,14 @@
       "type": "float",
       "desc": "How thick each layer should be.",
       "units": "mm",
-      "default": "1"
+      "default": ".1"
+    },
+    {
+      "name": "Hatch Spacing",
+      "type": "float",
+      "desc": "How much space there should be between the hatches.",
+      "units": "mm",
+      "default": ".1"
     },
     {
       "name": "Hatch Angle",
@@ -78,31 +88,36 @@
       "type": "float",
       "desc": "Offset between internal and external boundary (Need to confirm what this actually does).",
       "units": "mm",
-      "default": "0.08"
+      "default": "0.01"
     },
     {
       "name": "Spot Compensation",
       "type": "float",
       "desc": "Additional, multiplicative offset to account for laser spot size. Set to 1 for no change.",
       "units": "unitless",
-      "default": "1"
+      "default": ".02"
     },
     {
       "name": "# Inner Contours",
       "type": "int",
       "desc": "Number of inner contours. (Need to confirm difference between inner and outer contours)",
-      "default": "2"
+      "default": "0"
     },
     {
       "name": "# Outer Contours",
       "type": "int",
       "desc": "Number of outer contours. (Need to confirm difference between inner and outer contours)",
-      "default": "2"
+      "default": "1"
     },
     {
       "name": "Hatch Sorting Method",
       "type": "string",
-      "options": ["None", "Alternate", "Linear", "Greedy"],
+      "options": [
+        "None",
+        "Alternate",
+        "Linear",
+        "Greedy"
+      ],
       "desc": "Which way you'd like to sort the hatches.",
       "default": "Alternate"
     }
@@ -111,7 +126,10 @@
     {
       "name": "Contour First",
       "type": "bool",
-      "options": ["Yes", "No"],
+      "options": [
+        "Yes",
+        "No"
+      ],
       "desc": "Whether to print contours before hatches each layer.",
       "default": "Yes"
     }
