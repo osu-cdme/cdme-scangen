@@ -98,6 +98,7 @@ myHatcher.islandOverlap = 0
 
 # Set the base hatching parameters which are generated within Hatcher
 myHatcher.hatchAngle = config["Hatch Angle"]  # [°] The angle used for the islands
+myHatcher.hatchDistance = config["Hatch Spacing"]
 # [mm] Offset between internal and external boundary
 
 # TODO: There are some options here settable via pyslm but that don't currently exist in the UI yet
