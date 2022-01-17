@@ -182,8 +182,8 @@ class XMLWriter():
             ## Generate start point
             startPair=coordinates[0] # Weird stuff, don't worry about it, seems to work
             Start=SubElement(hatches_path,"Start")
-            SubElement(Start,"X").text=str(startPair[0])
-            SubElement(Start,"Y").text=str(startPair[1])
+            SubElement(Start,"X").text=str(round(startPair[0], 4))
+            SubElement(Start,"Y").text=str(round(startPair[1], 4))
 
             ## Generate every segment
             for i in range(1,numRows):
@@ -191,8 +191,9 @@ class XMLWriter():
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultContourSegmentStyleID)
                 end=SubElement(segment,"End")
-                SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
-                SubElement(end,"Y").text=str(coordinates[i,1])
+                # round to thousandths place 
+                SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
+                SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
 
         ##write hatches
         for group in layer.getHatchGeometry():
@@ -210,8 +211,8 @@ class XMLWriter():
             ## Generate start point
             startPair=coordinates[0]
             Start=SubElement(contours_path,"Start")
-            SubElement(Start,"X").text=str(startPair[0])
-            SubElement(Start,"Y").text=str(startPair[1])
+            SubElement(Start,"X").text=str(round(startPair[0], 4))
+            SubElement(Start,"Y").text=str(round(startPair[1], 4))
 
             ## Generate every segment
             for i in range(1,numRows):
@@ -219,8 +220,8 @@ class XMLWriter():
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
                 end=SubElement(segment,"End")
-                SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
-                SubElement(end,"Y").text=str(coordinates[i,1])
+                SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
+                SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
             
 
 
