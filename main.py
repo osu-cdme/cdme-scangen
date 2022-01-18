@@ -203,6 +203,11 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
+    # pyslm doesn't error out if Trimesh returns an empty slice, so we have to check
+    # This generally only occurs at the very beginning or end of the part 
+    if geom_slice == []:
+        continue
+
     if "Use Scanpath Switching" in config and config["Use Scanpath Switching"]:
         hatchers, areas = [], []
         for pair in scanpath_area_pairs:
