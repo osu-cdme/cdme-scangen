@@ -30,7 +30,7 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
-from src.output.xml_hdf5_io_2 import XMLWriter
+from src.output.xml_hdf5_io_2 import XMLWriter, xml_to_hdf5
 
 
 # Handle first command line argument, which is a JSON-serialized list of the user's option selections
@@ -307,6 +307,10 @@ xmlWriter.output_xml(layers,segStyleList,vProfileList, config["Contour Default I
 
 #outputs .scn file in same location as xml layer files
 xmlWriter.output_zip()
+
+#converts xlm output to an hdf5 file for use in external simulator
+hdf5Dir=os.path.abspath('HDF5Output')
+xml_to_hdf5(outputDir,hdf5Dir)
 
 #%%
 '''
