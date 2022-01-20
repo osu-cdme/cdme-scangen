@@ -182,8 +182,8 @@ class XMLWriter():
             ## Generate start point
             startPair=coordinates[0] # Weird stuff, don't worry about it, seems to work
             Start=SubElement(hatches_path,"Start")
-            SubElement(Start,"X").text=str(startPair[0])
-            SubElement(Start,"Y").text=str(startPair[1])
+            SubElement(Start,"X").text=str(round(startPair[0], 4))
+            SubElement(Start,"Y").text=str(round(startPair[1], 4))
 
             ## Generate every segment
             for i in range(1,numRows):
@@ -191,8 +191,9 @@ class XMLWriter():
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultContourSegmentStyleID)
                 end=SubElement(segment,"End")
-                SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
-                SubElement(end,"Y").text=str(coordinates[i,1])
+                # round to thousandths place 
+                SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
+                SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
 
         ##write hatches
         for group in layer.getHatchGeometry():
@@ -210,8 +211,8 @@ class XMLWriter():
             ## Generate start point
             startPair=coordinates[0]
             Start=SubElement(contours_path,"Start")
-            SubElement(Start,"X").text=str(startPair[0])
-            SubElement(Start,"Y").text=str(startPair[1])
+            SubElement(Start,"X").text=str(round(startPair[0], 4))
+            SubElement(Start,"Y").text=str(round(startPair[1], 4))
 
             ## Generate every segment
             for i in range(1,numRows):
@@ -219,8 +220,8 @@ class XMLWriter():
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
                 end=SubElement(segment,"End")
-                SubElement(end,"X").text=str(coordinates[i,0])  ##assuming coordinates is a 2 by n array of x,y coordinates
-                SubElement(end,"Y").text=str(coordinates[i,1])
+                SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
+                SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
             
 
 
@@ -370,7 +371,7 @@ class HDF5Writer():
                     scan_mode: ScanMode):
         params = self.parameters(layer_paths, layer_power, layer_speed, 
                                  layer_num, scan_mode)
-        with h5py.File(self.out , "a") as f:
+        with h5py.File(self.out + "/" + file_name, "a") as f:
             grp = f.create_group(str(layer_num))
             grp.create_dataset('points', data=params[3])
             grp.create_dataset('edges', data=params[2])
@@ -391,10 +392,10 @@ class HDF5Writer():
                     file_name: str, scan_mode: ScanMode):
         
         # Create/wipe folder
-        if not os.path.exists(self.out):
-            os.makedirs(self.out)
+        if not os.path.exists("hdf5"):
+            os.makedirs("hdf5")
         else:
-            for f in glob.glob(self.out+'\*'):
+            for f in glob.glob("hdf5/*"):
                 os.remove(f)
         
         data_layer_times = np.zeros(len(layers_paths), dtype='d')
@@ -432,7 +433,7 @@ class HDF5Writer():
         
         
         #Writing to HDF5 file for all the layers
-        with h5py.File(self.out , "a") as f:
+        with h5py.File(self.out + "/" + file_name, "a") as f:
             f.create_dataset("/data_layer_times", data=data_layer_times, dtype='d')
             f.create_dataset("/file_layer_times", data=file_layer_times, dtype='d')
             f.create_dataset("/layer_height", data=layer_height, dtype='d')
@@ -450,7 +451,7 @@ Requires out_file to be a .hdf5 file
 '''
 def xml_to_hdf5(in_dir: str, out_file: str):
     
-    hdf = HDF5Writer(out_file)
+    hdf = HDF5Writer('hdf5')
     num_layers = len(os.listdir(in_dir + '/')) - 1 # subtract .scn file
     
     layers_paths = []
@@ -490,15 +491,7 @@ def xml_to_hdf5(in_dir: str, out_file: str):
             seg_style = segstyles.find('./SegmentStyle/*[.=\'' + seg_style_id + '\']/..')
                 
             # Assign power for this segment
-
-            # first find power element
-            powerEl=seg_style.find('./Traveler/Power')
-            # if not a jump vector pull value, else power=0
-            if powerEl==None:
-                power=0
-            else:
-                power = float(powerEl.text)     
-
+            power = float(seg_style.find('./Traveler/Power').text)      
             layers_powers[layer_num].append(power)
                 
             vel_profile_id = seg_style.find('./VelocityProfileID').text
@@ -509,7 +502,7 @@ def xml_to_hdf5(in_dir: str, out_file: str):
             velocity = float(vel_profile.find('./Velocity').text)
             layers_speeds[layer_num].append(velocity)
                 
-    hdf.output_hdf5(layers_paths, layers_powers, layers_speeds, 'hdf5Output', scan_mode)
+    hdf.output_hdf5(layers_paths, layers_powers, layers_speeds, out_file, scan_mode)
                 
 
 '''

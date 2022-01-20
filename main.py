@@ -30,7 +30,7 @@ from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
 from src.scanpath_switching.scanpath_switching import excel_to_array, array_to_instances
-from src.output.xml_hdf5_io_2 import XMLWriter, xml_to_hdf5
+from src.output.xml_hdf5_io_2 import XMLWriter
 
 
 # Handle first command line argument, which is a JSON-serialized list of the user's option selections
@@ -98,6 +98,7 @@ myHatcher.islandOverlap = 0
 
 # Set the base hatching parameters which are generated within Hatcher
 myHatcher.hatchAngle = config["Hatch Angle"]  # [°] The angle used for the islands
+myHatcher.hatchDistance = config["Hatch Spacing"]
 # [mm] Offset between internal and external boundary
 
 # TODO: There are some options here settable via pyslm but that don't currently exist in the UI yet
@@ -202,6 +203,11 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
+    # pyslm doesn't error out if Trimesh returns an empty slice, so we have to check
+    # This generally only occurs at the very beginning or end of the part 
+    if geom_slice == []:
+        continue
+
     if "Use Scanpath Switching" in config and config["Use Scanpath Switching"]:
         hatchers, areas = [], []
         for pair in scanpath_area_pairs:
@@ -293,18 +299,14 @@ will need to ensure input sanitation when UI hooks into this component.
 
 # NOTE: This folder name is hardcoded into 'cdme-scangen-ui' as well, so if you change it here, change it there
 # Also note that xmlWriter creates the given output folder if it doesn't already
-xmlDir=os.path.abspath('XMLOutput')
-xmlWriter = XMLWriter(xmlDir)
+outputDir=os.path.abspath('XMLOutput')
+xmlWriter = XMLWriter(outputDir)
 
 #outputs xml layer files
 xmlWriter.output_xml(layers,segStyleList,vProfileList, config["Contour Default ID"], config["Hatch Default ID"])
 
 #outputs .scn file in same location as xml layer files
 xmlWriter.output_zip()
-
-#converts the scn data into an hdf5 package
-hdf5Dir=os.path.abspath('HDF5Output')
-xml_to_hdf5(xmlDir,hdf5Dir)
 
 #%%
 '''
