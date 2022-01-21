@@ -931,7 +931,7 @@ class Hatcher(BaseHatcher):
 
                 # Extract only x-y coordinates and sort based on the pseudo-order stored in the z component.
                 clippedLines = clippedLines[:, :, :3]
-                id = np.argsort(clippedLines[:, 0, 2])
+                id = np.argsort(clippedLines[:, 0, 1])
                 clippedLines = clippedLines[id, :, :]
 
                 scanVectors.append(clippedLines)
