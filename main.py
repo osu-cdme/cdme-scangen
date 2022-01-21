@@ -25,7 +25,7 @@ import pyslm.geometry
 from src.output.alsamTypes import SegmentStyle,VelocityProfile,Wobble,Traveler
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
-from pyslm.hatching.multiple import hatch_multiple
+# from pyslm.hatching.multiple import hatch_multiple
 from src.standardization.shortening import split_long_vectors
 from src.standardization.lengthening import lengthen_short_vectors
 from src.island.island import BasicIslandHatcherRandomOrder
@@ -84,38 +84,59 @@ if USE_SCANPATH_SWITCHING:
 """
 
 # Initialize Part
+# config["Part File Name"] = "Cone_1.stl"
 Part = pyslm.Part(config["Part File Name"])
 Part.setGeometry('geometry/' + config["Part File Name"])
 Part.origin = [0.0, 0.0, 0.0]
 Part.rotation = np.array([0, 0, 90])
 Part.dropToPlatform()
 
-# Create a BasicIslandHatcher object for performing any hatching operations
-myHatcher = hatching.Hatcher()
-myHatcher.islandWidth = 3.0
-myHatcher.islandOffset = 0
-myHatcher.islandOverlap = 0
+# General Part Parameters 
+LAYER_THICKNESS = config["Layer Thickness"]  # [mm]
 
-# Set the base hatching parameters which are generated within Hatcher
-myHatcher.hatchAngle = config["Hatch Angle"]  # [°] The angle used for the islands
-myHatcher.hatchDistance = config["Hatch Spacing"]
-# [mm] Offset between internal and external boundary
+# Special scan strategies need additional attributes supplied
+if config["Scan Strategy"] == "island":
+    print("Island Hatching!")
+    hatcher = hatching.IslandHatcher()
+elif config["Scan Strategy"] == "Striping": 
+    print("Striping hatching!") 
+    hatcher = hatching.StripeHatcher()
+else:
+    print("Default hatching!")
+    hatcher = hatching.Hatcher()
 
-# TODO: There are some options here settable via pyslm but that don't currently exist in the UI yet
-# myHatcher.volumeOffsetHatch = values[23]
-myHatcher.spotCompensation = config["Spot Compensation"]
-myHatcher.numInnerContours = config["# Inner Contours"]
-myHatcher.numOuterContours = config["# Outer Contours"]
+# Parameters used in the common hatching class used for any hatcher (default, island, striping)
+hatcher.hatchAngle = config["Hatch Angle"] # Hatch Angle 
+hatcher.hatchDistance = config["Hatch Distance"] # Hatch Distance
+hatcher.layerAngleIncrement = config["Hatch Angle Increment"] # Hatch Angle Increment
+hatcher.numInnerContours = config["# Inner Contours"] # Num Inner Contours
+hatcher.numOuterContours = config["# Outer Contours"] # Num Outer Contours
+hatcher.spotCompensation = config["Spot Compensation"] # Spot Compensation
+hatcher.volumeOffsetHatch = config["Volume Offset Hatch"] # Volume Offset Hatch 
 
+# Hatch Sort Method
 if config["Hatch Sorting Method"]=='Alternate':
-    myHatcher.hatchSortMethod = hatching.AlternateSort()
+    hatcher.hatchSortMethod = hatching.AlternateSort()
 elif config["Hatch Sorting Method"]=='Linear':
-    myHatcher.hatchSortMethod = hatching.LinearSort()
+    hatcher.hatchSortMethod = hatching.LinearSort()
 elif config["Hatch Sorting Method"]=='Greedy':
-    myHatcher.hatchSortMethod = hatching.GreedySort()
+    hatcher.hatchSortMethod = hatching.GreedySort()
 else:
     print("Invalid hatch sorting method " + config["Hatch Sorting Method"] + " passed in.")
-    myHatcher.hatchSortMethod = hatching.AlternateSort()
+    sys.exit(-1)
+
+if config["Scan Strategy"] == "Island":
+    hatcher.islandWidth = config["Island Width"]
+    hatcher.islandOffset = config["Island Offset"]
+    hatcher.islandOverlap = config["Island Overlap"]
+
+elif config["Scan Strategy"] == "Striping": 
+    print("Stripe Width: " + str(config["Stripe Width"]))
+    hatcher.stripeWidth = config["Stripe Width"]
+    print("Stripe Offset: " + str(config["Stripe Offset"]))
+    hatcher.stripeOffset = config["Stripe Offset"]
+    print("Stripe Overlap: " + str(config["Stripe Overlap"]))
+    hatcher.stripeOverlap = config["Stripe Overlap"]
 
 # TODO: Figure out what these were used for and reimplement the system
 # MIN_POWER_LVL = min(config_powers.keys())
@@ -179,9 +200,6 @@ for style in config["Velocity Profiles"]:
 
 resolution = 0.2
 
-# Set the layer thickness
-LAYER_THICKNESS = config["Layer Thickness"]  # [mm]
-
 #%%
 '''
 STEP 2: Slice part, generate scan paths, control parameters while slicing the part 
@@ -215,7 +233,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
             areas.append(pair[1])
         layer = hatch_multiple(hatchers[1:], areas[1:], hatchers[0], geom_slice, z)
     else:
-        layer = myHatcher.hatch(geom_slice)  # Hatch layer
+        layer = hatcher.hatch(geom_slice)  # Hatch layer
 
     # Vector Splitting; to use, switch to Hatcher()
     '''
@@ -272,8 +290,8 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     layers.append(layer)
 
     # Change hatch angle every layer
-    myHatcher.hatchAngle += 66.7
-    myHatcher.hatchAngle %= 360
+    # hatch.hatchAngle += 66.7
+    # myHatcher.hatchAngle %= 360
 
 '''
 If pulling .scn output from process, the data is available here for conversion

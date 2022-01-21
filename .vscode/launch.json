@@ -4,12 +4,11 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         { // Default debugger launches current file; we generally want to run the overall stack instead
             "name": "Python: main.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}\\main.py",
+            "program": "C:\\Projects\\cdme\\cdme-scangen\\main.py",
             "console": "integratedTerminal"
         },
         { // Default debugger launches current file; we generally want to run the overall stack instead

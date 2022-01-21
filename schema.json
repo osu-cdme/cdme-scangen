@@ -1,23 +1,4 @@
 {
-  "Input": [
-    {
-      "name": "Scan Strategy",
-      "type": "string",
-      "desc": "Which scan strategy you'd like to be used on the part.",
-      "options": [
-        "default",
-        "island"
-      ],
-      "default": "default"
-    },
-    {
-      "name": "Part File Name",
-      "type": "string",
-      "desc": "Which file you'd like to print. If your file isn't here, import it from the 'Import/Export' menu!",
-      "options": [],
-      "default": "nut.stl"
-    }
-  ],
   "Hatch Default ID": "default",
   "Contour Default ID": "default",
   "Segment Styles": [
@@ -60,42 +41,56 @@
       "polygonDelay": 20
     }
   ],
-  "Output": [],
-  "Hatching": [
+  "Input": [
+    {
+      "name": "Scan Strategy",
+      "type": "string",
+      "desc": "Which scan strategy you'd like to be used on the part.",
+      "options": [
+        "Default",
+        "Island", 
+        "Striping"
+      ],
+      "default": "Default"
+    },
+    {
+      "name": "Part File Name",
+      "type": "string",
+      "desc": "Which file you'd like to print. If your file isn't here, import it from the 'Import/Export' menu!",
+      "options": [],
+      "default": "nut.stl"
+    }
+  ],
+  "General": [
     {
       "name": "Layer Thickness",
       "type": "float",
       "desc": "How thick each layer should be.",
       "units": "mm",
       "default": ".1"
-    },
-    {
-      "name": "Hatch Spacing",
-      "type": "float",
-      "desc": "How much space there should be between the hatches.",
-      "units": "mm",
-      "default": ".1"
-    },
+    }
+  ],
+  "Hatching": [
     {
       "name": "Hatch Angle",
       "type": "float",
-      "desc": "The angle to rotate per layer.",
+      "desc": "The hatch angle used on Layer 0. Must be in range [−180,180].",
       "units": "deg",
       "default": "66.7"
     },
     {
-      "name": "Volume of Offset Hatch",
+      "name": "Hatch Angle Increment",
       "type": "float",
-      "desc": "Offset between internal and external boundary (Need to confirm what this actually does).",
-      "units": "mm",
-      "default": "0.01"
+      "desc": "An additional offset used to increment the hatch angle between layers.",
+      "units": "deg",
+      "default": "66.6"
     },
     {
-      "name": "Spot Compensation",
+      "name": "Hatch Distance",
       "type": "float",
-      "desc": "Additional, multiplicative offset to account for laser spot size. Set to 1 for no change.",
-      "units": "unitless",
-      "default": ".02"
+      "desc": "The distance between adjacent hatch scan vectors.",
+      "units": "mm",
+      "default": ".1"
     },
     {
       "name": "# Inner Contours",
@@ -110,6 +105,20 @@
       "default": "1"
     },
     {
+      "name": "Volume Offset Hatch",
+      "type": "float",
+      "desc": "An additional offset may be added (positive or negative) between the contour and the internal hatching.",
+      "units": "mm",
+      "default": "0.01"
+    },
+    {
+      "name": "Spot Compensation",
+      "type": "float",
+      "desc": "The spot (laser point) compensation factor is the distance to offset the outer-boundary and other internal hatch features in order to factor in the exposure radius of the laser.",
+      "units": "mm",
+      "default": ".02"
+    },
+    {
       "name": "Hatch Sorting Method",
       "type": "string",
       "options": [
@@ -118,7 +127,7 @@
         "Linear",
         "Greedy"
       ],
-      "desc": "Which way you'd like to sort the hatches.",
+      "desc": "The hatch sort method used once the hatch vectors have been generated.",
       "default": "Alternate"
     }
   ],
@@ -133,5 +142,53 @@
       "desc": "Whether to print contours before hatches each layer.",
       "default": "Yes"
     }
-  ]
+  ], 
+  "Strategy Specific": {
+    "Island": [
+      {
+        "name": "Island Width",
+        "type": "float",
+        "desc": "The island width.",
+        "units": "mm",
+        "default": "5"
+      },
+      {
+        "name": "Island Offset",
+        "type": "float",
+        "desc": "The island offset is the relative distance (hatch spacing) to move the scan vectors between adjacent checkers.",
+        "units": "mm",
+        "default": ".5"
+      },
+      {
+        "name": "Island Overlap",
+        "type": "float",
+        "desc": "The length of overlap between adjacent islands in both directions.",
+        "units": "mm",
+        "default": ".1"
+      }
+    ], 
+    "Striping": [
+      {
+        "name": "Stripe Width",
+        "type": "float",
+        "desc": "The island width.",
+        "units": "mm",
+        "default": "5"
+      },
+      {
+        "name": "Stripe Offset",
+        "type": "float",
+        "desc": "The stripe offset is the relative distance (hatch spacing) to move the scan vectors between adjacent stripes.",
+        "units": "mm",
+        "default": ".5"
+      },
+      {
+        "name": "Stripe Overlap",
+        "type": "float",
+        "desc": "The length of overlap between adjacent stripes.",
+        "units": "mm",
+        "default": ".1"
+      }
+    ]
+  }
 }
