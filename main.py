@@ -22,6 +22,7 @@ import pyslm
 import pyslm.visualise
 import pyslm.analysis
 import pyslm.geometry
+from pyslm.hatching.islandHatcher import IslandHatcher
 from src.output.alsamTypes import SegmentStyle,VelocityProfile,Wobble,Traveler
 from pyslm.hatching import hatching
 from pyslm.geometry import HatchGeometry
@@ -84,7 +85,7 @@ if USE_SCANPATH_SWITCHING:
 """
 
 # Initialize Part
-# config["Part File Name"] = "Cone_1.stl"
+# config["Part File Name"] = "nist.stl"
 Part = pyslm.Part(config["Part File Name"])
 Part.setGeometry('geometry/' + config["Part File Name"])
 Part.origin = [0.0, 0.0, 0.0]
@@ -95,9 +96,9 @@ Part.dropToPlatform()
 LAYER_THICKNESS = config["Layer Thickness"]  # [mm]
 
 # Special scan strategies need additional attributes supplied
-if config["Scan Strategy"] == "island":
+if config["Scan Strategy"] == "Island":
     print("Island Hatching!")
-    hatcher = hatching.IslandHatcher()
+    hatcher = IslandHatcher()
 elif config["Scan Strategy"] == "Striping": 
     print("Striping hatching!") 
     hatcher = hatching.StripeHatcher()
@@ -131,11 +132,8 @@ if config["Scan Strategy"] == "Island":
     hatcher.islandOverlap = config["Island Overlap"]
 
 elif config["Scan Strategy"] == "Striping": 
-    print("Stripe Width: " + str(config["Stripe Width"]))
     hatcher.stripeWidth = config["Stripe Width"]
-    print("Stripe Offset: " + str(config["Stripe Offset"]))
     hatcher.stripeOffset = config["Stripe Offset"]
-    print("Stripe Overlap: " + str(config["Stripe Overlap"]))
     hatcher.stripeOverlap = config["Stripe Overlap"]
 
 # TODO: Figure out what these were used for and reimplement the system

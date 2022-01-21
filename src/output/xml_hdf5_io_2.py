@@ -168,12 +168,12 @@ class XMLWriter():
         ##write contours
         
         for group in layer.getContourGeometry():
-            hatches_path =SubElement(traj,'Path')
+            contours_path =SubElement(traj,'Path')
             
-            SubElement(hatches_path,'Type').text="contour"
-            SubElement(hatches_path,"Tag").text="part1"
-            SubElement(hatches_path,"NumSegments").text=str(group.numContours())
-            SubElement(hatches_path,"SkyWritingMode").text="0"
+            SubElement(contours_path,'Type').text="contour"
+            SubElement(contours_path,"Tag").text="part1"
+            SubElement(contours_path,"NumSegments").text=str(group.numContours())
+            SubElement(contours_path,"SkyWritingMode").text="0"
 
             ## Get array of coordinates in numpy ndarray and its number of rows which represents the number of segments
             coordinates=group.coords
@@ -181,13 +181,13 @@ class XMLWriter():
 
             ## Generate start point
             startPair=coordinates[0] # Weird stuff, don't worry about it, seems to work
-            Start=SubElement(hatches_path,"Start")
+            Start=SubElement(contours_path,"Start")
             SubElement(Start,"X").text=str(round(startPair[0], 4))
             SubElement(Start,"Y").text=str(round(startPair[1], 4))
 
             ## Generate every segment
             for i in range(1,numRows):
-                segment=SubElement(hatches_path,"Segment")
+                segment=SubElement(contours_path,"Segment")
                 SubElement(segment,"SegmentID").text=str(i)
                 SubElement(segment,"SegStyle").text=str(defaultContourSegmentStyleID)
                 end=SubElement(segment,"End")
@@ -197,12 +197,12 @@ class XMLWriter():
 
         ##write hatches
         for group in layer.getHatchGeometry():
-            contours_path = SubElement(traj,'Path')
+            hatches_path = SubElement(traj,'Path')
             
-            SubElement(contours_path,'Type').text="hatch"
-            SubElement(contours_path,"Tag").text="part1"
-            SubElement(contours_path,"NumSegments").text=str(group.numHatches())
-            SubElement(contours_path,"SkyWritingMode").text="0"
+            SubElement(hatches_path,'Type').text="hatch"
+            SubElement(hatches_path,"Tag").text="part1"
+            SubElement(hatches_path,"NumSegments").text=str(group.numHatches())
+            SubElement(hatches_path,"SkyWritingMode").text="0"
 
             ## Get array of coordinates in numpy ndarray and its number of rows which represents the number of segments
             coordinates=group.coords
@@ -210,20 +210,30 @@ class XMLWriter():
 
             ## Generate start point
             startPair=coordinates[0]
-            Start=SubElement(contours_path,"Start")
+            Start=SubElement(hatches_path,"Start")
             SubElement(Start,"X").text=str(round(startPair[0], 4))
             SubElement(Start,"Y").text=str(round(startPair[1], 4))
 
             ## Generate every segment
+            # Hatches we have to basically alternate which we do
+            isHatch = True
             for i in range(1,numRows):
-                segment=SubElement(contours_path,"Segment")
-                SubElement(segment,"SegmentID").text=str(i)
-                SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
-                end=SubElement(segment,"End")
-                SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
-                SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
-            
-
+                if isHatch:
+                    segment=SubElement(hatches_path,"Segment")
+                    SubElement(segment,"SegmentID").text=str(i)
+                    SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
+                    end=SubElement(segment,"End")
+                    SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
+                    SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
+                else: 
+                    segment = SubElement(hatches_path,"Segment")
+                    SubElement(segment, "SegmentID").text=str(i)
+                    SubElement(segment, "SegStyle").text=str('jumps')
+                    end=SubElement(segment, "End")
+                    SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
+                    SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
+                    
+                isHatch = not isHatch 
 
         return tList
 
