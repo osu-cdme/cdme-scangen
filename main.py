@@ -321,7 +321,7 @@ xmlWriter = XMLWriter(outputDir)
 xmlWriter.output_xml(layers,segStyleList,vProfileList, config["Contour Default ID"], config["Hatch Default ID"])
 
 #outputs .scn file in same location as xml layer files
-xmlWriter.output_zip()
+# xmlWriter.output_zip()
 
 #converts xlm output to an hdf5 file for use in external simulator
 if False: 
