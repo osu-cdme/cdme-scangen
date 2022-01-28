@@ -288,8 +288,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     layers.append(layer)
 
     # Change hatch angle every layer
-    # hatch.hatchAngle += 66.7
-    # myHatcher.hatchAngle %= 360
+    hatcher.hatchAngle = (hatcher.hatchAngle + config["Hatch Angle Increment"]) % 360
 
 '''
 If pulling .scn output from process, the data is available here for conversion
