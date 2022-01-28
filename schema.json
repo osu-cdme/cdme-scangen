@@ -67,7 +67,7 @@
       "type": "float",
       "desc": "How thick each layer should be.",
       "units": "mm",
-      "default": ".1"
+      "default": ".03"
     }
   ],
   "Hatching": [
@@ -76,7 +76,7 @@
       "type": "float",
       "desc": "The hatch angle used on Layer 0. Must be in range [−180,180].",
       "units": "deg",
-      "default": "66.7"
+      "default": "45"
     },
     {
       "name": "Hatch Angle Increment",
@@ -90,18 +90,18 @@
       "type": "float",
       "desc": "The distance between adjacent hatch scan vectors.",
       "units": "mm",
-      "default": ".1"
+      "default": ".08"
     },
     {
       "name": "# Inner Contours",
       "type": "int",
-      "desc": "Number of inner contours. (Need to confirm difference between inner and outer contours)",
-      "default": "0"
+      "desc": "Number of inner contours.",
+      "default": "1"
     },
     {
       "name": "# Outer Contours",
       "type": "int",
-      "desc": "Number of outer contours. (Need to confirm difference between inner and outer contours)",
+      "desc": "Number of outer contours.",
       "default": "1"
     },
     {
@@ -109,14 +109,14 @@
       "type": "float",
       "desc": "An additional offset may be added (positive or negative) between the contour and the internal hatching.",
       "units": "mm",
-      "default": "0.01"
+      "default": "0.08"
     },
     {
       "name": "Spot Compensation",
       "type": "float",
       "desc": "The spot (laser point) compensation factor is the distance to offset the outer-boundary and other internal hatch features in order to factor in the exposure radius of the laser.",
       "units": "mm",
-      "default": ".02"
+      "default": ".08"
     },
     {
       "name": "Hatch Sorting Method",
@@ -127,7 +127,7 @@
         "Linear",
         "Greedy"
       ],
-      "desc": "The hatch sort method used once the hatch vectors have been generated.",
+      "desc": "The ordering mechanism by which the hatches will be ordered. 'None' is the default ordering.",
       "default": "Alternate"
     }
   ],
