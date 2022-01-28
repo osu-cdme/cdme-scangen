@@ -586,4 +586,4 @@ def hdf5_to_xml(in_path: str, out_dir: str):
             layers_paths.append(paths)
             
     xml_out.output_xml(layers_paths, layers_segstyles, scan_mode)
-    xml_out.output_zip()
+    # xml_out.output_zip()
