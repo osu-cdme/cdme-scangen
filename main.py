@@ -325,7 +325,7 @@ xmlWriter.output_xml(layers,segStyleList,vProfileList, config["Contour Default I
 # xmlWriter.output_zip()
 
 #converts xlm output to an hdf5 file for use in external simulator
-if False: 
+if True: 
     hdf5Dir=os.path.abspath('HDF5Output')
     HDF5Util.convertSCNtoHDF5(os.path.abspath('XMLOutput'),'HDF5FromSCN')
 
