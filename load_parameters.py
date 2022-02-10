@@ -18,8 +18,6 @@ def default_config():
     config = {} 
 
     # Need specially handled
-    config["Hatch Default ID"] = schema["Hatch Default ID"]
-    config["Contour Default ID"] = schema["Contour Default ID"]
     config["Segment Styles"] = schema["Segment Styles"]
     config["Velocity Profiles"] = schema["Velocity Profiles"]
 
