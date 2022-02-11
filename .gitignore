@@ -160,3 +160,5 @@ XMLOutput/*.xml
 node_modules
 *.scn 
 *.SCN
+*.hdf5
+HDF5FromSCN

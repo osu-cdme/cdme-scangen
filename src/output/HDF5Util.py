@@ -34,15 +34,12 @@ def generatePowerList(layerTree:ET.ElementTree):
                 if len(segmentStyle.findall('.//Traveler')):
                     powerList = np.append(powerList, int(segmentStyle.find('.//Power').text))
                 else:
-                    pass
-                    # powerList = np.append(powerList, 0)
+                    powerList = np.append(powerList, 0)
                 found = True
                 break
 
         if not found:
             raise ValueError('SegmentStyleID {} not found in SegmentStyleList'.format(styleID)) 
-
-    print(len(powerList))
 
     return powerList
 
@@ -131,31 +128,17 @@ def generateTimeList(layerTree:ET.ElementTree):
 
 # Makes an HDF5 file for a layer from a layer file from a .scn file, the .scn must be unzipped and the individual layer file passed in
 def convertLayerSCNtoHDF5(fileDirectory:str,root:h5py.File,layerNum:int):
-    print("fileDirectory: " + str(fileDirectory))
     layerTree = ET.parse(fileDirectory)
-    treeRoot = layerTree.getroot()
-    print("treeRoot: " + str(treeRoot))
-    for child in treeRoot: 
-        print(child)
-        for child2 in child: 
-            print(child2)
-            for child3 in child2:
-                print(child3)
     layerFolder = root.create_group(str(layerNum))
-    
-    print('converting layer folder')
 
-    print("Generating power list")
     layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/power', data=generatePowerList(layerTree))
-    print("generating velocity list")
     velocityList = generateVelocityList(layerTree)    
+
+    # TODO: These need the 'data' keyword argument specified, otherwise it's trying to use the second parameter as a shape/size as defined in the docs here: https://docs.h5py.org/en/stable/high/dataset.html
     layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/velocity',   velocityList)
-    print("generating point list")
     pointList = generatePointList(layerTree)
     layerFolder.create_dataset('/'+str(layerNum)+'/points', pointList)
-    print("generating edges")
     layerFolder.create_dataset('/'+str(layerNum)+'/edges',  generateEdges(pointList))
-    print("generating times")
     layerFolder.create_dataset('/'+str(layerNum)+'/pointData/time', generateTimeList(layerTree))
 
     return layerFolder
