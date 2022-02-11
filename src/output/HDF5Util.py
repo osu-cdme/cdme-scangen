@@ -6,15 +6,31 @@ import xml.etree.ElementTree as ET
 import math
 import os
 
+# TODO: Can probably make XPath searches quicker by being more specific than "search the entire tree for anything with this tag" 
+
+#* Utility functions that occur frequently 
+def getSegmentStyleOfSegment(layerTree:ET.ElementTree, segment:str):
+    id = segment.find('.//SegStyle').text
+    for segmentStyle in layerTree.findall(".//SegmentStyle"):
+        if segmentStyle.find('.//ID').text == id:
+            return segmentStyle
+    raise ValueError('SegmentStyleID {} not found in SegmentStyleList'.format(id))
+
+def getVelocityProfileOfSegment(layerTree:ET.ElementTree, segment:str):
+    segmentStyle = getSegmentStyleOfSegment(layerTree, segment)
+    velocityProfileID = segmentStyle.find('.//VelocityProfileID').text
+    for velocityProfile in layerTree.findall('.//VelocityProfile'):
+        if velocityProfile.find('.//ID').text == velocityProfileID:
+            return velocityProfile
+    raise ValueError('VelocityProfileID {} not found in VelocityProfileList'.format(velocityProfileID))
+
 # Adds a layer to an existing HDF5 file.
 def addHDF5Layer(HDF5FileName:str,layer:h5py.File):
     top=h5py.File(HDF5FileName,'r+')
     thisLayer=top.create_group(layer.name)
 
-
 # generates an n by 1 numpy array listing the powers in order of each step in the print for the layer passed in
 def generatePowerList(layerTree:ET.ElementTree):
-    powerList = np.array([])
     trajectoryTree = layerTree.find('.//TrajectoryList')
     if not trajectoryTree:
         raise ValueError('No TrajectoryList found in layerTree')
@@ -22,40 +38,38 @@ def generatePowerList(layerTree:ET.ElementTree):
     if not segmentStyleTree:
         raise ValueError('No SegmentStyleList found in layerTree')
     
-    # this section pulls every segment from the trajectory list, finds the segstyle attached to it, pulls the power from that segstyle and collects them in a list
-    for segment in trajectoryTree.findall('.//Segment'):
-        styleID = segment.find('.//SegStyle').text
-        segmentStyles = segmentStyleTree.findall(".//SegmentStyle")
+    segments = trajectoryTree.findall('.//Segment')
+    powers = np.empty(len(segments))
+    def getPower(segment:ET.ElementTree):
+        segmentStyle = getSegmentStyleOfSegment(layerTree, segment)
+        if len(segmentStyle.findall('.//Traveler')):
+            return int(segmentStyle.find('.//Power').text)
+        return 0 # Jump
+    for i in range(len(segments)):
+        powers[i] = getPower(segments[i])
 
-        # Get power based on linked segStyle and whether it's a jump or not 
-        found = False
-        for segmentStyle in segmentStyles:
-            if segmentStyle.find('.//ID').text == styleID:
-                if len(segmentStyle.findall('.//Traveler')):
-                    powerList = np.append(powerList, int(segmentStyle.find('.//Power').text))
-                else:
-                    powerList = np.append(powerList, 0)
-                found = True
-                break
-
-        if not found:
-            raise ValueError('SegmentStyleID {} not found in SegmentStyleList'.format(styleID)) 
-
-    return powerList
+    return powers
 
 # generate an n by 1 numpy array listing the velocities in order of each step in the print for the layer passed in
 def generateVelocityList(layerTree:ET.ElementTree):
     velocityList = np.array([])
-    trajectoryTree = layerTree.find('TrajectoryList')
-    segmentStyleTree = layerTree.find('SegmentStyleList')
-    VelocityProfileTree = layerTree.find('VelocityProfileList')
+    trajectoryTree = layerTree.find('.//TrajectoryList')
+    if not trajectoryTree:
+        raise ValueError('No TrajectoryList found in layerTree')
+    segmentStyleTree = layerTree.find('.//SegmentStyleList')
+    if not segmentStyleTree:
+        raise ValueError('No SegmentStyleList found in layerTree')
+    VelocityProfileTree = layerTree.find('.//VelocityProfileList')
+    if not VelocityProfileTree:
+        raise ValueError('No VelocityProfileList found in layerTree')
 
-    for segment in trajectoryTree.findall('Segment'):
-        associatedSegStyle = segmentStyleTree.find(segment.find('segStyle'))
-        associatedVelocityProfile = VelocityProfileTree.find(associatedSegStyle.find('VelocityProfileID'))
-        velocity = associatedVelocityProfile.find('Velocity')
-
-        velocityList = np.append(velocityList, velocity)
+    segments = trajectoryTree.findall('.//Segment')
+    velocities = np.empty(len(segments))
+    def getVelocity(segment:ET.ElementTree):
+        velocityProfile = getVelocityProfileOfSegment(layerTree, segment)
+        return float(velocityProfile.find(".//Velocity").text)
+    for i in range(len(segments)): 
+        velocities[i] = getVelocity(segments[i])
 
     return velocityList
 
@@ -134,12 +148,12 @@ def convertLayerSCNtoHDF5(fileDirectory:str,root:h5py.File,layerNum:int):
     layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/power', data=generatePowerList(layerTree))
     velocityList = generateVelocityList(layerTree)    
 
-    # TODO: These need the 'data' keyword argument specified, otherwise it's trying to use the second parameter as a shape/size as defined in the docs here: https://docs.h5py.org/en/stable/high/dataset.html
-    layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/velocity',   velocityList)
+    # TODO: Rest of these aren't fixed yet 
+    layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/velocity', data=velocityList)
     pointList = generatePointList(layerTree)
-    layerFolder.create_dataset('/'+str(layerNum)+'/points', pointList)
-    layerFolder.create_dataset('/'+str(layerNum)+'/edges',  generateEdges(pointList))
-    layerFolder.create_dataset('/'+str(layerNum)+'/pointData/time', generateTimeList(layerTree))
+    layerFolder.create_dataset('/'+str(layerNum)+'/points', data=pointList)
+    layerFolder.create_dataset('/'+str(layerNum)+'/edges',  data=generateEdges(pointList))
+    layerFolder.create_dataset('/'+str(layerNum)+'/pointData/time', data=generateTimeList(layerTree))
 
     return layerFolder
     
