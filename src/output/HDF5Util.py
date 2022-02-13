@@ -108,6 +108,8 @@ def generatePointList(layerTree:ET.ElementTree):
 
 # generates an n by 2 list of edges where the entries are the index of the start and end points in the pointList (NOTE:kinda redundant? the point list is ordered)
 def generateEdges(pointList:np.ndarray):
+    if not len(pointList): 
+        return np.array([])
     edgeList = np.empty((len(pointList) - 1, 2), dtype=np.int32)
     for i in range(len(pointList) - 1):
         edgeList[i] = [i, i + 1]
