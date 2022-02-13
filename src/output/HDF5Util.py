@@ -7,6 +7,7 @@ import math
 import os
 from tqdm import tqdm # progress bar
 
+# Various opportunities for performance improvement, if we end up needing to use them 
 # TODO: Profiling with something like cProfile and snakeviz will probably be very insightful regarding which parts in here are gobbling up all the processing time 
 # TODO: Can probably make XPath searches quicker by being more specific than "search the entire tree for anything with this tag" which probably involves a full linear search each time
 # TODO: Can probably boost performance by caching/memoizing many of the segment style / velocity profile lookups, or keeping those in a set for O(1) lookups or something
@@ -156,9 +157,7 @@ def convertLayerSCNtoHDF5(fileDirectory:str,root:h5py.File,layerNum:int):
     layerFolder = root.create_group(str(layerNum))
 
     layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/power', data=generatePowerList(layerTree))
-    velocityList = generateVelocityList(layerTree)    
-
-    # TODO: Rest of these aren't fixed yet 
+    velocityList = generateVelocityList(layerTree)
     layerFolder.create_dataset('/'+str(layerNum)+'/edgeData/velocity', data=velocityList)
     pointList = generatePointList(layerTree)
     layerFolder.create_dataset('/'+str(layerNum)+'/points', data=pointList)
