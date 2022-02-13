@@ -5,8 +5,11 @@ import h5py
 import xml.etree.ElementTree as ET
 import math
 import os
+from tqdm import tqdm # progress bar
 
-# TODO: Can probably make XPath searches quicker by being more specific than "search the entire tree for anything with this tag" 
+# TODO: Profiling with something like cProfile and snakeviz will probably be very insightful regarding which parts in here are gobbling up all the processing time 
+# TODO: Can probably make XPath searches quicker by being more specific than "search the entire tree for anything with this tag" which probably involves a full linear search each time
+# TODO: Can probably boost performance by caching/memoizing many of the segment style / velocity profile lookups, or keeping those in a set for O(1) lookups or something
 
 #* Utility functions that occur frequently 
 def getSegmentStyleOfSegment(layerTree:ET.ElementTree, segment:str):
@@ -39,7 +42,7 @@ def generatePowerList(layerTree:ET.ElementTree):
         raise ValueError('No SegmentStyleList found in layerTree')
     
     segments = trajectoryTree.findall('.//Segment')
-    powers = np.empty(len(segments))
+    powers = np.empty(len(segments), dtype=np.float64)
     def getPower(segment:ET.ElementTree):
         segmentStyle = getSegmentStyleOfSegment(layerTree, segment)
         if len(segmentStyle.findall('.//Traveler')):
@@ -52,7 +55,6 @@ def generatePowerList(layerTree:ET.ElementTree):
 
 # generate an n by 1 numpy array listing the velocities in order of each step in the print for the layer passed in
 def generateVelocityList(layerTree:ET.ElementTree):
-    velocityList = np.array([])
     trajectoryTree = layerTree.find('.//TrajectoryList')
     if not trajectoryTree:
         raise ValueError('No TrajectoryList found in layerTree')
@@ -64,75 +66,84 @@ def generateVelocityList(layerTree:ET.ElementTree):
         raise ValueError('No VelocityProfileList found in layerTree')
 
     segments = trajectoryTree.findall('.//Segment')
-    velocities = np.empty(len(segments))
+    velocities = np.empty(len(segments), dtype=np.float64)
     def getVelocity(segment:ET.ElementTree):
         velocityProfile = getVelocityProfileOfSegment(layerTree, segment)
         return float(velocityProfile.find(".//Velocity").text)
-    for i in range(len(segments)): 
+    for i in range(len(segments)):
         velocities[i] = getVelocity(segments[i])
 
-    return velocityList
+    return velocities
 
 # generates an n by 2 numpy array listing each vertex in order of the print for the layer passed in
 def generatePointList(layerTree:ET.ElementTree):
-    pointList = np.array([])
-    trajectoryTree = layerTree.find('TrajectoryList')
+    trajectoryTree = layerTree.find('.//TrajectoryList')
+
+    paths = trajectoryTree.findall('.//Path')
+    segments = trajectoryTree.findall('.//Segment')
+
+    # Paths add one point each, the start x/y, and segments add one point each, the end x/y
+    # This lets us predetermine size of end array and avoid all uses of np.append
+    points = np.empty((len(paths) + len(segments), 2), dtype=np.float64)
+    i = 0
 
     # There is a separate start point for each path so the paths must be iterated through to pull it since its not labelled a segment
-    for path in trajectoryTree.findall("Path"):
+    # Not a convenient single loop here so we manually update the tqdm bar 
+    for path in paths:
 
-        startPoint = path.find('Start')
-        startX = startPoint.find('X')
-        startY = startPoint.find('Y')
+        startPoint = path.find('.//Start')
+        startX = float(startPoint.find('.//X').text)
+        startY = float(startPoint.find('.//Y').text)
+        points[i] = [startX,startY]
+        i += 1
 
-        pointList = np.append(pointList,[startX,startY])
+        for segment in path.findall('.//Segment'):
+            x = float(segment.find('.//X').text)
+            y = float(segment.find('.//Y').text)
+            points[i] = [x,y]
+            i += 1
 
-        for segment in path.findall('Segment'):
-            x = segment.find('X')
-            y = segment.find('Y')
-
-            pointList = np.append(pointList,[x,y])
-
-    return pointList
+    return points
 
 # generates an n by 2 list of edges where the entries are the index of the start and end points in the pointList (NOTE:kinda redundant? the point list is ordered)
 def generateEdges(pointList:np.ndarray):
-    edgeList = np.array([])
-
-    pointListLength = len(pointList)
-    for i in range(pointListLength-1):
-        edgeList = np.append(edgeList,[i,i+1])
-
+    edgeList = np.empty((len(pointList) - 1, 2), dtype=np.int32)
+    for i in range(len(pointList) - 1):
+        edgeList[i] = [i, i + 1]
     return edgeList
 
-def generateTimeList(layerTree:ET.ElementTree):
-    segmentStyleTree = layerTree.find('SegmentStyleList')
-    VelocityProfileTree = layerTree.find('VelocityProfileList')
-    timeList = np.array([])
-    trajectoryTree = layerTree.find('TrajectoryList')
+def generateTimeList(layerTree:ET.ElementTree):    
+    trajectoryTree = layerTree.find('.//TrajectoryList')
 
-    timeList = np.append(timeList,0.0)
+    timeList = np.empty(1 + len(layerTree.findall('.//Segment')), dtype=np.float64)
+    timeList[0] = 0;
+    i = 1; 
 
     # There is a separate start point for each path so the paths must be iterated through to pull it since its not labelled as a segment
-    for path in trajectoryTree.findall("Path"):
-        startPoint = path.find('Start')
-        startX = startPoint.find('X')
-        startY = startPoint.find('Y')
+    # Not a convenient single loop here so we manually update the tqdm bar
+    # TODO: Verify there isn't weird behavior from the last segment of a path to the first segment of another path
+    paths = trajectoryTree.findall('.//Path')
+    for path in paths:
+        startPoint = path.find('.//Start')
+        startX = float(startPoint.find('.//X').text)
+        startY = float(startPoint.find('.//Y').text)
 
-        for segment in path.findall('Segment'):
-            endX = segment.find('X')
-            endY = segment.find('Y')
+        for segment in path.findall('.//Segment'):
+            endX = float(segment.find('.//X').text)
+            endY = float(segment.find('.//Y').text)
 
             # this chunk finds the speed associated with the current end point
-            associatedSegStyle = segmentStyleTree.find(segment.find('segStyle'))
-            associatedVelocityProfile = VelocityProfileTree.find(associatedSegStyle.find('VelocityProfileID'))
-            velocity = associatedVelocityProfile.find('Velocity')
-
+            velocityProfile = getVelocityProfileOfSegment(layerTree, segment)
+            velocity = float(velocityProfile.find('.//Velocity').text)
             distance = math.sqrt(pow(endX-startX,2)+pow(endY-startY,2))
-
+            print("startX: " + str(startX) + " startY: " + str(startY) + " endX: " + str(endX) + " endY: " + str(endY) + " distance: " + str(distance) + " velocity: " + str(velocity))
+            
             time = distance/velocity
-
-            timeList = np.append(timeList,time)
+            if time < 0: 
+                print("WARNING: Negative time detected. This is likely due to a negative velocity. Please check your velocity profile.")
+                pass
+            timeList[i] = time
+            i += 1 
 
             # need to update the start point for the distance on the next iteration through loop
             startX = endX
@@ -162,7 +173,7 @@ def convertSCNtoHDF5(inputDirectory:str, outputName:str):
     numLayers = len(os.listdir(inputDirectory + '/'))
     file=h5py.File(outputName,'w')
 
-    for i in range(numLayers):
+    for i in tqdm(range(numLayers), desc='Converting SCN to HDF5'):
         convertLayerSCNtoHDF5(inputDirectory + '/scan_' + str(i + 1) + '.xml',file, i)
     
     

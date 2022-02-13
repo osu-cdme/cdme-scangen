@@ -15,6 +15,7 @@ from pyslm.geometry.geometry import ScanMode, BuildStyle, Layer,Model ## Directe
 import h5py
 import glob
 from src.output.alsamTypes import SegmentStyle,Wobble,VelocityProfile,Traveler
+from tqdm import tqdm # Progress bar 
 
 
 '''
@@ -254,12 +255,10 @@ class XMLWriter():
             for f in glob.glob(self.out+'\*'):
                 os.remove(f)  
         
-        for i in range(0, len(layers)):
-            print('XML Layer # ' + str(i+1) + ' Started')
+        # TODO: Rewrite UI to parse tqdm output instead of the previous print statements here 
+        for i in tqdm(range(0, len(layers)), desc='Writing XML'):
             xml_path = os.path.join(self.out , 'scan_' + str(i+1) + '.xml')
-            print(xml_path)
             self.write_layer(layers[i],i+1,segmentStyleList,vProfileList, defaultContourSegmentStyleID, defaultHatchSegmentStyleID)
-            print('XML Layer # ' + str(i+1) + ' Complete')
             
         return
 
@@ -500,6 +499,7 @@ def hdf5_to_xml(in_path: str, out_dir: str):
     seg_style = ''
     
     with h5py.File(in_path, "r") as f:
+
         # List all groups
         for layer in range(0, len(f.keys())-5):
             
