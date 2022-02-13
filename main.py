@@ -39,11 +39,11 @@ import src.output.HDF5Util as HDF5Util
 # Go from our standardized source of fields, or our "schema"
 from load_parameters import *
 if len(sys.argv) > 1:
-    print("First Command Line Argument: " + sys.argv[1])
+    print("First Command Line Argument: " + sys.argv[1], flush=True)
     config_obj = json.loads(sys.argv[1])
     config = parse_config(config_obj)
 else: 
-    print("First Command Line Argument not specified, using default config")
+    print("First Command Line Argument not specified, using default config", flush=True)
     config = default_config()
 print("Post-load config: " + str(config))
 
@@ -51,39 +51,12 @@ print("Post-load config: " + str(config))
 # ...it's a (hacky) way to ensure a given library (in our case, pyslm) gets properly loaded from the UI
 
 if len(sys.argv) > 2: 
-    print("Second Command Line Argument: " + sys.argv[2])
+    print("Second Command Line Argument: " + sys.argv[2], flush=True)
     for path in json.loads(sys.argv[2]):
-        print("Appending {} to PYTHONPATH.".format(path))
+        print("Appending {} to PYTHONPATH.".format(path), flush=True)
         sys.path.append(path)
 
 #%%
-
-if "Write Debug Info" in config and config["Write Debug Info"]:
-    print("Logging debug information to `debug.txt`.")
-    debug_file = open("debug.txt", "w")
-    debug_file.write("Input Parameters\n")
-    debug_file.write("--------------------\n")
-    for key, value in config.items():
-        debug_file.write("{}: {}\n".format(key, value))
-    debug_file.write("\n")
-
-"""
-USE_SCANPATH_SWITCHING = False
-if USE_SCANPATH_SWITCHING:
-
-    # Function takes in a pd.ExcelFile() instance (and debug file) and returns an array of arrays, each inside array with the following structure:
-    # [0]: ID of the given Area (Equation: "<Row of Excel Sheet> - 2")
-    # [1]: 6-Long Array of min-x, min-y, min-z, max-x, max-y, max-z 
-    # [2]: scanpath identifier (`default`, `island`, etc.)
-    # [3]: General Parameters (True/False)
-    scanpath_info = excel_to_array(pd.ExcelFile(r'config.xlsx'), debug_file)
-    debug_file.write("scanpath_info: \n{}".format(scanpath_info))
-
-    # Function takes in the array from the previous call and returns an array of [hatcher instance, area]
-    #   corresponding to the parameters and scan path type given in the array.
-    scanpath_area_pairs = array_to_instances(scanpath_info, debug_file)
-    debug_file.write("scanpath_area_pairs: \n{}".format(scanpath_area_pairs))
-"""
 
 # Initialize Part
 # config["Part File Name"] = "nist.stl"
@@ -136,10 +109,6 @@ elif config["Scan Strategy"] == "Striping":
     hatcher.stripeWidth = config["Stripe Width"]
     hatcher.stripeOffset = config["Stripe Offset"]
     hatcher.stripeOverlap = config["Stripe Overlap"]
-
-# TODO: Figure out what these were used for and reimplement the system
-# MIN_POWER_LVL = min(config_powers.keys())
-# MAX_POWER_LVL = max(config_powers.keys())
 
 # Instantiate model and set model parameters
 model = pyslm.geometry.Model()
@@ -215,8 +184,9 @@ layer_segstyles = []
 # layer_segstyle = 11
 # layer_power = model.buildStyles[layer_segstyle].laserPower
 # layer_speed = model.buildStyles[layer_segstyle].laserSpeed
+# NOTE: file=* is b/c tqdm prints to stderr by default, but to handle properly in ui we need to redirect to stdout
 for z in tqdm(np.arange(0, Part.boundingBox[5],
-                        LAYER_THICKNESS), desc="(Step 1/3) Generating Vectors", unit="layers"):
+                        LAYER_THICKNESS), desc="(Step 1/3) Generating Vectors", unit="layers", file=sys.stdout, smoothing=0):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
@@ -234,58 +204,12 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
     else:
         layer = hatcher.hatch(geom_slice)  # Hatch layer
 
-    # Vector Splitting; to use, switch to Hatcher()
-    '''
-    CUTOFF = 2  # mm
-    for geometry in layer.geometry:
-        if isinstance(geometry, HatchGeometry):
-            coords = split_long_vectors(geometry.coords, CUTOFF)
-            geometry.coords = coord
-    '''
-
-    '''
-    # Vector Lengthening; to use, switch to Hatcher()
-    CUTOFF = 2 # mm
-    for geometry in layer.geometry:
-        if isinstance(geometry, HatchGeometry):
-            coords = lengthen_short_vectors(geometry.coords, CUTOFF)
-            geometry.coords = coords
-    '''
-
     # The layer height is set in integer increment of microns to ensure no rounding error during manufacturing
     layer.z = int(z*1000)
     for geometry in layer.geometry:
         geometry.mid = 1
         geometry.bid = 1
 
-    # Get parameters for each layer and collect
-    # layer_times.append(pyslm.analysis.getLayerTime(layer, [model]))
-    # layer_powers.append(layer_power)
-    # layer_speeds.append(layer_speed)
-    # layer_segstyles.append(model.buildStyles[layer_segstyle].name)
-    
-    '''
-    Scale parameters by how much time it's taking to scan layers.
-    Attempts to address "pyramid problem" where as you move up building a part 
-    shaped like a pyramid, layers take less time, and there's less time for 
-    things to cool off, which leads to problems with the part.
-    '''
-    ACTIVATION_DIFF = .5
-    """
-    if config["Change Parameters"] and len(layer_times) > 1:
-        dt = np.diff(layer_times)
-        if config["Change Power"]:
-        # As time goes down, so should power
-            if dt[len(dt)-1] > ACTIVATION_DIFF and layer_segstyle < MAX_POWER_LVL:
-                layer_segstyle += 1
-            elif dt[len(dt)-1] < -ACTIVATION_DIFF and layer_segstyle > MIN_POWER_LVL:
-                layer_segstyle -= 1
-            layer_power = model.buildStyles[layer_segstyle].laserPower
-        if config["Change Speed"]:
-            # As time goes down, so should speed
-            layer_speed = model.buildStyles[layer_segstyle].laserSpeed
-    """
-  
     layers.append(layer)
 
     # Change hatch angle every layer
@@ -309,9 +233,6 @@ Data available is in Lists after slicing and hatching completes
 This chunk should be able to go where needed. It requires an output directory to an empty or new folder so the zip output can produce a correct .scn file
 will need to ensure input sanitation when UI hooks into this component. 
 '''
-# if config["Output .scn"]:
-
-# Create 'output' directory if it doesn't exist\
 
 # NOTE: This folder name is hardcoded into 'cdme-scangen-ui' as well, so if you change it here, change it there
 # Also note that xmlWriter creates the given output folder if it doesn't already
@@ -324,80 +245,8 @@ xmlWriter.output_xml(layers,segStyleList,vProfileList, config["Contour Default I
 #outputs .scn file in same location as xml layer files
 # xmlWriter.output_zip()
 
+#%%
 #converts xlm output to an hdf5 file for use in external simulator
 if True: 
     hdf5Dir=os.path.abspath('HDF5Output')
-    HDF5Util.convertSCNtoHDF5(os.path.abspath('XMLOutput'),'HDF5FromSCN.hdf5')
-
-#%%
-'''
-STEP 3: Visualization Outputs       
-'''
-
-if "Output Plots" in config and config["Output Plots"]:
-
-    # Create/wipe folder
-    if not os.path.exists("LayerFiles"):
-        os.makedirs("LayerFiles")
-    else:
-        for f in glob.glob("LayerFiles/*"):
-            os.remove(f)
-
-    # Generate new output
-    for i in tqdm(range(len(layers)), desc="(Step 1/3) Generating", unit="layer"):
-        fig, ax = plt.subplots()
-        pyslm.visualise.plot(
-            layers[i], plot3D=False, plotOrderLine=config["Plot Centroids"], plotHatches=config["Plot Hatches"],\
-                 plotContours=config["Plot Contours"], plotJumps=config["Plot Jump Vectors"], handle=(fig, ax))
-
-        if config["Output .png"]:
-            fig.savefig("LayerFiles/Layer{}.png".format(i), bbox_inches='tight')
-        if config["Output .svg"]:
-            fig.savefig("LayerFiles/Layer{}.svg".format(i), bbox_inches='tight')
-
-        plt.cla()
-        plt.close(fig)
-    
-    if config["Plot Time"]:
-        plt.figure()
-        plt.title("Time by Layer")
-        plt.xlabel("Layer number")
-        plt.ylabel("Time (s)")
-        plt.plot(layer_times)
-        plt.show()
-    
-    if config["Plot Parameter Changes"]:
-        # Diagnostic plots for parameter scaling    
-        plt.figure()
-        plt.title("Normalized Process Parameters by Layer")
-        plt.xlabel("Layer number")
-        plt.ylabel("Normalized process parameters")
-        plt.plot(skp.scale(layer_times))
-        plt.plot(skp.scale(layer_powers))
-        plt.plot(skp.scale(layer_speeds))
-        plt.legend(['Time','Power','Speed'], loc='upper right')
-        plt.show()
-    
-        if config["Plot Power"]:
-            plt.figure()
-            plt.title("Power by Layer")
-            plt.xlabel("Layer number")
-            plt.ylabel("Power (W)")
-            plt.plot(layer_powers)
-            plt.show()        
-        
-        if config["Plot Speed"]:
-            plt.figure()
-            plt.title("Speed by Layer")
-            plt.xlabel("Layer number")
-            plt.ylabel("Speed (mm/s)")
-            plt.plot(layer_speeds)
-            plt.show()
-
-'''
-If we want to change to a subplot-based system, here's most of the code for it:
-NUM_ROWS, NUM_COLS = 200, 2
-fig, axarr = plt.subplots(NUM_ROWS, NUM_COLS)
-pyslm.visualise.plot(layers[i], plot3D=False, plotOrderLine=True,
-                                 plotHatches=True, plotContours=True, handle=(fig, axarr[i // NUM_COLS, i % NUM_COLS]))
-'''
+    HDF5Util.HDF5Util(os.path.abspath('XMLOutput'),'HDF5FromSCN.hdf5').convertSCNtoHDF5()

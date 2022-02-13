@@ -56,7 +56,7 @@
       "type": "string",
       "desc": "Which file you'd like to print. If your file isn't here, import it from the 'I/O' tab!",
       "options": [],
-      "default": "nut.stl"
+      "default": "nist.stl"
     }
   ],
   "General": [
@@ -65,7 +65,7 @@
       "type": "float",
       "desc": "How thick each layer should be.",
       "units": "mm",
-      "default": ".2"
+      "default": "1"
     }
   ],
   "Hatching": [
