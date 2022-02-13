@@ -216,7 +216,7 @@ layer_segstyles = []
 # layer_power = model.buildStyles[layer_segstyle].laserPower
 # layer_speed = model.buildStyles[layer_segstyle].laserSpeed
 for z in tqdm(np.arange(0, Part.boundingBox[5],
-                        LAYER_THICKNESS), desc="Processing Layers"):
+                        LAYER_THICKNESS), desc="(Step 1/3) Generating Vectors", unit="layers"):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
@@ -344,7 +344,7 @@ if "Output Plots" in config and config["Output Plots"]:
             os.remove(f)
 
     # Generate new output
-    for i in tqdm(range(len(layers)), desc="Generating Layer Plots"):
+    for i in tqdm(range(len(layers)), desc="(Step 1/3) Generating", unit="layer"):
         fig, ax = plt.subplots()
         pyslm.visualise.plot(
             layers[i], plot3D=False, plotOrderLine=config["Plot Centroids"], plotHatches=config["Plot Hatches"],\

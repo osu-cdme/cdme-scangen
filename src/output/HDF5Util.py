@@ -171,7 +171,7 @@ def convertSCNtoHDF5(inputDirectory:str, outputName:str):
     numLayers = len(os.listdir(inputDirectory + '/'))
     file=h5py.File(outputName,'w')
 
-    for i in tqdm(range(numLayers), desc='Converting SCN to HDF5'):
+    for i in tqdm(range(numLayers), desc='(Step 3/3) XML -> HDF5', unit="layers"):
         convertLayerSCNtoHDF5(inputDirectory + '/scan_' + str(i + 1) + '.xml',file, i)
     
     
