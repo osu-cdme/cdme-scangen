@@ -136,12 +136,11 @@ def generateTimeList(layerTree:ET.ElementTree):
             velocityProfile = getVelocityProfileOfSegment(layerTree, segment)
             velocity = float(velocityProfile.find('.//Velocity').text)
             distance = math.sqrt(pow(endX-startX,2)+pow(endY-startY,2))
-            print("startX: " + str(startX) + " startY: " + str(startY) + " endX: " + str(endX) + " endY: " + str(endY) + " distance: " + str(distance) + " velocity: " + str(velocity))
             
             time = distance/velocity
             if time < 0: 
                 print("WARNING: Negative time detected. This is likely due to a negative velocity. Please check your velocity profile.")
-                pass
+
             timeList[i] = time
             i += 1 
 
