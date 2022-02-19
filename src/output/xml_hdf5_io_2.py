@@ -257,7 +257,7 @@ class XMLWriter():
         
         # TODO: Rewrite UI to parse tqdm output instead of the previous print statements here 
         import sys
-        for i in tqdm(range(0, len(layers)), desc='(Step 2/3) Output -> XML', unit="layers", file=sys.stdout, smoothing=0):
+        for i in tqdm(range(0, len(layers)), desc='Output -> XML', unit="layers", file=sys.stdout, smoothing=0):
             xml_path = os.path.join(self.out , 'scan_' + str(i+1) + '.xml')
             self.write_layer(layers[i],i+1,segmentStyleList,vProfileList, defaultContourSegmentStyleID, defaultHatchSegmentStyleID)
             

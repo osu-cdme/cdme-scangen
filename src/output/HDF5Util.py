@@ -25,7 +25,7 @@ class HDF5Util:
         numLayers = len(os.listdir(self.inputDir + '/'))
 
         import sys 
-        for i in tqdm(range(numLayers), desc='(Step 3/3) XML -> HDF5', unit="layers", file=sys.stdout, smoothing=0):
+        for i in tqdm(range(numLayers), desc='XML -> HDF5', unit="layers", file=sys.stdout, smoothing=0):
             self.HDF5Layer(self.inputDir + '/scan_' + str(i + 1) + '.xml', self.file, i).exec()
 
     # Handles one file 

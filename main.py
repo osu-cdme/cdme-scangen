@@ -186,7 +186,7 @@ layer_segstyles = []
 # layer_speed = model.buildStyles[layer_segstyle].laserSpeed
 # NOTE: file=* is b/c tqdm prints to stderr by default, but to handle properly in ui we need to redirect to stdout
 for z in tqdm(np.arange(0, Part.boundingBox[5],
-                        LAYER_THICKNESS), desc="(Step 1/3) Generating Vectors", unit="layers", file=sys.stdout, smoothing=0):
+                        LAYER_THICKNESS), desc="Generating Vectors", unit="layers", file=sys.stdout, smoothing=0):
 
     geom_slice = Part.getVectorSlice(z)  # Slice layer
 
