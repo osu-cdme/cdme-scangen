@@ -22,11 +22,11 @@ class HDF5Util:
         
     # Converts a directory containing the unzipped layer files (.xml suffix) into an HDF5 file. directory must NOT have any other files in it
     def convertSCNtoHDF5(self):
-        numLayers = len(os.listdir(self.inputDir + '/'))
-
+        import glob 
+        files = glob.glob(self.inputDir+'/*.xml')
         import sys 
-        for i in tqdm(range(numLayers), desc='XML -> HDF5', unit="layers", file=sys.stdout, smoothing=0):
-            self.HDF5Layer(self.inputDir + '/scan_' + str(i + 1) + '.xml', self.file, i).exec()
+        for i in tqdm(range(len(files)), desc="XML -> HDF5", unit="layers", file=sys.stdout, smoothing=0):
+            self.HDF5Layer(files[i], self.file, i).exec()
 
     # Handles one file 
     class HDF5Layer:
