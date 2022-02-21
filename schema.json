@@ -41,15 +41,6 @@
   ],
   "Input": [
     {
-      "name": "Scan Strategy",
-      "type": "string",
-      "desc": "Which scan strategy you'd like to be used on the part.",
-      "options": [
-        "Default"
-      ],
-      "default": "Default"
-    },
-    {
       "name": "Part File Name",
       "type": "string",
       "desc": "Which file you'd like to print. If your file isn't here, import it from the 'I/O' tab!",
@@ -58,6 +49,15 @@
     }
   ],
   "General": [
+    {
+      "name": "Scan Strategy",
+      "type": "string",
+      "desc": "Which scan strategy you'd like to be used on the part.",
+      "options": [
+        "Default"
+      ],
+      "default": "Default"
+    },
     {
       "name": "Layer Thickness",
       "type": "float",
@@ -84,14 +84,14 @@
       "type": "float",
       "desc": "The hatch angle used on Layer 0. Must be in range [−180,180].",
       "units": "deg",
-      "default": "45"
+      "default": "65"
     },
     {
       "name": "Hatch Angle Increment",
       "type": "float",
       "desc": "An additional offset used to increment the hatch angle between layers.",
       "units": "deg",
-      "default": "66.6"
+      "default": "15"
     },
     {
       "name": "Hatch Distance",
@@ -125,18 +125,6 @@
       "desc": "The spot (laser point) compensation factor is the distance to offset the outer-boundary and other internal hatch features in order to factor in the exposure radius of the laser.",
       "units": "mm",
       "default": ".08"
-    },
-    {
-      "name": "Hatch Sorting Method",
-      "type": "string",
-      "options": [
-        "None",
-        "Alternate",
-        "Linear",
-        "Greedy"
-      ],
-      "desc": "The ordering mechanism by which the hatches will be ordered. 'None' is the default ordering.",
-      "default": "Alternate"
     }
   ],
   "Trajectory Ordering": [

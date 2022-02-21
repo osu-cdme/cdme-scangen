@@ -722,7 +722,7 @@ class Hatcher(BaseHatcher):
 
 
         # Hatch private attributes
-        self._layerAngleIncrement = 0  # 66 + 2 / 3
+        self._layerAngleIncrement = 66 + 2 / 3
         self._hatchDistance = 0.08  # mm
         self._hatchAngle = 45
         self._hatchSortMethod = None
@@ -908,17 +908,18 @@ class Hatcher(BaseHatcher):
             paths = curBoundary
 
             # Hatch angle will change per layer
-            # TODO change the layer angle increment
-            layerHatchAngle = np.mod(self._hatchAngle + self._layerAngleIncrement, 180)
-            #layerHatchAngle = float(self._hatchAngle + self._layerAngleIncrement)
-            #layerHatchAngle -= np.floor(layerHatchAngle / 360. + 0.5) * 360.
+            self._hatchAngle = np.mod(self._hatchAngle + self._layerAngleIncrement, 180)
 
             # The layer hatch angle needs to be bound by +ve X vector (i.e. -90 < theta_h < 90 )
-            if layerHatchAngle > 90:
-                layerHatchAngle = layerHatchAngle - 180
+            if self._hatchAngle > 90:
+                self._hatchAngle = self._hatchAngle - 180
+
+            # NOTE: MUST happen after changing hatch angle 
+            if self.hatchSortMethod:
+                self.hatchSortMethod.hatchAngle = self.hatchAngle
 
             # Generate the un-clipped hatch regions based on the layer hatchAngle and hatch distance
-            hatches = self.generateHatching(paths, self._hatchDistance, layerHatchAngle)
+            hatches = self.generateHatching(paths, self._hatchDistance, self._hatchAngle)
 
             # Clip the hatch fill to the boundary
             clippedPaths = self.clipLines(paths, hatches)
@@ -931,8 +932,12 @@ class Hatcher(BaseHatcher):
 
                 # Extract only x-y coordinates and sort based on the pseudo-order stored in the z component.
                 clippedLines = clippedLines[:, :, :3]
-                id = np.argsort(clippedLines[:, 0, 1])
+
+                '''
+                for i in range(len(clippedLines)): 
+                id = np.argsort(clippedLines[:, 0, 2])
                 clippedLines = clippedLines[id, :, :]
+                '''
 
                 scanVectors.append(clippedLines)
 
@@ -943,11 +948,11 @@ class Hatcher(BaseHatcher):
 
                 # Only copy the (x,y) points from the coordinate array.
                 hatchVectors = np.vstack(scanVectors)
-                hatchVectors = hatchVectors[:, :, :2].reshape(-1, 2)
+                # hatchVectors = hatchVectors[:, :, :2].reshape(-1, 2)
 
                 # Note the does not require positional sorting
                 if self.hatchSortMethod:
-                    hatchVectors = self.hatchSortMethod.sort(hatchVectors)
+                   hatchVectors = self.hatchSortMethod.sort(hatchVectors)
 
                 hatchGeom.coords = hatchVectors
                 hatchLayerGeometries.append(hatchGeom)

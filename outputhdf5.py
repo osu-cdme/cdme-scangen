@@ -7,7 +7,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath("./")) # Needed for it to recognize src 
 import src.output.HDF5Util as HDF5Util
-print("argv: " + str(sys.argv))
 
 # Verify cmd line arguments
 if not len(sys.argv) == 3:
@@ -27,9 +26,7 @@ if not sys.argv[2].lower().endswith(".hdf5"):
 
 # Convert relative path to absolute paths
 input_folder = os.path.abspath(sys.argv[1])
-print("input_folder: {}".format(input_folder))
 output_file = os.path.abspath(sys.argv[2])
-print("output_file: {}".format(output_file))
 
 # Actually do the work 
 HDF5Util.HDF5Util(input_folder, output_file).convertSCNtoHDF5()

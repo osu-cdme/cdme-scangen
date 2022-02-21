@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import networkx as nx
 
@@ -95,6 +96,7 @@ class LinearSort(BaseSort):
         self._hatchAngle = angle
 
     def sort(self, scanVectors: np.ndarray) -> np.ndarray:
+        # scanVectors = scanVectors.reshape(-1, 2, 2)
         # requires an n x 2 x 2 array
 
         # Sort along the x-axis and obtain the indices of the sorted array
@@ -105,6 +107,7 @@ class LinearSort(BaseSort):
         norm = np.array([np.cos(theta_h), np.sin(theta_h)])
 
         midPoints = np.mean(scanVectors, axis=1)
+
         idx2 = norm.dot(midPoints.T)
         idx3 = np.argsort(idx2)
 

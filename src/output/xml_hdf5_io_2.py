@@ -210,36 +210,33 @@ class XMLWriter():
             numRows=coordinates.shape[0]
 
             ## Generate start point
-            startPair=coordinates[0]
+            firstHatch=coordinates[0]
             Start=SubElement(hatches_path,"Start")
-            SubElement(Start,"X").text=str(round(startPair[0], 4))
-            SubElement(Start,"Y").text=str(round(startPair[1], 4))
+            SubElement(Start,"X").text=str(round(firstHatch[0][0], 4))
+            SubElement(Start,"Y").text=str(round(firstHatch[0][1], 4))
 
-            ## Generate every segment
-            # Hatches we have to basically alternate which we do
-            isHatch = True
-            for i in range(1,numRows):
-                if isHatch:
-                    segment=SubElement(hatches_path,"Segment")
-                    SubElement(segment,"SegmentID").text=str(i)
-                    SubElement(segment,"SegStyle").text=str(defaultHatchSegmentStyleID)
-                    end=SubElement(segment,"End")
-                    SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
-                    SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
-                else: 
-                    segment = SubElement(hatches_path,"Segment")
-                    SubElement(segment, "SegmentID").text=str(i)
-                    SubElement(segment, "SegStyle").text=str('jumps')
-                    end=SubElement(segment, "End")
-                    SubElement(end,"X").text=str(round(coordinates[i,0], 4))  ##assuming coordinates is a 2 by n array of x,y coordinates
-                    SubElement(end,"Y").text=str(round(coordinates[i,1], 4))
-                    
-                isHatch = not isHatch 
+            for i in range(len(coordinates)):
+                hatch = coordinates[i]
+
+                # Burn the hatch 
+                hatchVec=SubElement(hatches_path,"Segment")
+                SubElement(hatchVec,"SegmentID").text=str(i)
+                SubElement(hatchVec,"SegStyle").text=str(defaultHatchSegmentStyleID)
+                hatchVecEnd=SubElement(hatchVec,"End")
+                SubElement(hatchVecEnd,"X").text=str(round(hatch[1][0], 4))
+                SubElement(hatchVecEnd,"Y").text=str(round(hatch[1][1], 4))
+
+                # If next hatch exists, add jump vector to next hatch
+                if (i < len(coordinates) - 1):
+                    nextHatch=coordinates[i+1]
+                    jumpVec = SubElement(hatches_path,"Segment")
+                    SubElement(jumpVec, "SegmentID").text=str(i)
+                    SubElement(jumpVec, "SegStyle").text=str('jumps')
+                    jumpVecEnd=SubElement(jumpVec, "End")
+                    SubElement(jumpVecEnd,"X").text=str(round(nextHatch[0][0], 4))
+                    SubElement(jumpVecEnd,"Y").text=str(round(nextHatch[0][1], 4))
 
         return tList
-
-
-
 
 
     """

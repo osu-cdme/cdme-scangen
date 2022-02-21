@@ -24,7 +24,7 @@ import pyslm.analysis
 import pyslm.geometry
 from pyslm.hatching.islandHatcher import IslandHatcher
 from src.output.alsamTypes import SegmentStyle,VelocityProfile,Wobble,Traveler
-from pyslm.hatching import hatching
+from pyslm.hatching import hatching, LinearSort
 from pyslm.geometry import HatchGeometry
 # from pyslm.hatching.multiple import hatch_multiple
 from src.standardization.shortening import split_long_vectors
@@ -81,24 +81,16 @@ else:
     hatcher = hatching.Hatcher()
 
 # Parameters used in the common hatching class used for any hatcher (default, island, striping)
-hatcher.hatchAngle = config["Hatch Angle"] # Hatch Angle 
+hatcher.hatchAngle = config["Hatch Angle"] # Hatch Angle
+hatcher.layerAngleIncrement = config["Hatch Angle Increment"] # [degrees]
 hatcher.hatchDistance = config["Hatch Distance"] # Hatch Distance
 hatcher.layerAngleIncrement = config["Hatch Angle Increment"] # Hatch Angle Increment
 hatcher.numInnerContours = config["# Inner Contours"] # Num Inner Contours
 hatcher.numOuterContours = config["# Outer Contours"] # Num Outer Contours
 hatcher.spotCompensation = config["Spot Compensation"] # Spot Compensation
 hatcher.volumeOffsetHatch = config["Volume Offset Hatch"] # Volume Offset Hatch 
-
-# Hatch Sort Method
-if config["Hatch Sorting Method"]=='Alternate':
-    hatcher.hatchSortMethod = hatching.AlternateSort()
-elif config["Hatch Sorting Method"]=='Linear':
-    hatcher.hatchSortMethod = hatching.LinearSort()
-elif config["Hatch Sorting Method"]=='Greedy':
-    hatcher.hatchSortMethod = hatching.GreedySort()
-else:
-    print("Invalid hatch sorting method " + config["Hatch Sorting Method"] + " passed in.")
-    sys.exit(-1)
+hatcher.scanContourFirst = config["Contour First"] # Whether to scan contours or hatches first
+hatcher.hatchSortMethod = LinearSort() # Which direction, essentially, to do vectors
 
 if config["Scan Strategy"] == "Island":
     hatcher.islandWidth = config["Island Width"]
@@ -212,8 +204,7 @@ for z in tqdm(np.arange(0, Part.boundingBox[5],
 
     layers.append(layer)
 
-    # Change hatch angle every layer
-    hatcher.hatchAngle = (hatcher.hatchAngle + config["Hatch Angle Increment"]) % 360
+    # Hatch angle increment is handled inside pyslm
 
 '''
 If pulling .scn output from process, the data is available here for conversion
