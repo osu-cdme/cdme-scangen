@@ -63,7 +63,7 @@
       "type": "float",
       "desc": "How thick each layer should be.",
       "units": "mm",
-      "default": "1"
+      "default": ".03"
     }
   ],
   "Hatching": [
@@ -84,14 +84,14 @@
       "type": "float",
       "desc": "The hatch angle used on Layer 0. Must be in range [−180,180].",
       "units": "deg",
-      "default": "65"
+      "default": "0"
     },
     {
       "name": "Hatch Angle Increment",
       "type": "float",
       "desc": "An additional offset used to increment the hatch angle between layers.",
       "units": "deg",
-      "default": "15"
+      "default": "66.6"
     },
     {
       "name": "Hatch Distance",
