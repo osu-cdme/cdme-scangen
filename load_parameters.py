@@ -15,7 +15,7 @@ special_keys = set(["Hatch Default ID", "Contour Default ID", "Segment Styles", 
 def default_config():
     with open(os.path.abspath("schema.json"), "r") as f:
         schema = json.load(f)
-    config = {} 
+    config = {}
 
     # Need specially handled
     config["Segment Styles"] = schema["Segment Styles"]

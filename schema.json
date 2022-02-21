@@ -45,9 +45,7 @@
       "type": "string",
       "desc": "Which scan strategy you'd like to be used on the part.",
       "options": [
-        "Default",
-        "Island", 
-        "Striping"
+        "Default"
       ],
       "default": "Default"
     },
@@ -153,6 +151,18 @@
       "default": "Yes"
     }
   ], 
+  "Output": [
+    {
+      "name": "Output .HDF5",
+      "type": "bool",
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "desc": "Whether to print contours before hatches each layer.",
+      "default": "No"
+    }
+  ],
   "Strategy Specific": {
     "Island": [
       {
